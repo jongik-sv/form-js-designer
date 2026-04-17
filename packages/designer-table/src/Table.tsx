@@ -227,8 +227,10 @@ export function TableCore({
             <td
               key={cell.id}
               class="fjs-designer-table__td"
+              data-column-type={cellType}
               onClick={() => {
-                if (canModify) {
+                // boolean cells handle their own commit (checkbox onChange) — skip beginEdit
+                if (canModify && cellType !== 'boolean') {
                   cellEdit.beginEdit(row.index, colId, cell.getValue());
                 }
               }}

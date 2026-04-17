@@ -12,19 +12,16 @@
 
 import { test, expect } from '@playwright/test';
 
-const BASE_URL = process.env.E2E_BASE_URL ?? 'http://localhost:5173';
+const BASE_URL = process.env.E2E_BASE_URL ?? 'http://localhost:5176';
 
 /**
  * 팔레트에서 Table 컴포넌트를 캔버스에 드롭하는 헬퍼
  */
 async function dropTableToCanvas(page: import('@playwright/test').Page) {
+  // 팔레트 Table 버튼 클릭 → 캔버스에 컴포넌트 마운트 (테스트 하네스: 클릭 기반)
   const paletteEntry = page.locator('[data-palette-entry="table"]');
   await paletteEntry.waitFor({ state: 'visible', timeout: 10_000 });
-
-  const canvasDrop = page.locator('[data-canvas-drop]');
-  await canvasDrop.waitFor({ state: 'visible', timeout: 10_000 });
-
-  await paletteEntry.dragTo(canvasDrop);
+  await paletteEntry.click();
 
   await page.locator('[data-testid="designer-table"]').waitFor({ state: 'visible', timeout: 10_000 });
 }

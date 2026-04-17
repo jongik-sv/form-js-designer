@@ -16,7 +16,7 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: [['html', { outputFolder: './e2e-report', open: 'never' }]],
   use: {
-    baseURL: process.env.E2E_BASE_URL ?? 'http://localhost:5173',
+    baseURL: process.env.E2E_BASE_URL ?? 'http://localhost:5176',
     trace: 'on-first-retry',
   },
   projects: [
@@ -25,12 +25,10 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'] },
     },
   ],
-  webServer: process.env.CI
-    ? undefined
-    : {
-        command: 'npm --prefix packages/designer-editor-host run dev',
-        url: 'http://localhost:5173',
-        reuseExistingServer: !process.env.CI,
-        timeout: 30_000,
-      },
+  webServer: {
+    command: 'npm --prefix packages/designer-table run dev:e2e',
+    url: 'http://localhost:5176',
+    reuseExistingServer: true,
+    timeout: 30_000,
+  },
 });
