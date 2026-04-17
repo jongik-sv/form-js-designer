@@ -13,25 +13,12 @@ import type { ColumnOrderState } from '@tanstack/react-table';
 import type { CellEditAPI } from './cells/useCellEdit';
 import { useColumnReorder } from './dnd/useColumnReorder';
 import { ColumnDragHandle } from './dnd/ColumnDragHandle';
-import type { ColumnDef as TRDColumnDef } from './types';
+import { extractLeafIds } from './Table';
 
 // Lazy import of TableCore — avoids circular dependency
 // TableCore type re-export
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type TableCoreType = (props: any) => any;
-
-function extractLeafIds(cols: TRDColumnDef[]): string[] {
-  const ids: string[] = [];
-  function walk(col: TRDColumnDef) {
-    if (col.columns && col.columns.length > 0) {
-      col.columns.forEach(walk);
-    } else {
-      ids.push(col.id);
-    }
-  }
-  cols.forEach(walk);
-  return ids;
-}
 
 interface TableDndProps {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

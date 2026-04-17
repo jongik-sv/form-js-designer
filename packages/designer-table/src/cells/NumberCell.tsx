@@ -16,6 +16,15 @@ interface NumberCellProps {
   rowIndex?: number;
 }
 
+function commitOrCancel(inputEl: HTMLInputElement, cellEdit: CellEditAPI): void {
+  const num = parseFloat(inputEl.value);
+  if (!isNaN(num)) {
+    cellEdit.commit(num);
+  } else {
+    cellEdit.cancel();
+  }
+}
+
 export function NumberCell({ value, columnDef, cellEdit, rowIndex = 0 }: NumberCellProps) {
   const editing = cellEdit.isEditing(rowIndex, columnDef.id);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -40,26 +49,12 @@ export function NumberCell({ value, columnDef, cellEdit, rowIndex = 0 }: NumberC
         step={constraints?.step}
         onKeyDown={(e) => {
           if (e.key === 'Enter') {
-            const input = e.currentTarget as HTMLInputElement;
-            const num = parseFloat(input.value);
-            if (!isNaN(num)) {
-              cellEdit.commit(num);
-            } else {
-              cellEdit.cancel();
-            }
+            commitOrCancel(e.currentTarget as HTMLInputElement, cellEdit);
           } else if (e.key === 'Escape') {
             cellEdit.cancel();
           }
         }}
-        onBlur={(e) => {
-          const input = e.currentTarget as HTMLInputElement;
-          const num = parseFloat(input.value);
-          if (!isNaN(num)) {
-            cellEdit.commit(num);
-          } else {
-            cellEdit.cancel();
-          }
-        }}
+        onBlur={(e) => commitOrCancel(e.currentTarget as HTMLInputElement, cellEdit)}
         class="fjs-designer-table__cell-input"
       />
     );

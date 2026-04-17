@@ -66,11 +66,6 @@ export interface InternalFeatures extends TableFeatures {
 
 export type InternalTableField = Omit<TableField, 'features'> & { features: InternalFeatures };
 
-// TanStack 헤더 header 함수 생성기 (LocaleKey → ctx.t(key))
-function makeHeaderFn(key: string, tFn: (k: string) => string) {
-  return () => tFn(key);
-}
-
 // header 프로퍼티를 t 함수로 변환 (재귀)
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function applyT(cols: any[], tFn: (k: string) => string): any[] {
@@ -78,7 +73,7 @@ function applyT(cols: any[], tFn: (k: string) => string): any[] {
     const result = { ...col };
     if (typeof result.header === 'string') {
       const key = result.header as string;
-      result.header = makeHeaderFn(key, tFn);
+      result.header = () => tFn(key);
     }
     if (Array.isArray(result.columns)) {
       result.columns = applyT(result.columns, tFn);
@@ -208,11 +203,10 @@ export function TableCore({
           const canModify = features.editEnabled && colDef?.editable;
 
           // BUILTIN_CELL_RENDERERS 매핑 (알 수 없는 type → TextCell fallback)
-          let CellRenderer = BUILTIN_CELL_RENDERERS[cellType] ?? BUILTIN_CELL_RENDERERS['text']!;
           if (!BUILTIN_CELL_RENDERERS[cellType]) {
             console.warn(`[designer-table] Unknown column type "${cellType}", falling back to TextCell.`);
-            CellRenderer = BUILTIN_CELL_RENDERERS['text']!;
           }
+          const CellRenderer = BUILTIN_CELL_RENDERERS[cellType] ?? BUILTIN_CELL_RENDERERS['text']!;
 
           // features.editEnabled === false → read-only
           const effectiveCellEdit: CellEditAPI = features.editEnabled
@@ -271,12 +265,14 @@ export function TableCore({
               const filterType = colDef?.filter;
               const FilterRenderer = filterType ? BUILTIN_FILTER_RENDERERS[filterType] : undefined;
 
+              const isSortable = features.sorting && header.column.getCanSort();
+
               const headerContent = (
                 <Fragment>
                   {header.isPlaceholder
                     ? null
                     : flexRender(header.column.columnDef.header, header.getContext())}
-                  {features.sorting && header.column.getCanSort() && (
+                  {isSortable && (
                     <span class="fjs-designer-table__sort-indicator">
                       {header.column.getIsSorted() === 'asc'
                         ? ' ↑'
@@ -300,22 +296,15 @@ export function TableCore({
               return (
                 <th
                   key={header.id}
-                  class={[
-                    'fjs-designer-table__th',
-                    features.sorting && header.column.getCanSort()
-                      ? 'fjs-designer-table__th--sortable'
-                      : '',
-                  ]
-                    .join(' ')
-                    .trim()}
+                  class={
+                    isSortable
+                      ? 'fjs-designer-table__th fjs-designer-table__th--sortable'
+                      : 'fjs-designer-table__th'
+                  }
                   colSpan={header.colSpan}
                   rowSpan={header.rowSpan > 1 ? header.rowSpan : undefined}
                   data-level={levelIdx}
-                  onClick={
-                    features.sorting && header.column.getCanSort()
-                      ? header.column.getToggleSortingHandler()
-                      : undefined
-                  }
+                  onClick={isSortable ? header.column.getToggleSortingHandler() : undefined}
                 >
                   {features.columnReorder && isLeaf && DragHandle ? (
                     <DragHandle columnId={colId} isLeaf={isLeaf}>
