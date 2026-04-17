@@ -11,9 +11,40 @@ import { Table } from '../src/Table';
 import { generateRows } from '../e2e/fixtures/rows-10k';
 import type { TableSchema } from '../src/types';
 
-// URL 파라미터에서 행 수 확인
+// URL 파라미터에서 행 수 / 멀티헤더 모드 확인
 const params = new URLSearchParams(location.search);
 const rowCount = parseInt(params.get('rows') ?? '10', 10);
+const useMultiHeader = params.get('multiheader') === '1';
+
+// 3단 멀티헤더 schema (TSK-05-01 검증용)
+const MULTIHEADER_SCHEMA: TableSchema = {
+  type: 'table',
+  columns: [
+    {
+      id: 'info', header: 'User Info', type: 'text', accessor: '',
+      columns: [
+        {
+          id: 'personal', header: 'Personal', type: 'text', accessor: '',
+          columns: [
+            { id: 'id', header: 'ID', accessor: 'id', type: 'number', editable: true },
+            { id: 'name', header: 'Name', accessor: 'name', type: 'text', editable: true },
+          ],
+        },
+        { id: 'active', header: 'Active', accessor: 'active', type: 'boolean', editable: true },
+      ],
+    },
+    {
+      id: 'metrics', header: 'Metrics', type: 'text', accessor: '',
+      columns: [
+        { id: 'score', header: 'Score', accessor: 'score', type: 'number', editable: true, filter: 'range' },
+        { id: 'status', header: 'Status', accessor: 'status', type: 'enum', editable: true, filter: 'select',
+          meta: { enum: [{ value: 'active', label: 'Active' }, { value: 'inactive', label: 'Inactive' }], selectOptions: ['active', 'inactive'] } },
+      ],
+    },
+  ],
+  data: 'rows',
+  features: { editing: true, filtering: true, sorting: true, columnReorder: true, virtualization: false },
+};
 
 // 기본 schema (5종 셀 타입 포함)
 const SCHEMA: TableSchema = {
@@ -47,6 +78,7 @@ const SCHEMA: TableSchema = {
 
 function App() {
   const [mounted, setMounted] = useState(false);
+  const activeSchema = useMultiHeader ? MULTIHEADER_SCHEMA : SCHEMA;
   const [rows, setRows] = useState(generateRows(rowCount, 42));
 
   function handlePaletteClick() {
@@ -82,7 +114,7 @@ function App() {
       <div data-canvas-drop={true} id="canvas" style={{ minHeight: '400px', background: 'white', padding: '16px' }}>
         {mounted ? (
           <Table
-            field={{ ...SCHEMA, id: 'table-e2e' }}
+            field={{ ...activeSchema, id: 'table-e2e' }}
             value={rows}
             onChange={handleChange as unknown as (update: { value: unknown }) => void}
           />
