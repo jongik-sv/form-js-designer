@@ -1,0 +1,28 @@
+{
+  "name": "@form-js-designer/designer-editor-host",
+  "version": "0.0.0",
+  "private": true,
+  "description": "form-js editor host app with Palette + Outline modules",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "typecheck": "tsc --noEmit",
+    "test:unit": "vitest run",
+    "test:unit:watch": "vitest",
+    "test:e2e": "playwright test --config playwright.config.ts"
+  },
+  "devDependencies": {
+    "@bpmn-io/form-js-editor": "^1.21.2",
+    "@form-js-designer/designer-core": "*",
+    "@playwright/test": "^1.47.2",
+    "@preact/preset-vite": "^2.9.1",
+    "@testing-library/preact": "^3.2.4",
+    "@types/node": "^20.16.10",
+    "happy-dom": "^15.7.4",
+    "preact": "^10.19.3",
+    "typescript": "^5.6.0",
+    "vite": "^5.4.8",
+    "vitest": "^2.1.2"
+  }
+}
