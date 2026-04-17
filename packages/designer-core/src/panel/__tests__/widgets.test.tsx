@@ -23,10 +23,10 @@ const WIDGET_NAMES = [
   'string', 'number', 'boolean', 'enum',
   'color', 'spacing', 'expression', 'i18n',
 ] as const;
-// Static compile-time assertion: 8 widgets × 3 contracts = 24
-type _Assert24 = [typeof WIDGET_NAMES]['length'] extends 8 ? true : false;
-const _: _Assert24 = true;
-void _;
+// Runtime sanity: 8 widgets × 3 contracts = 24 cases
+if (WIDGET_NAMES.length !== 8) {
+  throw new Error(`Widget count sanity check failed: expected 8, got ${WIDGET_NAMES.length}`);
+}
 
 // ---------------------------------------------------------------------------
 // Widget registry for tests
@@ -161,8 +161,9 @@ describe('EnumWidget — extra edge cases', () => {
   it('edit — renders select with correct options', () => {
     const onChange = vi.fn();
     const meta: WidgetMeta = { type: 'enum', label: 'Status', enum: ['a', 'b', 'c'] };
-    render(EnumWidget.edit('a', onChange, { ...CTX }, meta));
-    const select = screen.getByRole('combobox') as HTMLSelectElement;
+    const { container } = render(EnumWidget.edit('a', onChange, { ...CTX }, meta));
+    const select = container.querySelector('select') as HTMLSelectElement;
+    expect(select).not.toBeNull();
     expect(select.options.length).toBe(3);
   });
 
@@ -204,15 +205,17 @@ describe('I18nWidget — extra edge cases', () => {
 describe('BooleanWidget — extra edge cases', () => {
   it('edit — checkbox reflects boolean value', () => {
     const onChange = vi.fn();
-    render(BooleanWidget.edit(true, onChange, CTX));
-    const checkbox = screen.getByRole('checkbox') as HTMLInputElement;
+    const { container } = render(BooleanWidget.edit(true, onChange, CTX));
+    const checkbox = container.querySelector('input[type="checkbox"]') as HTMLInputElement;
+    expect(checkbox).not.toBeNull();
     expect(checkbox.checked).toBe(true);
   });
 
   it('edit — onChange called with false when unchecked', () => {
     const onChange = vi.fn();
-    render(BooleanWidget.edit(true, onChange, CTX));
-    const checkbox = screen.getByRole('checkbox') as HTMLInputElement;
+    const { container } = render(BooleanWidget.edit(true, onChange, CTX));
+    const checkbox = container.querySelector('input[type="checkbox"]') as HTMLInputElement;
+    expect(checkbox).not.toBeNull();
     fireEvent.change(checkbox, { target: { checked: false } });
     expect(onChange).toHaveBeenCalledWith(false);
   });

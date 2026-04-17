@@ -8,6 +8,7 @@
   "types": "src/index.ts",
   "exports": {
     ".": "./src/index.ts",
+    "./panel": "./src/panel/types.ts",
     "./testing/browserEnvContract": "./src/testing/browserEnvContract.ts",
     "./overlay": "./src/overlay/OverlayLayer.tsx",
     "./overlay/overlay.css": "./src/overlay/overlay.css"

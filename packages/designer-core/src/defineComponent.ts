@@ -2,6 +2,7 @@ import { h } from 'preact';
 import type { ComponentDefinition, FieldSchema, FormJsFieldComponent, PureRenderProps } from './types';
 import { assertPureRender } from './assertPureRender';
 import { isProductionEnv } from './envUtils';
+import { validatePropsSchema } from './panel/validatePropsSchema';
 
 /**
  * The exact set of keys that constitute PureRenderProps.
@@ -35,6 +36,16 @@ export function defineComponent<F extends FieldSchema = FieldSchema>(
   // Dev-only purity check — never runs in production, safe in vanilla browsers
   if (!isProductionEnv()) {
     assertPureRender(def.render as unknown as (...args: unknown[]) => unknown);
+
+    // Dev-only propsSchema meta-schema validation (TSK-03-02)
+    // Warns on invalid propsSchema shape — production 무영향 (assertPureRender 동형 패턴)
+    const schemaResult = validatePropsSchema(def.propsSchema);
+    if (!schemaResult.ok) {
+      console.warn(
+        `[defineComponent] "${def.type}" propsSchema is invalid:\n` +
+        schemaResult.errors.join('\n'),
+      );
+    }
   }
 
   // Build the Preact component that sanitizes props before forwarding to def.render
