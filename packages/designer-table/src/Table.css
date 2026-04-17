@@ -1,0 +1,52 @@
+/**
+ * Table 컴포넌트 CSS
+ * ADR-0001 D4: 전역 평문 CSS (*.module.css 금지)
+ */
+
+.fjs-designer-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.fjs-designer-table__thead {
+  background-color: #f8f9fa;
+}
+
+.fjs-designer-table__th {
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  border: 1px solid #dee2e6;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.fjs-designer-table__th[data-level="0"] {
+  background-color: #e9ecef;
+}
+
+.fjs-designer-table__th[data-level="1"] {
+  background-color: #f1f3f5;
+}
+
+.fjs-designer-table__th[data-level="2"] {
+  background-color: #f8f9fa;
+}
+
+.fjs-designer-table__th--sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+.fjs-designer-table__th--sortable:hover {
+  background-color: #dee2e6;
+}
+
+.fjs-designer-table__tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.fjs-designer-table__td {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #dee2e6;
+}

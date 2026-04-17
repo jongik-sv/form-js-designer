@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>designer-table E2E Test Harness</title>
+  <style>
+    body { margin: 0; font-family: sans-serif; background: #f5f5f5; }
+    #root { padding: 16px; }
+    /* 팔레트 영역 (E2E 스펙 진입 경로) */
+    #palette {
+      background: white;
+      border: 1px solid #ddd;
+      padding: 12px;
+      margin-bottom: 16px;
+      border-radius: 4px;
+    }
+    #palette h3 { margin: 0 0 8px; font-size: 14px; color: #333; }
+    [data-palette-entry="table"] {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: #fff;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    [data-palette-entry="table"]:hover { background: #f0f0f0; }
+    /* 캔버스 드롭 영역 */
+    [data-canvas-drop] {
+      min-height: 400px;
+      background: white;
+      border: 2px dashed #ccc;
+      border-radius: 4px;
+      padding: 16px;
+      position: relative;
+    }
+    [data-canvas-drop].empty::after {
+      content: "팔레트에서 Table을 클릭하여 추가";
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: #999;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div id="root">
+    <div id="palette">
+      <h3>Components</h3>
+      <button data-palette-entry="table" type="button">
+        <svg width="20" height="20" viewBox="0 0 54 54" fill="none">
+          <path fill="currentColor" fill-rule="evenodd" d="M42.545 12.273A2.455 2.455 0 0 1 45 14.727v24.546a2.455 2.455 0 0 1-2.455 2.454h-31.09A2.455 2.455 0 0 1 9 39.273V14.727a2.455 2.455 0 0 1 2.455-2.454zM27.818 40.09h14.727a.82.82 0 0 0 .819-.818v-4.91H27.818Zm-1.636-5.727v5.727H11.455a.82.82 0 0 1-.819-.818v-4.91zm1.636-1.637h15.546V27H27.818ZM26.182 27v5.727H10.636V27zm1.636-1.636h15.546v-5.728H27.818Zm-1.636-5.728v5.728H10.636v-5.728z" clip-rule="evenodd"/>
+        </svg>
+        Table
+      </button>
+    </div>
+    <div data-canvas-drop class="empty" id="canvas"></div>
+  </div>
+  <script type="module" src="./main.tsx"></script>
+</body>
+</html>
