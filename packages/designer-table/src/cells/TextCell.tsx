@@ -50,14 +50,7 @@ export function TextCell({ value, columnDef, cellEdit, rowIndex = 0 }: TextCellP
   }
 
   return (
-    <span
-      class="fjs-designer-table__cell-value"
-      onClick={() => {
-        if (columnDef.editable) {
-          cellEdit.beginEdit(rowIndex, columnDef.id, value);
-        }
-      }}
-    >
+    <span class="fjs-designer-table__cell-value">
       {value != null ? String(value) : ''}
     </span>
   );

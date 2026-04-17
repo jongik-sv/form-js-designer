@@ -73,14 +73,7 @@ export function DateCell({ value, columnDef, cellEdit, rowIndex = 0 }: DateCellP
   }
 
   return (
-    <span
-      class="fjs-designer-table__cell-value"
-      onClick={() => {
-        if (columnDef.editable) {
-          cellEdit.beginEdit(rowIndex, columnDef.id, value);
-        }
-      }}
-    >
+    <span class="fjs-designer-table__cell-value">
       {formatDate(value)}
     </span>
   );

@@ -39,6 +39,7 @@ export function ColumnDragHandle({ columnId, children, isLeaf }: ColumnDragHandl
       {...(isLeaf ? listeners : {})}
       data-drag-handle={isLeaf ? 'true' : undefined}
       class="fjs-designer-table__drag-handle"
+      onClick={(e) => e.stopPropagation()}
     >
       {children}
     </div>

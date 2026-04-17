@@ -38,7 +38,7 @@ const MULTIHEADER_SCHEMA: TableSchema = {
       columns: [
         { id: 'score', header: 'Score', accessor: 'score', type: 'number', editable: true, filter: 'range' },
         { id: 'status', header: 'Status', accessor: 'status', type: 'enum', editable: true, filter: 'select',
-          meta: { enum: [{ value: 'active', label: 'Active' }, { value: 'inactive', label: 'Inactive' }], selectOptions: ['active', 'inactive'] } },
+          meta: { enum: [{ value: 'active', label: 'Active' }, { value: 'inactive', label: 'Inactive' }], selectOptions: [{ value: 'active', label: 'Active' }, { value: 'inactive', label: 'Inactive' }] } },
       ],
     },
   ],
@@ -61,7 +61,7 @@ const SCHEMA: TableSchema = {
           { value: 'active', label: 'Active' },
           { value: 'inactive', label: 'Inactive' },
         ],
-        selectOptions: ['active', 'inactive'],
+        selectOptions: [{ value: 'active', label: 'Active' }, { value: 'inactive', label: 'Inactive' }],
       },
     },
     { id: 'score', header: 'Score', accessor: 'score', type: 'number', editable: true, filter: 'range' },

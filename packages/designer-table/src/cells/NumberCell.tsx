@@ -63,14 +63,7 @@ export function NumberCell({ value, columnDef, cellEdit, rowIndex = 0 }: NumberC
   const displayValue = value != null ? String(value) : '';
 
   return (
-    <span
-      class="fjs-designer-table__cell-value"
-      onClick={() => {
-        if (columnDef.editable) {
-          cellEdit.beginEdit(rowIndex, columnDef.id, value);
-        }
-      }}
-    >
+    <span class="fjs-designer-table__cell-value">
       {displayValue}
     </span>
   );

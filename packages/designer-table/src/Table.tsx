@@ -23,6 +23,7 @@
  */
 
 import { h, Fragment } from 'preact';
+import type { RefObject, ComponentChildren } from 'preact';
 import { useState, useRef } from 'preact/hooks';
 import {
   useReactTable,
@@ -114,6 +115,32 @@ function findColumnDef(cols: TRDColumnDef[], id: string): TRDColumnDef | undefin
 
 // filterFns은 columnDefToTanstack에서 컬럼별로 직접 함수 주입 (string key 불필요)
 
+// ===== VirtualizedBody — useRowVirtualizer를 격리하는 서브 컴포넌트 =====
+// hooks 조건부 호출 금지 규칙 준수: features.virtualization=true일 때만 마운트
+interface VirtualizedBodyProps {
+  parentRef: RefObject<HTMLDivElement>;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  rows: Row<any>[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  renderRow: (row: Row<any>, virtualIndex: number) => ComponentChildren;
+}
+
+function VirtualizedBody({ parentRef, rows, renderRow }: VirtualizedBodyProps) {
+  const rowVirtualizer = useRowVirtualizer({
+    count: rows.length,
+    parentRef,
+    estimateSize: 36,
+    overscan: 6,
+  });
+  return (
+    <VirtualRows
+      virtualizer={rowVirtualizer}
+      rows={rows}
+      renderRow={renderRow}
+    />
+  );
+}
+
 // ===== TableCore — dnd-kit 없는 순수 테이블 렌더 =====
 export interface TableCoreProps {
   field: InternalTableField;
@@ -182,13 +209,6 @@ export function TableCore({
   const parentRef = useRef<HTMLDivElement>(null);
   const rows = table.getRowModel().rows;
 
-  const rowVirtualizer = useRowVirtualizer({
-    count: rows.length,
-    parentRef,
-    estimateSize: 36,
-    overscan: 6,
-  });
-
   const headerGroups = table.getHeaderGroups();
 
   // ===== renderRow 헬퍼 =====
@@ -244,8 +264,8 @@ export function TableCore({
 
   // ===== tbody 콘텐츠 =====
   const tbodyContent = features.virtualization ? (
-    <VirtualRows
-      virtualizer={rowVirtualizer}
+    <VirtualizedBody
+      parentRef={parentRef}
       rows={rows}
       renderRow={renderRow}
     />
