@@ -63,34 +63,94 @@ Phase 0 종료 시점 `packages/designer-core/src/` 실재 파일:
 
 ## 2. 기술 결정 게이트 (Q1·Q2 spike, 1주)
 
-TRD §3 말미 요구사항: 기본값(Radix + TanStack Table v8)은 idea.md 권장안 기준이며, **Phase 1 시작 시점 1주 spike**로 실측 비교 후 TRD §3 갱신.
+**재설계 근거 (2026-04-17, ADR-0001 Accepted 이후 사전 조사)**: 당초 "Radix vs Ark, TanStack vs Glide" 이진 비교는 idea.md 권장안 기반이었으며, PRD "Preact 단일 스택" 제약과 ADR-0001 D1/D6 파리티 요건 이전의 가정이다. Phase 0 종료 후 1차 조사(Context7 `/radix-ui/website`, [radix-ui/primitives #1056](https://github.com/radix-ui/primitives/issues/1056), [preactjs/preact #3297](https://github.com/preactjs/preact/issues/3297), [ark-ui About](https://ark-ui.com/docs/overview/about), glide-data-grid `packages/core/package.json`)에서:
 
-### 2.1 Q1 — UI 프리미티브 (Radix UI vs Ark UI)
+- **Radix UI**: Preact 공식 미지원 + portal 렌더 실패 / Dialog stuck 등 다수 실사용 버그 (Radix·Preact 메인테이너 모두 확인).
+- **Ark UI**: `@ark-ui/preact` 패키지 부재. 공식 지원 타깃은 React/Solid/Vue/Svelte 4종.
+- **Glide Data Grid**: canvas 렌더로 **ADR-0001 D1 "단일 컴포넌트 DOM" · D6 픽셀 파리티 전제와 원천 충돌**. peerDep이 React만 선언됨 (MIT 라이선스는 확인).
 
-| 비교 축 | 측정 방법 |
+이 발견은 Q1 후보군 재편 + Q2 상위 정책 결정 선행을 강제한다.
+
+### 2.0 선행 정책 결정 — PD1: canvas 렌더 허용 범위
+
+Phase 1에서 Table에 한해 ADR-0001 D1/D6 예외를 허용할지 먼저 결정한다. 이 결정이 Q2 후보군을 갈라낸다.
+
+| 선택지 | 결과 |
 |---|---|
-| Preact 호환 | `preact/compat` alias 하에 Dialog/Tabs/Popover 3종 렌더 동작 + React DevTools 의존성 0 |
-| 번들 크기 | 3종 컴포넌트만 사용 시 gzip 증분 (`esbuild --analyze`) |
-| 접근성 | axe-core 0 위반 |
-| API 안정도 | breaking change 이력 (최근 12개월) |
+| **PD1-A (기본값, 보수)** — 모든 컴포넌트 DOM 렌더 의무 | Glide 탈락. TanStack Table v8 + TanStack Virtual 단독 검토. |
+| **PD1-B (폴백, 완화)** — Table에 한해 canvas 허용, D6는 "viewer↔viewer 동등성 + 데이터 모델 동등성"으로 대체 | Glide 후보 유지. `docs/adr/0001-single-render-pipeline.md` 부록 §A "Canvas 예외" 또는 `docs/adr/0003-table-library.md` §0 정책 섹션 필요. |
 
-**산출물**: `packages/designer-core/spike/ui-primitives/` (폐기 가능). 결정서는 `docs/adr/0002-ui-primitives.md` (신규) — Radix 유지 또는 Ark 전환 중 택1.
+**결정 방식**: PD1-A를 기본값으로 두고 §2.2 Step 1에서 TanStack DOM 10k 행 성능을 실측. FPS ≥ 55면 PD1-A 확정, < 50이거나 preact/compat hooks 호환성이 깨지면 PD1-B 전환. 즉 PD1은 **성능 실측 결과로 자동 확정**되며, 별도 정책 회의 없음.
 
-### 2.2 Q2 — 테이블 라이브러리 (TanStack Table v8 vs Glide Data Grid)
+### 2.1 Q1 — UI 프리미티브 (5후보 · 동일 게이트)
 
-| 비교 축 | 측정 방법 |
+**문제 재정의**: "Radix vs Ark" (이진) → **"Preact 단일 스택에서 Dialog/Tabs/Popover 3종이 a11y·성능 합격으로 동작하는 조합"** (탐색).
+
+| # | 후보 | 동작 방식 | 선행 공수 |
+|---|---|---|---|
+| A | **Radix UI** (`@radix-ui/react-*`) + `preact/compat` | React 의존을 preact compat으로 흡수. 알려진 portal/Dialog 버그 재현·회피 실측. | 0일 |
+| B | **Zag.js 저수준 + 자체 Preact 어댑터** | `@zag-js/dialog` 등 상태머신만 사용, 렌더·접근성 props 바인딩은 Preact로 자체 작성. | 2일 |
+| C | **Ariakit** (`@ariakit/react`) + `preact/compat` | Radix 대안. Preact 실측 전례 적음. | 0.5일 |
+| D | **Headless UI** (`@headlessui/react`) + `preact/compat` | Tailwind 팀 공식. 3종 지원. | 0일 |
+| E | **자작 + WAI-ARIA 스펙 직접** | Radix 수준의 ARIA Authoring Practices를 3종에 한해 직접 구현. | 3~4일 |
+
+**동일 게이트** (모든 후보 동일 측정):
+
+| 축 | 측정 방법 | 합격선 |
+|---|---|---|
+| Preact 렌더 동작 | preact/compat alias 하에 Dialog(open/close), Tabs(3탭 전환), Popover(anchor/positioning) 실제 동작. React DevTools 의존 0. | pass/fail |
+| 접근성 | axe-core + Playwright keyboard (Tab/Arrow/Esc) | axe 0 위반 + 키보드 경로 모두 통과 |
+| 번들 | 3종만 import 시 gzip 증분 (`esbuild --analyze`) | ≤ 30 KB |
+| 유지보수성 | 최근 12개월 release 빈도 + breaking change | 정성 기록 |
+| Phase 1 확장성 | 3종 외 AccordionItem/Toast 등 같은 라이브러리로 수평 확장 가능한지 | 확장 가능 수 기록 |
+
+**Tie-break**: a11y + preact 동작 합격 = 합격 후보군. 합격 후보 중 선행 공수 최저 → 번들 최소 → 유지보수성 최고 순.
+
+**Kill criterion**: 후보 A(Radix)가 회피 가능해도 컴포넌트당 workaround가 **50줄 이상**이면 탈락.
+
+**산출물**: `packages/designer-core/spike/ui-primitives/{A..E}/` (폐기 가능). 결정서 `docs/adr/0002-ui-primitives.md` — 1개 선정 또는 "조합 불가 시 PRD §5 Preact 제약 재협상" 권고.
+
+### 2.2 Q2 — 테이블 라이브러리 (단계형 · PD1과 동시 확정)
+
+**Step 1 — TanStack DOM 성능 실측 (2일, PD1 게이트)**:
+
+- TanStack Table v8 + TanStack Virtual + preact/compat로 10,000 행 렌더
+- 필터/정렬/가상 스크롤 상태 FPS (Playwright `performance.measureUserAgentSpecificMemory` + `requestAnimationFrame` 카운트)
+- 멀티헤더 3단계 + dnd-kit 컬럼이동 동작 확인
+
+| 결과 | 다음 |
 |---|---|
-| 1만 행 가상 스크롤 60fps | TRD §10 NFR 직결 — Playwright + `requestAnimationFrame` 측정 |
-| 멀티헤더 colspan | 3단계 그룹 헤더 렌더 가능 여부 |
-| 컬럼이동 | dnd-kit 통합 난이도 |
-| Preact 호환 | Canvas 렌더(Glide) vs DOM 렌더(TanStack) 파리티 영향 |
-| 라이선스 | MIT 유지 필요 |
+| FPS ≥ 55 + 멀티헤더·reorder 동작 | **PD1-A 확정**. TanStack 단독 채택. Step 3 생략. |
+| FPS 50~55 | Step 2 (DOM 최적화 0.5일): memo/keyed reconcile/prop 축소. 55 회복 시 PD1-A. |
+| FPS < 50 또는 preact/compat hooks 실패 | **PD1-B 전환**. Step 3로. |
 
-**산출물**: `packages/designer-core/spike/table/` + `docs/adr/0003-table-library.md`.
+**Step 3 — Glide Data Grid 폴백 (2일 · 조건부)**:
 
-### 2.3 결정 갱신
+- `@glideapps/glide-data-grid` canvas 렌더로 10k 행 FPS 60+ 확인
+- ADR-0001 부록 §A 또는 ADR-0003 §0에 "Table canvas 예외" 조항 추가
+- 파리티 테스트 재정의: "viewer canvas ↔ viewer canvas + 데이터 모델 동등성" (editor vs viewer 픽셀 일치 불가 명시)
+- peerDep react만 → preact/compat alias + react shim 동작 실측 (실패 시 Phase 1 Table 범위 축소)
 
-Q1/Q2 spike 완료 후 **TRD §3 (UI 라이브러리 / 테이블) 표 + §13 (Q1·Q2 처리) 표**를 실제 선택으로 치환하는 PR 머지. 이 PR 머지 = §3 이하 작업 착수 전제 조건.
+| 축 | PD1-A (TanStack) | PD1-B (Glide) |
+|---|---|---|
+| 10k 행 FPS | ≥ 55 (DOM) | ≥ 60 (canvas) |
+| 멀티헤더 3단계 | 공식 지원 | 자체 mergeable headers |
+| 컬럼이동 | dnd-kit | 내장 |
+| D1/D6 파리티 | 유지 | 예외 조항 |
+| Preact 호환 | preact/compat + hooks | react shim 실측 |
+| 라이선스 | MIT | MIT |
+
+**산출물**: `packages/designer-core/spike/table/{tanstack,glide}/`. 결정서 `docs/adr/0003-table-library.md` — PD1 + Q2 결정을 한 문서에서 마무리.
+
+### 2.3 결정 갱신 (한 PR 동시 머지)
+
+1. `docs/adr/0002-ui-primitives.md` 신규 Accepted
+2. `docs/adr/0003-table-library.md` 신규 Accepted (PD1 결정 포함)
+3. `docs/adr/0001-single-render-pipeline.md` 부록 §A (PD1-B 확정 시만)
+4. `docs/TRD.md` §3 (UI 라이브러리/테이블 기본값) 및 §13 (Q1·Q2 처리) 갱신
+5. `docs/phase-1-plan.md` §2.1/§2.2 결과 노트 서브섹션 추가 (본 초안은 유지, 결과는 §2.4로 append)
+
+이 PR 머지 = §3 이하 작업 착수 전제 조건.
 
 ---
 
