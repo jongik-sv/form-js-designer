@@ -1,0 +1,34 @@
+@layer designer-overlay {
+  .fjs-designer-overlay {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+
+  .fjs-designer-overlay-selection {
+    position: absolute;
+    left: 0;
+    top: 0;
+    outline: 2px solid #2563eb;
+    outline-offset: -1px;
+    pointer-events: none;
+  }
+
+  .fjs-designer-overlay-handle {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    background: #ffffff;
+    border: 1px solid #2563eb;
+    pointer-events: auto;
+  }
+
+  .fjs-designer-overlay-handle--nw { left: -4px; top: -4px; cursor: nwse-resize; }
+  .fjs-designer-overlay-handle--n  { left: calc(50% - 4px); top: -4px; cursor: ns-resize; }
+  .fjs-designer-overlay-handle--ne { right: -4px; top: -4px; cursor: nesw-resize; }
+  .fjs-designer-overlay-handle--e  { right: -4px; top: calc(50% - 4px); cursor: ew-resize; }
+  .fjs-designer-overlay-handle--se { right: -4px; bottom: -4px; cursor: nwse-resize; }
+  .fjs-designer-overlay-handle--s  { left: calc(50% - 4px); bottom: -4px; cursor: ns-resize; }
+  .fjs-designer-overlay-handle--sw { left: -4px; bottom: -4px; cursor: nesw-resize; }
+  .fjs-designer-overlay-handle--w  { left: -4px; top: calc(50% - 4px); cursor: ew-resize; }
+}

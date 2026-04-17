@@ -8,7 +8,9 @@
   "types": "src/index.ts",
   "exports": {
     ".": "./src/index.ts",
-    "./testing/browserEnvContract": "./src/testing/browserEnvContract.ts"
+    "./testing/browserEnvContract": "./src/testing/browserEnvContract.ts",
+    "./overlay": "./src/overlay/OverlayLayer.tsx",
+    "./overlay/overlay.css": "./src/overlay/overlay.css"
   },
   "scripts": {
     "dev:spike": "vite --config spike/wysiwyg/vite.config.ts",
@@ -16,8 +18,10 @@
     "preview:spike": "vite preview --config spike/wysiwyg/vite.config.ts",
     "test:unit": "vitest run",
     "test:unit:watch": "vitest",
-    "test:e2e": "playwright test --config spike/wysiwyg/playwright.config.ts",
-    "test:e2e:update": "playwright test --config spike/wysiwyg/playwright.config.ts --update-snapshots",
+    "test:e2e": "playwright test --config playwright.config.ts",
+    "test:e2e:update": "playwright test --config playwright.config.ts --update-snapshots",
+    "test:e2e:spike": "playwright test --config spike/wysiwyg/playwright.config.ts",
+    "test:e2e:spike:update": "playwright test --config spike/wysiwyg/playwright.config.ts --update-snapshots",
     "typecheck": "tsc --noEmit"
   },
   "peerDependencies": {
