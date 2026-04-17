@@ -26,7 +26,20 @@ export type {
   PanelWidgetCtx,
   WidgetMeta,
   WidgetValidationResult,
-  LocaleT,
-  UnknownWidgetError,
-  DuplicateWidgetError,
 } from './panel/types';
+export { UnknownWidgetError, DuplicateWidgetError } from './panel/types';
+
+// Host module — TSK-03-03 (PRD §4 AC #4, #4-1)
+export { ViewerHost, EditorHost, useViewportWidth } from './host';
+export type {
+  ViewerHostProps,
+  EditorHostProps,
+  HostOnChangeEvent,
+  HostViewportInfo,
+  FormSchema,
+  FormRenderContextSlots,
+} from './host';
+
+// i18n module — TSK-03-03 (PRD §4 AC #5)
+export { LocaleProvider, useT, useLocale, createFallbackT } from './i18n/LocaleProvider';
+export type { LocaleT, LocaleContextValue, LocaleKey } from './i18n/localeTypes';

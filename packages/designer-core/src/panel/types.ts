@@ -5,9 +5,11 @@
 import type { JSX } from 'preact';
 
 // ---------------------------------------------------------------------------
-// Locale helper type
+// Locale helper type — TSK-03-03에서 i18n/localeTypes.ts로 정식 정의
+// LocaleT는 i18n 모듈을 SSOT로 사용하되, panel은 호환 alias를 유지.
+// WP-07 머지 시 직접 re-export로 통합 예정.
 // ---------------------------------------------------------------------------
-export type LocaleT = (key: string, params?: Record<string, unknown>) => string;
+export type LocaleT = (key: string, params?: Record<string, string | number | unknown>) => string;
 
 // ---------------------------------------------------------------------------
 // Widget context — 위젯 render/edit 호출 시 전달되는 공통 컨텍스트

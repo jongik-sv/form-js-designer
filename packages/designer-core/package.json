@@ -11,7 +11,10 @@
     "./panel": "./src/panel/types.ts",
     "./testing/browserEnvContract": "./src/testing/browserEnvContract.ts",
     "./overlay": "./src/overlay/OverlayLayer.tsx",
-    "./overlay/overlay.css": "./src/overlay/overlay.css"
+    "./overlay/overlay.css": "./src/overlay/overlay.css",
+    "./host": "./src/host/index.ts",
+    "./host/shellStyles.css": "./src/host/shellStyles.css",
+    "./i18n": "./src/i18n/index.ts"
   },
   "scripts": {
     "dev:spike": "vite --config spike/wysiwyg/vite.config.ts",
@@ -26,6 +29,7 @@
     "typecheck": "tsc --noEmit"
   },
   "peerDependencies": {
+    "@bpmn-io/form-js-viewer": "^1.21.2",
     "preact": "^10.19.3"
   },
   "devDependencies": {
