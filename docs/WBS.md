@@ -284,7 +284,7 @@ node, vitest, vite, playwright
 - category: development
 - domain: library
 - model: opus
-- status: [ ]
+- status: [dd]
 - priority: critical
 - assignee: -
 - schedule: 2026-04-25 ~ 2026-04-27
