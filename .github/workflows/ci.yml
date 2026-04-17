@@ -21,3 +21,19 @@ jobs:
           node-version: 20
       - name: Run no-css-modules lint
         run: node scripts/ci/no-css-modules.mjs
+
+  test-designer-core:
+    name: test · designer-core (unit + typecheck)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Typecheck
+        run: npm --prefix packages/designer-core run typecheck
+      - name: Unit tests (includes browserEnvContract ADR-0001 §3 D7 regression)
+        run: npm --prefix packages/designer-core run test:unit

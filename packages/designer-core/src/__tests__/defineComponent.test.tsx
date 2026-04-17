@@ -4,6 +4,7 @@ import type { JSX } from 'preact';
 import type { PureRenderProps, ComponentDefinition, FieldSchema } from '../types';
 
 import { defineComponent } from '../defineComponent';
+import { assertBrowserEnvContract } from '../testing/browserEnvContract';
 
 // ---------------------------------------------------------------------------
 // Shared minimal def
@@ -221,23 +222,17 @@ describe('defineComponent', () => {
   });
 
   // -------------------------------------------------------------------------
-  // Runtime-compatibility regression: defineComponent must not reference
-  // `process` directly in module scope. A vanilla browser evaluation (no
-  // bundler replace of `process.env.NODE_ENV`) would otherwise throw
-  // ReferenceError at import time.
-  //
-  // See `isProductionEnv()` in defineComponent.ts for the fix.
+  // ADR-0001 §3 D7: defineComponent must not reference `process` directly in
+  // module scope. Delegates to the shared browserEnvContract helper so every
+  // designer-* package verifies the same contract identically.
   // -------------------------------------------------------------------------
-  it('does not throw when `process` is undefined (vanilla browser simulation)', () => {
-    const globals = globalThis as unknown as { process?: unknown };
-    const savedProcess = globals.process;
+  it('satisfies the browser-env contract (ADR-0001 §3 D7)', () => {
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-
     try {
-      delete globals.process;
-      expect(() => defineComponent(makeMinimalDef())).not.toThrow();
+      expect(() =>
+        assertBrowserEnvContract(() => defineComponent(makeMinimalDef())),
+      ).not.toThrow();
     } finally {
-      globals.process = savedProcess;
       warnSpy.mockRestore();
     }
   });

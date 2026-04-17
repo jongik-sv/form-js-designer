@@ -7,7 +7,8 @@
   "main": "src/index.ts",
   "types": "src/index.ts",
   "exports": {
-    ".": "./src/index.ts"
+    ".": "./src/index.ts",
+    "./testing/browserEnvContract": "./src/testing/browserEnvContract.ts"
   },
   "scripts": {
     "dev:spike": "vite --config spike/wysiwyg/vite.config.ts",
