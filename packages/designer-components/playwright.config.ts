@@ -12,6 +12,7 @@ export default defineConfig({
     '**/*.parity.spec.ts',
     '**/*.golden.spec.ts',
     '**/*.computed-style.spec.ts',
+    '**/*.a11y.spec.ts',
   ],
   outputDir: './test/artifacts/test-results',
   snapshotDir: './test/artifacts/snapshots',

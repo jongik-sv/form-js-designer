@@ -11,13 +11,15 @@
 import { CardComponent } from './card/index';
 import { StackComponent } from './stack/index';
 import { ButtonComponent } from './button/index';
+import { TabsComponent } from './tabs/Tabs';
+import { ModalComponent } from './modal/Modal';
 
 /** form-js didi 컨테이너가 주입하는 FormFieldRegistry 최소 인터페이스 */
 interface FormFieldRegistry {
   register: (type: string, componentDef: unknown) => void;
 }
 
-const COMPONENTS = [CardComponent, StackComponent, ButtonComponent] as const;
+const COMPONENTS = [CardComponent, StackComponent, ButtonComponent, TabsComponent, ModalComponent] as const;
 
 /**
  * Registration service — form-js didi 컨테이너가 FormFieldRegistry를 주입한다.

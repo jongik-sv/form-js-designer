@@ -12,6 +12,8 @@ import { DesignerComponentsModule } from '../src/module';
 import { CardComponent } from '../src/card/index';
 import { StackComponent } from '../src/stack/index';
 import { ButtonComponent } from '../src/button/index';
+import { TabsComponent } from '../src/tabs/Tabs';
+import { ModalComponent } from '../src/modal/Modal';
 import { cardPropsSchema } from '../src/card/propsSchema';
 import { stackPropsSchema } from '../src/stack/propsSchema';
 import { buttonPropsSchema } from '../src/button/propsSchema';
@@ -93,8 +95,22 @@ describe('DesignerComponentsModule registration', () => {
     );
   });
 
-  it('registers exactly 3 components', () => {
-    expect(registry.register).toHaveBeenCalledTimes(3);
+  it('registers "tabs" component', () => {
+    expect(registry.register).toHaveBeenCalledWith(
+      'tabs',
+      expect.objectContaining({ component: expect.any(Function) }),
+    );
+  });
+
+  it('registers "modal" component', () => {
+    expect(registry.register).toHaveBeenCalledWith(
+      'modal',
+      expect.objectContaining({ component: expect.any(Function) }),
+    );
+  });
+
+  it('registers exactly 5 components (card, stack, button, tabs, modal)', () => {
+    expect(registry.register).toHaveBeenCalledTimes(5);
   });
 });
 

@@ -1,0 +1,25 @@
+{
+  "type": "tabs",
+  "name": "designer.components.tabs.name",
+  "group": "container",
+  "propsSchema": {
+    "properties": {
+      "tabs": {
+        "type": "array",
+        "label": "designer.components.tabs.tabs",
+        "default": [{ "label": "Tab 1", "value": "tab1" }]
+      },
+      "defaultValue": {
+        "type": "string",
+        "label": "designer.components.tabs.defaultValue",
+        "default": "tab1"
+      },
+      "orientation": {
+        "type": "enum",
+        "label": "designer.components.tabs.orientation",
+        "default": "horizontal",
+        "enum": ["horizontal", "vertical"]
+      }
+    }
+  }
+}
