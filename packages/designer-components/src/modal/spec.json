@@ -1,0 +1,35 @@
+{
+  "type": "modal",
+  "name": "designer.components.modal.name",
+  "group": "container",
+  "propsSchema": {
+    "properties": {
+      "title": {
+        "type": "i18n",
+        "label": "designer.components.modal.title",
+        "default": "Modal Title"
+      },
+      "description": {
+        "type": "i18n",
+        "label": "designer.components.modal.description",
+        "default": ""
+      },
+      "triggerLabel": {
+        "type": "i18n",
+        "label": "designer.components.modal.triggerLabel",
+        "default": "Open"
+      },
+      "size": {
+        "type": "enum",
+        "label": "designer.components.modal.size",
+        "default": "md",
+        "enum": ["sm", "md", "lg"]
+      },
+      "portalContainerRef": {
+        "type": "string",
+        "label": "designer.components.modal.portalContainerRef",
+        "default": ""
+      }
+    }
+  }
+}

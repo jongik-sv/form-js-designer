@@ -1,0 +1,69 @@
+@layer components {
+  .dc-card {
+    background-color: #ffffff;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* padding variants */
+  .dc-card--padding-none {
+    padding: 0;
+  }
+
+  .dc-card--padding-sm {
+    padding: 8px;
+  }
+
+  .dc-card--padding-md {
+    padding: 16px;
+  }
+
+  .dc-card--padding-lg {
+    padding: 24px;
+  }
+
+  /* elevation variants */
+  .dc-card--elevation-0 {
+    box-shadow: none;
+  }
+
+  .dc-card--elevation-1 {
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  }
+
+  .dc-card--elevation-2 {
+    box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  }
+
+  .dc-card--elevation-3 {
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  }
+
+  /* header */
+  .dc-card__header {
+    margin: 0 0 12px 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1e293b;
+    line-height: 1.5;
+  }
+
+  /* body */
+  .dc-card__body {
+    width: 100%;
+  }
+
+  /* error state */
+  .dc-card__errors {
+    margin-top: 8px;
+    list-style: none;
+    padding: 0;
+  }
+
+  .dc-card__error-item {
+    color: #ef4444;
+    font-size: 0.875rem;
+  }
+}

@@ -1,0 +1,108 @@
+@layer components {
+  .dc-tabs {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .dc-tabs[data-orientation="vertical"] {
+    flex-direction: row;
+  }
+
+  /* Tab List */
+  .dc-tabs__list {
+    display: flex;
+    flex-direction: row;
+    border-bottom: 2px solid #e2e8f0;
+    background-color: transparent;
+    flex-shrink: 0;
+  }
+
+  .dc-tabs[data-orientation="vertical"] .dc-tabs__list {
+    flex-direction: column;
+    border-bottom: none;
+    border-right: 2px solid #e2e8f0;
+    min-width: 160px;
+  }
+
+  /* Tab Trigger */
+  .dc-tabs__trigger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 16px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #64748b;
+    background-color: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    transition: color 150ms ease, border-color 150ms ease;
+    white-space: nowrap;
+    outline: none;
+    margin-bottom: -2px;
+  }
+
+  .dc-tabs__trigger:hover {
+    color: #334155;
+    background-color: #f8fafc;
+  }
+
+  .dc-tabs__trigger:focus-visible {
+    outline: 2px solid #3b82f6;
+    outline-offset: -1px;
+    border-radius: 4px;
+  }
+
+  .dc-tabs__trigger[data-state="active"] {
+    color: #1e40af;
+    border-bottom-color: #3b82f6;
+    font-weight: 600;
+  }
+
+  .dc-tabs__trigger[data-disabled] {
+    color: #cbd5e1;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  .dc-tabs[data-orientation="vertical"] .dc-tabs__trigger {
+    justify-content: flex-start;
+    border-bottom: none;
+    border-right: 2px solid transparent;
+    margin-bottom: 0;
+    margin-right: -2px;
+    padding: 10px 16px;
+    border-radius: 4px 0 0 4px;
+  }
+
+  .dc-tabs[data-orientation="vertical"] .dc-tabs__trigger[data-state="active"] {
+    border-bottom-color: transparent;
+    border-right-color: #3b82f6;
+  }
+
+  /* Tab Content */
+  .dc-tabs__content {
+    padding: 16px;
+    flex: 1;
+    outline: none;
+  }
+
+  .dc-tabs__content:focus-visible {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  .dc-tabs__content[data-state="inactive"] {
+    display: none;
+  }
+
+  /* Reduced motion */
+  @media (prefers-reduced-motion: reduce) {
+    .dc-tabs__trigger {
+      transition: none;
+    }
+  }
+}

@@ -310,7 +310,7 @@ node, vitest, vite, playwright
 - category: development
 - domain: frontend
 - model: sonnet
-- status: [ ]
+- status: [xx]
 - priority: critical
 - assignee: -
 - schedule: 2026-04-27 ~ 2026-05-04
@@ -332,7 +332,7 @@ node, vitest, vite, playwright
 - category: development
 - domain: frontend
 - model: opus
-- status: [ ]
+- status: [xx]
 - priority: critical
 - assignee: -
 - schedule: 2026-05-04 ~ 2026-05-11

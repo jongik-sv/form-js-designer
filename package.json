@@ -9,8 +9,9 @@
   "scripts": {
     "build": "echo \"TODO: per-package build\" && exit 0",
     "test": "echo \"TODO: vitest\" && exit 0",
-    "lint": "npm run lint:no-css-modules",
-    "lint:no-css-modules": "node scripts/ci/no-css-modules.mjs"
+    "lint": "npm run lint:no-css-modules && npm run lint:single-preact",
+    "lint:no-css-modules": "node scripts/ci/no-css-modules.mjs",
+    "lint:single-preact": "node scripts/ci/assert-single-preact.mjs"
   },
   "dependencies": {
     "@bpmn-io/form-js-editor": "^1.21.2",
@@ -18,6 +19,9 @@
   },
   "devDependencies": {
     "typescript": "^5.6.0"
+  },
+  "overrides": {
+    "preact": "10.29.x"
   },
   "engines": {
     "node": ">=20"
