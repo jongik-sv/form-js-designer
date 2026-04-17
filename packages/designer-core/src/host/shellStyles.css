@@ -1,0 +1,35 @@
+/**
+ * shellStyles.css — TSK-03-03
+ *
+ * #fjs-designer-shell layout — ADR-0001 §3 D1/D3/D5
+ * spike/wysiwyg/src/layers.css:26-43 패턴 이관.
+ * @layer designer-shell 네임스페이스 사용.
+ */
+
+@layer designer-shell {
+  #fjs-designer-shell {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+
+  #fjs-designer-shell #form-root,
+  #fjs-designer-shell #overlay-root {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* form-root는 stacking context 하단 */
+  #fjs-designer-shell #form-root {
+    z-index: 0;
+  }
+
+  /* overlay-root는 form-root 위에 pointer-events 투명하게 */
+  #fjs-designer-shell #overlay-root {
+    z-index: 1;
+    pointer-events: none;
+  }
+}

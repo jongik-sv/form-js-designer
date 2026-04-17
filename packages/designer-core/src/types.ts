@@ -27,10 +27,17 @@ export interface PropsSchema {
   properties: Record<string, {
     type: 'string' | 'number' | 'boolean' | 'enum' | 'spacing' | 'color' | 'expression' | 'i18n';
     label?: string;
+    description?: string;
     default?: unknown;
     enum?: readonly string[];
     min?: number;
     max?: number;
+    /** 패널 그룹 이름 (TRD §4.3 "메타: group") */
+    group?: string;
+    /** 조건부 표시 FEEL 표현식 (TRD §4.3 "메타: showIf(FEEL)") */
+    showIf?: string;
+    /** 그룹 초기 접힘 상태 (TRD §4.3 "메타: collapsed") */
+    collapsed?: boolean;
   }>;
 }
 

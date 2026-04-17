@@ -8,3 +8,38 @@ export type {
   ComponentDefinition,
   FormJsFieldComponent,
 } from './types';
+
+// OverlayLayer — TSK-03-01 (ADR-0001 §3 D3 WYSIWYG overlay primitives)
+export { OverlayLayer } from './overlay/OverlayLayer';
+export type { OverlayLayerProps } from './overlay/OverlayLayer';
+export { assertSharedOrigin, SharedOriginViolation } from './overlay/assertSharedOrigin';
+export type { SharedOriginMeasured } from './overlay/assertSharedOrigin';
+
+// Panel module — TSK-03-02 (PRD §4 AC #7)
+export { propsSchemaToPanel } from './panel/propsSchemaToPanel';
+export { PanelWidgetRegistry, createDefaultRegistry } from './panel/PanelWidgetRegistry';
+export { validatePropsSchema } from './panel/validatePropsSchema';
+export type {
+  PanelEntry,
+  PanelGroup,
+  PanelWidget,
+  PanelWidgetCtx,
+  WidgetMeta,
+  WidgetValidationResult,
+} from './panel/types';
+export { UnknownWidgetError, DuplicateWidgetError } from './panel/types';
+
+// Host module — TSK-03-03 (PRD §4 AC #4, #4-1)
+export { ViewerHost, EditorHost, useViewportWidth } from './host';
+export type {
+  ViewerHostProps,
+  EditorHostProps,
+  HostOnChangeEvent,
+  HostViewportInfo,
+  FormSchema,
+  FormRenderContextSlots,
+} from './host';
+
+// i18n module — TSK-03-03 (PRD §4 AC #5)
+export { LocaleProvider, useT, useLocale, createFallbackT } from './i18n/LocaleProvider';
+export type { LocaleT, LocaleContextValue, LocaleKey } from './i18n/localeTypes';
