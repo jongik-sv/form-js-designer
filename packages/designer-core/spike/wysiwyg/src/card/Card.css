@@ -1,0 +1,25 @@
+@layer components {
+  .designer-card {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    box-sizing: border-box;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    color: #111827;
+  }
+  .designer-card--pad-none { padding: 0; }
+  .designer-card--pad-sm   { padding: 8px; }
+  .designer-card--pad-md   { padding: 16px; }
+  .designer-card--pad-lg   { padding: 24px; }
+  .designer-card--elev-0 { box-shadow: none; }
+  .designer-card--elev-1 { box-shadow: 0 1px 2px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.10); }
+  .designer-card--elev-2 { box-shadow: 0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.06); }
+  .designer-card__header {
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #f3f4f6;
+  }
+  .designer-card__title { font-size: 16px; font-weight: 600; line-height: 1.4; }
+  .designer-card__body  { font-size: 14px; line-height: 1.5; }
+  .designer-card__text  { margin: 0; }
+}

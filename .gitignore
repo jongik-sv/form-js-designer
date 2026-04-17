@@ -5,6 +5,11 @@ coverage/
 .turbo/
 .cache/
 
+# Playwright artifacts
+test-results/
+playwright-report/
+packages/*/spike/*/tests/artifacts/
+
 .DS_Store
 *.log
 *.tsbuildinfo

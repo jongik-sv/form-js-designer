@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <title>form-js-designer spike</title>
+  <style>
+    :root { color-scheme: light; }
+    html, body { margin: 0; padding: 0; background: #fafafa; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; color: #222; }
+    main { max-width: 720px; margin: 48px auto; padding: 32px; background: #ffffff; border: 1px solid #e5e5e5; border-radius: 8px; }
+    h1 { margin-top: 0; font-size: 22px; }
+    p { line-height: 1.5; }
+    ul { padding-left: 20px; }
+    a { color: #2563eb; text-decoration: none; font-weight: 500; }
+    a:hover { text-decoration: underline; }
+    code { background: #f3f4f6; padding: 2px 6px; border-radius: 4px; font-size: 0.9em; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>form-js-designer spike &mdash; ADR-0001</h1>
+    <p>Phase 0 spike validating the Single Render Pipeline &amp; Designer Overlay architecture. form-js renders the form; a Preact overlay draws designer chrome without mutating form-js DOM.</p>
+    <ul>
+      <li><a href="./viewer.html">viewer.html</a> &mdash; form-js viewer only (no overlay).</li>
+      <li><a href="./editor.html">editor.html</a> &mdash; form-js viewer + designer overlay layer.</li>
+    </ul>
+    <p>Dev: <code>npm --prefix packages/designer-core run dev:spike</code></p>
+  </main>
+</body>
+</html>

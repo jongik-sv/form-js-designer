@@ -1,0 +1,42 @@
+{
+  "name": "@form-js-designer/designer-core",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Designer component definition API + WYSIWYG primitives",
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "dev:spike": "vite --config spike/wysiwyg/vite.config.ts",
+    "build:spike": "vite build --config spike/wysiwyg/vite.config.ts",
+    "preview:spike": "vite preview --config spike/wysiwyg/vite.config.ts",
+    "test:unit": "vitest run",
+    "test:unit:watch": "vitest",
+    "test:e2e": "playwright test --config spike/wysiwyg/playwright.config.ts",
+    "test:e2e:update": "playwright test --config spike/wysiwyg/playwright.config.ts --update-snapshots",
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "preact": "^10.19.3"
+  },
+  "devDependencies": {
+    "@bpmn-io/form-js-viewer": "^1.21.2",
+    "@playwright/test": "^1.47.2",
+    "@preact/preset-vite": "^2.9.1",
+    "@testing-library/preact": "^3.2.4",
+    "@types/node": "^20.16.10",
+    "@types/pixelmatch": "^5.2.6",
+    "@types/pngjs": "^6.0.5",
+    "happy-dom": "^15.7.4",
+    "jsdom": "^25.0.1",
+    "pixelmatch": "^6.0.0",
+    "pngjs": "^7.0.0",
+    "preact": "^10.19.3",
+    "typescript": "^5.6.0",
+    "vite": "^5.4.8",
+    "vitest": "^2.1.2"
+  }
+}

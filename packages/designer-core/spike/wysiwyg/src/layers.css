@@ -1,0 +1,44 @@
+@import "@bpmn-io/form-js-viewer/dist/assets/form-js.css";
+
+@layer reset, layout, components, designer-overlay;
+
+@layer layout {
+  html, body { margin: 0; padding: 0; background: #fafafa; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; }
+
+  /* Viewer page: #viewer-root is the centered form container. */
+  #viewer-root {
+    position: relative;
+    width: 1024px;
+    margin: 0 auto;
+    padding: 24px;
+    box-sizing: border-box;
+    background: #ffffff;
+  }
+
+  /*
+   * Editor page: #editor-shell is the centered stacking container so that
+   * #form-root and #overlay-root share the SAME origin and size.
+   * (Previously #overlay-root covered the whole viewport while #form-root
+   *  was centered, so selection boxes appeared shifted on viewports wider
+   *  than 1024 px. Playwright's 1024-px viewport hid the bug by coincidence.)
+   */
+  #editor-shell {
+    position: relative;
+    width: 1024px;
+    margin: 0 auto;
+  }
+  #form-root {
+    position: relative;
+    width: 100%;
+    padding: 24px;
+    box-sizing: border-box;
+    background: #ffffff;
+  }
+  #overlay-root {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 10;
+  }
+}
