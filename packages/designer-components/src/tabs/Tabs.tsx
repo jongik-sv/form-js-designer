@@ -25,7 +25,7 @@ function validateAndSanitize(field: TabsSchema): {
 
   // Validate tab labels
   tabs.forEach((tab, i) => {
-    if (!tab.label || tab.label === '') {
+    if (!tab.label) {
       console.warn(`[Tabs] tabs[${i}].label is empty — falling back to value "${tab.value}"`);
     }
   });

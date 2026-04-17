@@ -1,0 +1,44 @@
+/**
+ * Tabs disabled fixture entry — disabled 탭 포함 렌더
+ */
+import { h, render } from 'preact';
+import { TabsComponent } from '../../src/tabs/Tabs';
+import type { TabsSchema } from '../../src/tabs/propsSchema';
+import type { PureRenderProps } from '@form-js-designer/designer-core';
+
+const baseField: TabsSchema = {
+  id: 'tabs-disabled-fixture',
+  type: 'tabs',
+  tabs: [
+    { label: 'Tab 1', value: 'tab1' },
+    { label: 'Tab 2 (Disabled)', value: 'tab2' },
+    { label: 'Tab 3', value: 'tab3' },
+  ],
+  defaultValue: 'tab1',
+  orientation: 'horizontal',
+};
+
+const baseProps: PureRenderProps<TabsSchema> = {
+  field: baseField,
+  value: null,
+  domId: 'tabs-disabled-fixture-dom',
+  errors: [],
+  disabled: false,
+  readonly: false,
+};
+
+const Comp = TabsComponent.component;
+
+function ViewerRoot() {
+  return <Comp {...baseProps} domId="tabs-viewer" />;
+}
+
+function EditorRoot() {
+  return <Comp {...baseProps} domId="tabs-editor" />;
+}
+
+const viewerEl = document.getElementById('viewer-root');
+const editorEl = document.getElementById('editor-root');
+
+if (viewerEl) render(<ViewerRoot />, viewerEl);
+if (editorEl) render(<EditorRoot />, editorEl);

@@ -8,7 +8,7 @@
     font-size: 0.875rem;
     font-weight: 500;
     color: #ffffff;
-    background-color: #3b82f6;
+    background-color: #1d4ed8; /* blue-700: contrast ratio 5.44:1 (WCAG AA) */
     border: none;
     border-radius: 6px;
     cursor: pointer;
@@ -17,11 +17,11 @@
   }
 
   .dc-modal__trigger:hover {
-    background-color: #2563eb;
+    background-color: #1e40af; /* blue-800 */
   }
 
   .dc-modal__trigger:focus-visible {
-    outline: 2px solid #3b82f6;
+    outline: 2px solid #1d4ed8;
     outline-offset: 2px;
   }
 

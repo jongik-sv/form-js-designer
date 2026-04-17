@@ -18,7 +18,7 @@ const VALID_SIZES = new Set(['sm', 'md', 'lg']);
  * - ref selector does not match any element
  */
 function resolvePortalContainer(ref?: string): Element | null {
-  if (!ref || ref === '') return null;
+  if (!ref) return null;
   const el = document.querySelector(ref);
   if (!el) {
     console.warn(
@@ -33,7 +33,7 @@ function resolvePortalContainer(ref?: string): Element | null {
  * Validate Modal field props and warn/throw on violations (ADR-0002 D1 조건 2).
  */
 function validateModalField(field: ModalSchema): void {
-  if (!field.title || field.title === '') {
+  if (!field.title) {
     // In dev mode: throw; in prod: warn (aria-label fallback)
     const msg = '[Modal] title is required (ADR-0002 D1 condition 2). Provide a non-empty title or aria-label.';
     if (typeof process !== 'undefined' && process.env['NODE_ENV'] === 'production') {
@@ -50,10 +50,6 @@ function validateModalField(field: ModalSchema): void {
 function sanitizeSize(size?: string): 'sm' | 'md' | 'lg' {
   if (size && VALID_SIZES.has(size)) return size as 'sm' | 'md' | 'lg';
   return 'md';
-}
-
-interface ModalRenderState {
-  isOpen: boolean;
 }
 
 function ModalRender(props: PureRenderProps<ModalSchema>) {
@@ -75,12 +71,6 @@ function ModalRender(props: PureRenderProps<ModalSchema>) {
   // Resolve portal container
   const portalContainer = resolvePortalContainer(field.portalContainerRef);
 
-  const handleOpenChange = (open: boolean) => {
-    if (controlledOpen === undefined) {
-      setIsOpen(open);
-    }
-  };
-
   const effectiveOpen = controlledOpen !== undefined ? controlledOpen : isOpen;
 
   return (
@@ -89,7 +79,10 @@ function ModalRender(props: PureRenderProps<ModalSchema>) {
       data-component="modal"
       id={props.domId}
     >
-      <DialogPrimitive.Root open={effectiveOpen} onOpenChange={handleOpenChange}>
+      <DialogPrimitive.Root
+        open={effectiveOpen}
+        onOpenChange={(open) => { if (controlledOpen === undefined) setIsOpen(open); }}
+      >
         <DialogPrimitive.Trigger asChild>
           <button
             class="dc-modal__trigger"
