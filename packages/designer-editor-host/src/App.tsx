@@ -12,6 +12,10 @@ import { useLayoutEffect, useRef } from 'preact/hooks';
 import { FormEditor } from '@bpmn-io/form-js-editor';
 import { PaletteModule } from './modules/PaletteModule';
 import { OutlineModule } from './modules/OutlineModule';
+import '@bpmn-io/form-js-editor/dist/assets/form-js-editor-base.css';
+import '@bpmn-io/form-js-editor/dist/assets/form-js-editor.css';
+import '@bpmn-io/form-js-editor/dist/assets/properties-panel.css';
+import '@bpmn-io/form-js-editor/dist/assets/draggle.css';
 import './app.css';
 
 const DEFAULT_SCHEMA = {
