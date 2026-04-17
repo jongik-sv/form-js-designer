@@ -1,0 +1,14 @@
+@zag-js/core MIT
+@zag-js/dialog MIT
+@zag-js/tabs MIT
+@zag-js/popover MIT
+@zag-js/anatomy MIT
+@zag-js/aria-hidden MIT
+@zag-js/dismissable MIT
+@zag-js/dom-query MIT
+@zag-js/focus-trap MIT
+@zag-js/interact-outside MIT
+@zag-js/popper MIT
+@zag-js/remove-scroll MIT
+@zag-js/types MIT
+@zag-js/utils MIT

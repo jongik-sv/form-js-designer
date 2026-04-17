@@ -1,0 +1,136 @@
+{
+  "startedAt": "2026-04-17T11:39:12.326Z",
+  "baseUrl": "http://localhost:5223",
+  "scenarios": {
+    "dialog": {
+      "steps": [
+        {
+          "name": "open_click",
+          "contentFound": true
+        },
+        {
+          "name": "aria_attrs",
+          "aria": {
+            "role": "dialog",
+            "ariaModal": "true",
+            "ariaLabelledby": "P0-0",
+            "ariaDescribedby": "P0-1",
+            "labelledbyResolves": true,
+            "describedbyResolves": true
+          }
+        },
+        {
+          "name": "initial_focus",
+          "initialFocus": {
+            "testId": "dialog-input",
+            "tag": "INPUT"
+          }
+        },
+        {
+          "name": "scroll_lock",
+          "overflow": "hidden"
+        },
+        {
+          "name": "tab_once",
+          "after": {
+            "testId": "dialog-close",
+            "tag": "BUTTON"
+          }
+        },
+        {
+          "name": "tab_wrap",
+          "after": {
+            "testId": "dialog-input",
+            "tag": "INPUT"
+          }
+        },
+        {
+          "name": "shift_tab",
+          "after": {
+            "testId": "dialog-close",
+            "tag": "BUTTON"
+          }
+        },
+        {
+          "name": "esc_close",
+          "remaining": 0
+        },
+        {
+          "name": "focus_return_esc",
+          "after": {
+            "testId": "dialog-trigger",
+            "tag": "BUTTON"
+          }
+        },
+        {
+          "name": "scroll_release",
+          "overflow": ""
+        },
+        {
+          "name": "reopen",
+          "contentFound": true
+        },
+        {
+          "name": "overlay_close",
+          "remaining": 0
+        },
+        {
+          "name": "focus_return_overlay",
+          "after": {
+            "testId": "dialog-trigger",
+            "tag": "BUTTON"
+          }
+        }
+      ]
+    }
+  },
+  "ariaChecks": {
+    "ContentRendered": {
+      "ok": true,
+      "detail": "Dialog.Content rendered"
+    },
+    "AriaAttrs": {
+      "ok": true,
+      "detail": "{\"role\":\"dialog\",\"ariaModal\":\"true\",\"ariaLabelledby\":\"P0-0\",\"ariaDescribedby\":\"P0-1\",\"labelledbyResolves\":true,\"describedbyResolves\":true}"
+    },
+    "InitialFocus": {
+      "ok": true,
+      "detail": "focused: {\"testId\":\"dialog-input\",\"tag\":\"INPUT\"}"
+    },
+    "ScrollLock": {
+      "ok": true,
+      "detail": "body.overflow = hidden"
+    },
+    "TabTrap": {
+      "ok": true,
+      "detail": "after wrap: {\"testId\":\"dialog-input\",\"tag\":\"INPUT\"}"
+    },
+    "ShiftTabTrap": {
+      "ok": true,
+      "detail": "after shift-tab: {\"testId\":\"dialog-close\",\"tag\":\"BUTTON\"}"
+    },
+    "EscClose": {
+      "ok": true,
+      "detail": "remaining content after ESC: 0"
+    },
+    "FocusReturnEsc": {
+      "ok": true,
+      "detail": "focused after ESC: {\"testId\":\"dialog-trigger\",\"tag\":\"BUTTON\"}"
+    },
+    "ScrollRelease": {
+      "ok": true,
+      "detail": "body.overflow = "
+    },
+    "OverlayClose": {
+      "ok": true,
+      "detail": "remaining content after overlay: 0"
+    },
+    "FocusReturnOverlay": {
+      "ok": true,
+      "detail": "focused after overlay close: {\"testId\":\"dialog-trigger\",\"tag\":\"BUTTON\"}"
+    }
+  },
+  "consoleErrors": [],
+  "pageErrors": [],
+  "finishedAt": "2026-04-17T11:39:13.894Z"
+}

@@ -1,0 +1,34 @@
+{
+  "@axe-core/playwright": {
+    "version": "4.11.1",
+    "license": "MPL-2.0"
+  },
+  "@playwright/test": {
+    "version": "1.59.1",
+    "license": "Apache-2.0"
+  },
+  "@preact/preset-vite": {
+    "version": "2.10.5",
+    "license": "MIT"
+  },
+  "axe-core": {
+    "version": "4.11.3",
+    "license": "MPL-2.0"
+  },
+  "preact": {
+    "version": "10.29.1",
+    "license": "MIT"
+  },
+  "rollup-plugin-visualizer": {
+    "version": "5.14.0",
+    "license": "MIT"
+  },
+  "typescript": {
+    "version": "5.9.3",
+    "license": "Apache-2.0"
+  },
+  "vite": {
+    "version": "5.4.21",
+    "license": "MIT"
+  }
+}

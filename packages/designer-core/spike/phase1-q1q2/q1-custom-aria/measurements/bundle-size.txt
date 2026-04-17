@@ -1,0 +1,13 @@
+Full bundle (dist/assets/index-*.js):
+  raw:  16,994 bytes  (16.60 KB)
+  gzip:  7,225 bytes  (7.06 KB)
+
+Preact-only baseline (dist-baseline/baseline.js):
+  raw:  10,804 bytes  (10.55 KB)
+  gzip:  4,603 bytes  (4.50 KB)
+
+Delta (Dialog + Demo + main.tsx vs baseline):
+  raw:   5,573 bytes  (5.44 KB)
+  gzip:  2,283 bytes  (2.23 KB)
+
+Source of truth: measurements/bundle-increment.json

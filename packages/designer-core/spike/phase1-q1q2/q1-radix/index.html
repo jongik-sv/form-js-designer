@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Q1 Radix Spike</title>
+    <style>
+      body { font-family: -apple-system, 'Noto Sans KR', sans-serif; padding: 24px; }
+      button { padding: 8px 16px; cursor: pointer; }
+      [data-radix-popper-content-wrapper] { z-index: 10; }
+      .dialog-overlay {
+        position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 40;
+      }
+      .dialog-content {
+        position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%);
+        background: white; padding: 24px; border-radius: 8px; min-width: 320px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2); z-index: 50;
+      }
+      .popover-content {
+        background: #fff8e1; padding: 12px 16px; border: 1px solid #f1c40f;
+        border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      }
+      .tabs-list { display: flex; gap: 4px; border-bottom: 1px solid #ddd; }
+      .tabs-trigger {
+        padding: 8px 16px; border: none; background: transparent; cursor: pointer;
+      }
+      .tabs-trigger { color: #222; }
+      .tabs-trigger[data-state="active"] { border-bottom: 2px solid #1d4ed8; color: #1d4ed8; }
+      .popover-content { color: #5b3a00; }
+      .tabs-content { padding: 16px 0; }
+      section { margin-bottom: 32px; }
+      h2 { margin-bottom: 8px; }
+    </style>
+  </head>
+  <body>
+    <h1>Q1 후보 A — Radix UI + preact/compat</h1>
+    <div id="app"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

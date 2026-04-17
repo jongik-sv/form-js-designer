@@ -1,0 +1,5 @@
+file	raw	gzip
+index-DnGSMgTF.js	133971	47278
+TOTAL	133971	47278
+
+TOTAL gzip KB: 46.17

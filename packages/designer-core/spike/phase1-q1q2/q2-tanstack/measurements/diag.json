@@ -1,0 +1,6 @@
+{
+  "spikeFps": 60.41694330105232,
+  "spikeDone": true,
+  "hasTestId": true,
+  "bodyPreview": "\n    <div id=\"root\"><div class=\"demo-root\"><h1>Q2 TanStack Spike — 10,000 rows</h1><div class=\"toolbar\"><label>이름 필터: <input type=\"text\" placeholder=\"예: 김\"></label><span class=\"meta\">행 10,000 / 10,000</span></div><div data-testid=\"table-wrap\" class=\"table-wrap\"><div class=\"thead\"><div class=\"tr th-row\"><div data-colspan=\"4\" class=\"th group\" style=\"width: 520px;\">개인정보</div><div data-colspan=\"2\" class=\"th group\" style=\"width: 260px;\">지표</div></div><div class=\"tr th-row\"><div data-colspan=\"2\" class"
+}

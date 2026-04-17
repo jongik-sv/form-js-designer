@@ -1,0 +1,33 @@
+# Q1 Candidate E — Custom WAI-ARIA implementation line count
+#
+# NOTE: This is not a "workaround"; there is no library to shim against.
+# This is the BODY LINE COUNT of the Dialog implementation itself.
+# Use these numbers to compute Phase 1 effort if full 3-primitive custom path is taken.
+#
+# Measured by: `awk` excluding blank + comment-only lines.
+
+# File                              total  code   blank  comment
+src/custom/Dialog.tsx               169    152    16     1
+src/Demo.tsx                        40     32     6      2   # demo wiring (not Dialog body)
+
+# Dialog impl body (measured)
+DIALOG_BODY_CODE_LINES = 152
+
+# Tabs / Popover extrapolation (NOT MEASURED — estimated from WAI-ARIA complexity factor)
+#   Ratio factors (relative to Dialog=1.0, based on WAI-ARIA spec scope):
+#     Tabs      ≈ 0.7  — roving tabindex, Arrow Left/Right/Home/End, aria-selected sync, tablist/tab/tabpanel wiring
+#     Popover   ≈ 1.2  — anchored position math (ResizeObserver + getBoundingClientRect),
+#                        outside-click, ESC, optional focus trap (non-modal), return focus,
+#                        collision flip logic if requested
+#   Tabs      ≈ 152 * 0.7 ≈ 106 code lines (estimate)
+#   Popover   ≈ 152 * 1.2 ≈ 182 code lines (estimate)
+#   3-primitive total   ≈ 152 + 106 + 182 = 440 code lines (estimate)
+#
+# Kill criterion reinterpretation for Candidate E:
+#   Original criterion "workaround >= 50 lines/component → fail" does not apply
+#   cleanly here because the ENTIRE component body IS the implementation.
+#   Instead, we note:
+#     - Dialog alone is 152 lines (~3× the 50-line workaround threshold other candidates had)
+#     - 3-primitive extrapolated total ~440 lines of net-new production code
+#     - + future maintenance burden: a11y regression tests, screen reader matrix,
+#       RTL, ARIA 1.3 migration, browser edge cases (iOS VoiceOver focus rings etc.)

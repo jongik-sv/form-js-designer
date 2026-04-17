@@ -1,0 +1,26 @@
+vite.config.ts resolve.alias: 7
+resolve: {
+    alias: {
+      react: 'preact/compat',
+      'react-dom/test-utils': 'preact/test-utils',
+      'react-dom': 'preact/compat',
+      'react/jsx-runtime': 'preact/jsx-runtime',
+    },
+
+---
+vite.config.ts esbuild.jsxImportSource: 4
+esbuild: {
+    jsx: 'automatic',
+    jsxImportSource: 'preact',
+  },
+
+---
+tsconfig paths: 5
+"paths": {
+      "react": ["./node_modules/preact/compat/"],
+      "react-dom": ["./node_modules/preact/compat/"],
+      "react/jsx-runtime": ["./node_modules/preact/jsx-runtime"]
+    }
+---
+TOTAL: 16
+Per-component (Dialog/Tabs/Popover): 0 lines of component-specific shim. All workaround is shared config.

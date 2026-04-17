@@ -118,31 +118,12 @@ packages/
 
 ### 1. shadcn급 컴포넌트 라이브러리 선정
 
-**제약 인지**: form-js는 **Preact** 기반. shadcn/ui는 React 전용 → 직접 사용 불가.
-해결 옵션 두 가지:
-
-- **(A) Preact 유지 + Headless 라이브러리 조합** *(권장: form-js 통합 비용 최소)*
-  - 베이스: **Radix UI Primitives** (`preact/compat` alias로 동작) — 접근성·헤드리스, MIT
-  - 스타일: **Tailwind CSS + CVA(class-variance-authority)** — shadcn 스타일 패턴 그대로 차용
-  - 또는 **Ark UI**(Zag.js 기반) — framework-agnostic 상태머신, Preact 어댑터 가능
-- **(B) `designer-runtime`만 React로 분리** — shadcn/ui를 그대로 사용
-  - form-js-editor는 Preact 유지, 운영 런타임은 별도 React SDK
-  - 장점: shadcn 생태계 통째로 활용 / 단점: 두 렌더 트리 유지 부담
-
-**테이블**(요구사항 핵심): 라이브러리 선택과 무관하게 **TanStack Table v8** (헤드리스, 무료/MIT)
-- 셀 편집(`editing` plugin / 자체 구현 패턴 공식 문서 제공)
-- 필터(`columnFilters` 내장 + faceted/global)
-- **멀티라인/그룹 헤더** (`columns` 트리 구조 → 자동 colspan)
-- **컬럼 이동**(`columnOrder` 상태 + `dnd-kit` 결합 — 공식 예제 존재)
-- 가상화: `@tanstack/react-virtual`
-- AI 친화도: 헤드리스 + 선언형 API, 컬럼 정의가 JSON-직렬화 가능
-
-**대안 표 라이브러리**(보조)
-- **AG Grid Community** — 강력하지만 Enterprise 기능(피벗·트리·그룹) 유료. 무료 범위로는 TanStack과 비슷.
-- **Glide Data Grid** — Excel급 성능, MIT, 셀 편집 내장. Canvas 기반이라 커스터마이징 곡선 있음.
-- **Handsontable Community** — MIT는 v6 이전만, 신버전은 비상업 한정 → **무료 요구 미충족, 제외**.
-
-**최종 추천**: **Radix UI(or Ark UI) + Tailwind/CVA + TanStack Table + dnd-kit** 조합. shadcn 스타일을 Preact에서 그대로 모사하며 전부 무료(MIT).
+> **⚠ 본 서브섹션은 Phase 1 §2 spike 로 재정비됨 (2026-04-17)**. 아래 초기 탐색 (옵션 A/B 이진 비교, Radix vs Ark UI, 대안 표 라이브러리 비교) 은 **역사적 탐색 기록**으로만 의미를 가지며, **현행 결정은 `docs/TRD.md §3` + `docs/phase-1-plan.md §2` 참조**.
+>
+> **확정 요약 (2026-04-17)**:
+> - **UI 프리미티브**: Radix UI + `preact/compat` 본체 (조건부 채택 — preact overrides · Portal.container `<main>` 주입 · 버전 업데이트 시 parity 재실행) / Zag.js 저수준 + 자체 Preact 어댑터 fallback. 5 후보 (Radix · Zag+자체 · Ariakit · Headless UI · 자작) 동일 게이트 실측: gzip · axe · pageerror · workaround LOC. Ariakit 탈락 (pageerror 25건), Headless UI 3순위 (46.17 KB 초과). 자작(E) 는 Dialog 한정 실측 진행 중, TRD 에서는 extrapolated fallback only 표기. 수치 상세: TRD §13.1.
+> - **테이블**: TanStack Table v8 + TanStack Virtual + dnd-kit 확정 — 1만 행 평균 FPS 59.99 (합격선 55), 멀티헤더 3단계 · dnd-kit 컬럼 이동 · preact/compat hooks 호환 전부 통과. **PD1-A 자동 확정** — ADR-0001 D1/D6 "단일 컴포넌트 DOM · 픽셀 파리티" 전제 유지, canvas 예외 조항 불필요. Glide Data Grid 폴백 경로 미사용.
+> - **결정서**: `docs/adr/0002-ui-primitives.md` (작성 중 · 자작 E Dialog 실측 완료 후 머지) · `docs/adr/0003-table-library.md` (작성 중).
 
 **AI 친화 요건 충족 방법**
 - 모든 컴포넌트에 **MDX/JSON spec** 동봉 (`spec.json` — props/슬롯/예시)
@@ -611,6 +592,8 @@ designer-cli check-prod-safety <file>    # 배포 전 위험 액션 점검
 
 > **최종 결정**: form-js는 그대로 사용. **bpmn.io 워터마크는 노출하여 의무 충족.**
 > 추가되는 모든 새 의존성은 permissive(MIT/Apache-2.0/ISC/BSD)로 한정.
+>
+> **UI 라이브러리·테이블 선택 갱신 (Phase 1 §2 spike, 2026-04-17)**: 아래 `#### UI 라이브러리` / `#### 테이블` 서브섹션의 후보 나열은 역사적 의존성 후보·라이선스 팩트 정리용이다. 실제 채택·탈락 여부와 채택 조건은 본 문서 위쪽 §1 스텁 + **`docs/TRD.md §3`** 에서 확정본을 읽어야 한다.
 
 ### 핵심 결정: form-js 유지 + 워터마크 노출
 
@@ -819,3 +802,43 @@ form-js/                           # 기존 form-js 모노레포 그대로 사�
 - form-js 재사용 → **개발량 절감**, 검증된 viewer/editor 골격 활용
 - **유일한 제약**: 워터마크 노출 (디자인 시스템에 자연스럽게 통합 필요)
 - 신규 의존성은 모두 permissive — 라이선스 사고 차단
+
+---
+
+## 차후 계획: JSON 한 방 렌더 스킬 (2026-04-17 논의)
+
+> 프로젝트 본체 완성 후 부가 스킬로 추가. 임의의 폼 JSON 파일을 디자이너 없이 **브라우저에 바로 렌더**해서 확인·공유하는 경량 프리뷰 채널.
+
+### 배경
+- 디자이너 내부에는 에디터 옆 Live Preview 패널이 포함될 예정 (Phase 5)
+- 그와 **역할이 겹치지 않게** "designer 없이 JSON만으로 브라우저를 띄우는" 독립 스킬로 포지셔닝
+- 쓰임새: QA·검증·PR 리뷰·버그 재현·디자이너 없이 현업 공유
+
+### 스킬 형상 (초안)
+- 진입: `/preview-schema <path>` 또는 클립보드/STDIN JSON
+- 동작:
+  1. 입력 JSON을 AJV + 스키마 버전 마이그레이터로 검증·정규화
+  2. `@bpmn-io/form-js-viewer` + `designer-runtime` 만 로드하는 **최소 HTML**을 temp 디렉터리에 생성
+  3. 로컬 정적 서버(or `file://`)로 기본 브라우저 오픈 — headless 아님, 실제 브라우저 가시 확인
+  4. Playwright visible 모드로 E2E 자동 검증(옵션 플래그)
+- 옵션:
+  - `--schema-only` : 뷰어만
+  - `--with-data <file>` : 프리필 데이터 같이 주입
+  - `--env=prod|stage` : 운영 토큰·로케일 프로파일 로드
+  - `--png` : 스크린샷만 저장하고 종료
+
+### 설계 원칙
+- **디자이너 의존 없음** — 에디터 패키지/에디터 설정 전혀 로드하지 않음 (번들/보안 경계 분리)
+- **운영 런타임 동일성 보장** — 프리뷰가 실제 운영과 같은 `designer-runtime` 경로 타기 → "여기서 되던 게 운영서 깨짐" 회귀 방지
+- **워터마크 노출 유지** — form-js PoweredBy 그대로 렌더 (라이선스 의무, E2E 가시성 테스트 포함)
+- **실제 브라우저 검증 의무** — headless 측정만으로 완료 보고 금지, 항상 visible 브라우저로 한 번 확인 (memory: E2E 가시 검증 룰)
+- **designer-cli preview 와 관계**: 본 스킬은 `designer-cli preview` 를 얇게 래핑하는 Claude Skill. CLI가 엔진, 스킬은 진입점·자연어 트리거.
+
+### 구현 위치
+- CLI 로직: `packages/designer-cli/src/commands/preview.ts` (기존 §AI 디자인 섹션의 `designer-cli preview` 확장)
+- Skill 파일: `.claude/skills/preview-schema/SKILL.md` + 트리거 규칙(`*.schema.json` + "미리보기/preview/렌더" 키워드)
+- Slash command: `.claude/commands/preview-schema.md`
+
+### 진행 타이밍
+- **Phase 1 본체 (1차 릴리스) 완료 이후**에 별도 작업으로 착수 (스코프 크리프 방지)
+- 단, `designer-cli preview` 골격은 AI 디자인 Phase 2 에 이미 들어있으므로 — 스킬 래핑 자체는 그 위에 ~0.5d 정도로 얹을 수 있음

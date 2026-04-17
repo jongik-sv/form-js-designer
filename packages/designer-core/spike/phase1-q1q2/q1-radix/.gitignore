@@ -1,0 +1,5 @@
+node_modules
+dist
+.vite
+measurements/playwright-report
+measurements/test-results

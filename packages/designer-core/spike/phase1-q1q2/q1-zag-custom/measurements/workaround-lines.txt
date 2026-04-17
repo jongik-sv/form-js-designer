@@ -1,0 +1,35 @@
+Workaround line counts — Q1 Candidate B (Zag.js + custom Preact adapter)
+=========================================================================
+
+== Shared Preact adapter (src/zag-preact/) ==
+src/zag-preact/useMachine.ts       300 lines   (port of @zag-js/react useMachine, 263 lines, + Preact refs/flush rewiring)
+src/zag-preact/normalizeProps.ts     7 lines   (identity normalizer — Preact 10+ accepts React-style props natively)
+src/zag-preact/index.ts              2 lines   (re-exports)
+Subtotal — shared adapter          309 lines
+
+== Per-component Demo boilerplate (src/Demo.tsx) ==
+DialogDemo (machine + connect + getXProps spread + portal)    47 lines
+TabsDemo   (machine + connect + 3 trigger/content per-value)  44 lines
+PopoverDemo (machine + connect + portal + arrow)              34 lines
+Demo.tsx total                                                147 lines (incl. imports + <Demo /> root 22 lines)
+
+== Per-component attributable total (shared adapter // 3 + per-component Demo) ==
+Dialog   : 103 + 47 = 150 lines
+Tabs     : 103 + 44 = 147 lines
+Popover  : 103 + 34 = 137 lines
+
+== Per-component Demo-only (shared adapter not amortized, counted once) ==
+Dialog   : 47 lines   ✅ < 50 kill criterion
+Tabs     : 44 lines   ✅ < 50 kill criterion
+Popover  : 34 lines   ✅ < 50 kill criterion
+
+Interpretation (per task-5 contract § "kill criterion"):
+- If "per-component" = Demo wiring only (shared adapter counted as infrastructure),
+  all three components stay below 50 lines → PASS.
+- If "per-component" includes amortized adapter share, each component sits at 137~150
+  lines → FAIL by a factor of 3. The 300-line adapter is a one-time cost but is
+  unambiguously attributable to this candidate; other candidates (task-2/3/4) have
+  0 custom-adapter lines because they consume React libraries via preact/compat alias.
+- Honest reading: the 309-line adapter is the single biggest cost driver for
+  candidate B, and the "< 50 per component" threshold is only satisfied if we
+  treat the adapter as shared infrastructure. RESULT.md reports both readings.

@@ -1,0 +1,63 @@
+{
+  "startedAt": "2026-04-17T11:33:21.542Z",
+  "baseUrl": "http://localhost:5213",
+  "scenarios": {
+    "dialog": {
+      "steps": [
+        {
+          "name": "open_click",
+          "portalRendered": true
+        },
+        {
+          "name": "open_visible",
+          "visible": true
+        },
+        {
+          "name": "esc_close",
+          "remainingContent": 0
+        },
+        {
+          "name": "focus_return",
+          "activeTestId": "dialog-trigger"
+        },
+        {
+          "name": "interact_outside_close",
+          "remainingContent": 0
+        }
+      ]
+    },
+    "tabs": {
+      "steps": [
+        {
+          "name": "arrow_right_from_a",
+          "activeElement": "tab-b",
+          "tabBSelected": true
+        },
+        {
+          "name": "arrow_right_from_b",
+          "activeElement": "tab-c",
+          "tabCSelected": true
+        },
+        {
+          "name": "arrow_left_from_c",
+          "activeElement": "tab-b"
+        }
+      ]
+    },
+    "popover": {
+      "steps": [
+        {
+          "name": "open_click",
+          "portalRendered": true
+        },
+        {
+          "name": "outside_click_close",
+          "remaining": 0
+        }
+      ]
+    }
+  },
+  "consoleErrors": [],
+  "pageErrors": [],
+  "finishedAt": "2026-04-17T11:33:25.239Z"
+}

@@ -1,0 +1,20 @@
+Q1 Radix Spike — Radix UI + preact/compat workaround line count
+================================================================
+
+Kill criterion: 컴포넌트당 50줄 이상의 shim/patch/monkeypatch 필요 시 탈락 (§2.1, phase-1-plan.md).
+
+실측:
+  vite.config.ts "alias" 블록  : 7 줄  (shared, 3종 컴포넌트 공용)
+  tsconfig.json  "paths" 블록  : 5 줄  (shared, 3종 컴포넌트 공용)
+  src/radix-shim/              : 0 줄 (README 제외)
+  컴포넌트별 shim              : 0 줄 / Dialog
+                                0 줄 / Tabs
+                                0 줄 / Popover
+
+합계 (shared)                  : 12 줄
+합계 (component-scoped)        : 0 줄
+
+분산 규칙: "alias / paths"는 preact/compat 공용 설정 1회로 3종 모두 흡수.
+컴포넌트당 공유분 3분의 1로 안분해도 4 줄 < 50줄.
+
+판정: **kill criterion 통과** — shim 없이 동작.

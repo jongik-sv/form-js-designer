@@ -1,0 +1,79 @@
+.demo-root {
+  max-width: 1040px;
+  margin: 0 auto;
+}
+.demo-root h1 {
+  font-size: 18px;
+  margin: 0 0 12px;
+}
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+.toolbar input {
+  padding: 4px 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 13px;
+}
+.toolbar .meta {
+  color: #666;
+}
+.table-wrap {
+  border: 1px solid #d0d7de;
+  background: #fff;
+  border-radius: 6px;
+  font-size: 13px;
+  width: max-content;
+  min-width: 100%;
+}
+.thead {
+  background: #f6f8fa;
+  border-bottom: 1px solid #d0d7de;
+}
+.tr {
+  display: flex;
+  align-items: stretch;
+  border-bottom: 1px solid #eaecef;
+}
+.th-row {
+  font-weight: 600;
+}
+.th, .td {
+  padding: 6px 10px;
+  box-sizing: border-box;
+  border-right: 1px solid #eaecef;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.th.group {
+  text-align: center;
+  background: #eef2f6;
+}
+.th.leaf { padding: 0; }
+.th-cell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  width: 100%;
+  box-sizing: border-box;
+  height: 100%;
+}
+.drag-handle {
+  cursor: grab;
+  color: #8b949e;
+  user-select: none;
+}
+.sort-label {
+  cursor: pointer;
+  user-select: none;
+}
+.scroll {
+  overflow: auto;
+  position: relative;
+}

@@ -1,0 +1,85 @@
+{
+  "startedAt": "2026-04-17T11:08:46.519Z",
+  "baseUrl": "http://localhost:5183",
+  "scenarios": {
+    "dialog": {
+      "steps": [
+        {
+          "name": "open_click",
+          "portalFound": true
+        },
+        {
+          "name": "open_visible",
+          "visible": true
+        },
+        {
+          "name": "esc_close",
+          "remainingContent": 0
+        },
+        {
+          "name": "focus_return",
+          "activeTestId": "dialog-trigger"
+        },
+        {
+          "name": "overlay_close",
+          "remainingContent": 0
+        }
+      ]
+    },
+    "tabs": {
+      "steps": [
+        {
+          "name": "arrow_right_from_a",
+          "activeElement": "tab-b",
+          "tabBState": "active"
+        },
+        {
+          "name": "arrow_right_from_b",
+          "activeElement": "tab-c",
+          "tabCState": "active"
+        },
+        {
+          "name": "arrow_left_from_c",
+          "activeElement": "tab-b"
+        }
+      ]
+    },
+    "popover": {
+      "steps": [
+        {
+          "name": "open_click",
+          "portalFound": true
+        },
+        {
+          "name": "outside_click_close",
+          "remaining": 0
+        }
+      ]
+    }
+  },
+  "bugReproductionChecks": {
+    "PortalElementMissing": {
+      "reproduced": false,
+      "detail": "Dialog.Portal rendered Dialog.Content under body"
+    },
+    "DialogStuck_Esc": {
+      "reproduced": false,
+      "detail": "Dialog closed on ESC"
+    },
+    "DialogStuck_Overlay": {
+      "reproduced": false,
+      "detail": "Dialog closed on Overlay click"
+    },
+    "PopoverPortalMissing": {
+      "reproduced": false,
+      "detail": "Popover content rendered"
+    },
+    "PopoverStuck": {
+      "reproduced": false,
+      "detail": "Popover closed on outside click"
+    }
+  },
+  "consoleErrors": [],
+  "pageErrors": [],
+  "finishedAt": "2026-04-17T11:08:49.077Z"
+}

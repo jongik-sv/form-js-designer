@@ -1,5 +1,7 @@
 node_modules/
 dist/
+dist-baseline/
+dist-full/
 build/
 coverage/
 .turbo/
@@ -8,6 +10,7 @@ coverage/
 # Playwright artifacts
 test-results/
 playwright-report/
+.playwright-mcp/
 packages/*/spike/*/tests/artifacts/
 
 .DS_Store

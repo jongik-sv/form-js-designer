@@ -1,0 +1,66 @@
+{
+  "version": "0.0.0",
+  "name": "q2-tanstack-spike",
+  "dependencies": {
+    "@dnd-kit/core": {
+      "version": "6.3.1",
+      "resolved": "https://registry.npmjs.org/@dnd-kit/core/-/core-6.3.1.tgz",
+      "overridden": false
+    },
+    "@dnd-kit/sortable": {
+      "version": "8.0.0",
+      "resolved": "https://registry.npmjs.org/@dnd-kit/sortable/-/sortable-8.0.0.tgz",
+      "overridden": false
+    },
+    "@dnd-kit/utilities": {
+      "version": "3.2.2",
+      "resolved": "https://registry.npmjs.org/@dnd-kit/utilities/-/utilities-3.2.2.tgz",
+      "overridden": false
+    },
+    "@preact/preset-vite": {
+      "version": "2.10.5",
+      "resolved": "https://registry.npmjs.org/@preact/preset-vite/-/preset-vite-2.10.5.tgz",
+      "overridden": false
+    },
+    "@tanstack/react-table": {
+      "version": "8.21.3",
+      "resolved": "https://registry.npmjs.org/@tanstack/react-table/-/react-table-8.21.3.tgz",
+      "overridden": false
+    },
+    "@tanstack/react-virtual": {
+      "version": "3.13.23",
+      "resolved": "https://registry.npmjs.org/@tanstack/react-virtual/-/react-virtual-3.13.23.tgz",
+      "overridden": false
+    },
+    "@types/node": {
+      "version": "20.19.39",
+      "resolved": "https://registry.npmjs.org/@types/node/-/node-20.19.39.tgz",
+      "overridden": false
+    },
+    "playwright": {
+      "version": "1.59.1",
+      "resolved": "https://registry.npmjs.org/playwright/-/playwright-1.59.1.tgz",
+      "overridden": false
+    },
+    "preact": {
+      "version": "10.29.1",
+      "resolved": "https://registry.npmjs.org/preact/-/preact-10.29.1.tgz",
+      "overridden": false
+    },
+    "rollup-plugin-visualizer": {
+      "version": "5.14.0",
+      "resolved": "https://registry.npmjs.org/rollup-plugin-visualizer/-/rollup-plugin-visualizer-5.14.0.tgz",
+      "overridden": false
+    },
+    "typescript": {
+      "version": "5.9.3",
+      "resolved": "https://registry.npmjs.org/typescript/-/typescript-5.9.3.tgz",
+      "overridden": false
+    },
+    "vite": {
+      "version": "5.4.21",
+      "resolved": "https://registry.npmjs.org/vite/-/vite-5.4.21.tgz",
+      "overridden": false
+    }
+  }
+}

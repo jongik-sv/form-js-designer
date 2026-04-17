@@ -1,0 +1,19 @@
+Q1 Ariakit + preact/compat — 워크어라운드 라인 수 집계
+=====================================================
+
+shim/monkeypatch 라인:
+  (없음)                             0 줄
+
+공유 preact/compat alias (vite.config.ts resolve.alias)   4 줄
+공유 preact/compat alias (tsconfig.json compilerOptions.paths) 3 줄
+esbuild.jsx 블록 (vite.config.ts)                          3 줄
+
+총 preact/compat 호환용 config:                           10 줄
+컴포넌트 전용 shim:                                        0 줄
+컴포넌트당 평균 shim:                                      0 줄 (3종 공용 config)
+
+**중대 경고**: 위 라인 수는 "config 전환 비용"이지, "실제 Preact 적합성" 지표가 아님.
+런타임에서 `Cannot call an event handler while rendering.` pageerror 25건 발생 (smoke-errors.json 참조).
+이를 해소하려면 Preact `options._diff`/`options._commit` 수준의 모종 모종 shim,
+또는 `useSyncExternalStore` → `useState + useEffect` 포팅이 필요. 예상 200~400 줄.
+본 스파이크 시간 예산 내에는 작성하지 않음.

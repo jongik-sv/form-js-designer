@@ -1,0 +1,56 @@
+{
+  "version": "0.0.0",
+  "name": "q1-ariakit-spike",
+  "dependencies": {
+    "@ariakit/react": {
+      "version": "0.4.26",
+      "resolved": "https://registry.npmjs.org/@ariakit/react/-/react-0.4.26.tgz",
+      "overridden": false
+    },
+    "@axe-core/playwright": {
+      "version": "4.11.1",
+      "resolved": "https://registry.npmjs.org/@axe-core/playwright/-/playwright-4.11.1.tgz",
+      "overridden": false
+    },
+    "@playwright/test": {
+      "version": "1.59.1",
+      "resolved": "https://registry.npmjs.org/@playwright/test/-/test-1.59.1.tgz",
+      "overridden": false
+    },
+    "@preact/preset-vite": {
+      "version": "2.10.5",
+      "resolved": "https://registry.npmjs.org/@preact/preset-vite/-/preset-vite-2.10.5.tgz",
+      "overridden": false
+    },
+    "@types/node": {
+      "version": "20.19.39",
+      "resolved": "https://registry.npmjs.org/@types/node/-/node-20.19.39.tgz",
+      "overridden": false
+    },
+    "axe-core": {
+      "version": "4.11.3",
+      "resolved": "https://registry.npmjs.org/axe-core/-/axe-core-4.11.3.tgz",
+      "overridden": false
+    },
+    "preact": {
+      "version": "10.29.1",
+      "resolved": "https://registry.npmjs.org/preact/-/preact-10.29.1.tgz",
+      "overridden": false
+    },
+    "rollup-plugin-visualizer": {
+      "version": "5.14.0",
+      "resolved": "https://registry.npmjs.org/rollup-plugin-visualizer/-/rollup-plugin-visualizer-5.14.0.tgz",
+      "overridden": false
+    },
+    "typescript": {
+      "version": "5.9.3",
+      "resolved": "https://registry.npmjs.org/typescript/-/typescript-5.9.3.tgz",
+      "overridden": false
+    },
+    "vite": {
+      "version": "5.4.21",
+      "resolved": "https://registry.npmjs.org/vite/-/vite-5.4.21.tgz",
+      "overridden": false
+    }
+  }
+}

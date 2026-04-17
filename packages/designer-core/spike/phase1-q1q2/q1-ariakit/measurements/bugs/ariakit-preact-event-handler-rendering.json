@@ -1,0 +1,135 @@
+{
+  "consoleErrors": [
+    {
+      "text": "smoke-exception: page.waitForSelector: Target page, context or browser has been closed\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"popover-panel\"]') to be visible\u001b[22m\n\u001b[2m    7 × locator resolved to hidden <div hidden=\"\" id=\"P0-20\" role=\"dialog\" tabindex=\"-1\" data-dialog=\"\" class=\"ak-popover\" data-placing=\"true\" aria-label=\"도움말 팝오버\" data-testid=\"popover-panel\">…</div>\u001b[22m\n",
+      "stack": "page.waitForSelector: Target page, context or browser has been closed\nCall log:\n\u001b[2m  - waiting for locator('[data-testid=\"popover-panel\"]') to be visible\u001b[22m\n\u001b[2m    7 × locator resolved to hidden <div hidden=\"\" id=\"P0-20\" role=\"dialog\" tabindex=\"-1\" data-dialog=\"\" class=\"ak-popover\" data-placing=\"true\" aria-label=\"도움말 팝오버\" data-testid=\"popover-panel\">…</div>\u001b[22m\n\n    at /Users/jji/project/form-js-designer/packages/designer-core/spike/phase1-q1q2/q1-ariakit/scripts/smoke.mjs:113:14"
+    }
+  ],
+  "pageErrors": [
+    {
+      "name": "Error",
+      "message": "Cannot call an event handler while rendering.",
+      "stack": "Error: Cannot call an event handler while rendering.\n    at Object.current (http://localhost:5203/node_modules/.vite/deps/@ariakit_react.js?v=ad1a8dde:977:11)\n    at http://localhost:5203/node_modules/.vite/deps/@ariakit_react.js?v=ad1a8dde:988:53\n    at setRef (http://localhost:5203/node_modules/.vite/deps/@ariakit_react.js?v=ad1a8dde:605:5)\n    at http://localhost:5203/node_modules/.vite/deps/@ariakit_react.js?v=ad1a8dde:1012:9\n    at setRef (http://localhost:5203/node_modules/.vite/deps/@ariakit_react.js?v=ad1a8dde:605:5)\n    at http://localhost:5203/node_modules/.vite/deps/@ariakit_react.js?v=ad1a8dde:1012:9\n    at J (http://localhost:5203/node_modules/.vite/deps/chunk-A3MENGQB.js?v=32a57f49:236:53)\n    at D (http://localhost:5203/node_modules/.vite/deps/chunk-A3MENGQB.js?v=32a57f49:195:42)\n    at R (http://localhost:5203/node_modules/.vite/deps/chunk-A3MENGQB.js?v=32a57f49:260:381)\n    at http://localhost:5203/src/main.tsx:7:1"
+    },
+    {
+      "name": "Error",
+      "message": "Cannot call an event handler while rendering.",
+      "stack": "Error: Cannot call an event handler while rendering.\n    at Object.current (http://localhost:5203/node_modules/.vite/deps/@ariakit_react.js?v=ad1a8dde:977:11)\n    at http://localhost:5203/node_modules/.vite/deps/@ariakit_react.js?v=ad1a8dde:988:53\n    at HTMLDivElement.<anonymous> (http://localhost:5203/node_modules/.vite/deps/chunk-A3MENGQB.js?v=32a57f49:151:14)"
+    },
+    {
+      "name": "Error",
+      "message": "Cannot call an event handler while rendering.",
+      "stack": "Error: Cannot call an event handler while rendering.\n    at Object.current (http://localhost:5203/node_modules/.vite/deps/@ariakit_react.js?v=ad1a8dde:977:11)\n    at http://localhost:5203/node_modules/.vite/deps/@ariakit_react.js?v=ad1a8dde:988:53\n    at HTMLButtonElement.<anonymous> (http://localhost:5203/node_modules/.vite/deps/chunk-A3MENGQB.js?v=32a57f49:151:14)"
+    },
+    {
+      "name": "Error",
+      "message": "Cannot call an event handler while rendering.",
+      "stack": "Error: Cannot call an event handler while rendering.\n    at Object.current (http://localhost:5203/node_modules/.vite/deps/@ariakit_react.js?v=ad1a8dde:977:11)\n    at http://localhost:5203/node_modules/.vite/deps/@ariakit_react.js?v=ad1a8dde:988:53\n    at HTMLButtonElement.<anonymous> (http://localhost:5203/node_modules/.vite/deps/chunk-A3MENGQB.js?v=32a57f49:151:14)"
+    },
+    {
+      "name": "Error",
+      "message": "Cannot call an event handler while rendering.",
+      "stack": "Error: Cannot call an event handler while rendering.\n    at Object.current (http://localhost:5203/node_modules/.vite/deps/@ariakit_react.js?v=ad1a8dde:977:11)\n    at http://localhost:5203/node_modules/.vite/deps/@ariakit_react.js?v=ad1a8dde:988:53\n    at HTMLDivElement.<anonymous> (http://localhost:5203/node_modules/.vite/deps/chunk-A3MENGQB.js?v=32a57f49:151:14)"
+    },
+    {
+      "name": "Error",
+      "message": "Cannot call an event handler while rendering.",
+      "stack": "Error: Cannot call an event handler while rendering.\n    at Object.current (http://localhost:5203/node_modules/.vite/deps/@ariakit_react.js?v=ad1a8dde:977:11)\n    at http://localhost:5203/node_modules/.vite/deps/@ariakit_react.js?v=ad1a8dde:988:53\n    at HTMLDivElement.<anonymous> (http://localhost:5203/node_modules/.vite/deps/chunk-A3MENGQB.js?v=32a57f49:151:14)"
+    },
+    {
+      "name": "Error",
+      "message": "Cannot call an event handler while rendering.",
+      "stack": "Error: Cannot call an event handler while rendering.\n    at Object.current (http://localhost:5203/node_modules/.vite/deps/@ariakit_react.js?v=ad1a8dde:977:11)\n    at http://localhost:5203/node_modules/.vite/deps/@ariakit_react.js?v=ad1a8dde:988:53\n    at HTMLButtonElement.<anonymous> (http://localhost:5203/node_modules/.vite/deps/chunk-A3MENGQB.js?v=32a57f49:151:14)"
+    },
+    {
+      "name": "Error",
+      "message": "Cannot call an event handler while rendering.",
+      "stack": "Error: Cannot call an event handler while rendering.\n    at Object.current (http://localhost:5203/node_modules/.vite/deps/@ariakit_react.js?v=ad1a8dde:977:11)\n    at http://localhost:5203/node_modules/.vite/deps/@ariakit_react.js?v=ad1a8dde:988:53\n    at HTMLButtonElement.<anonymous> (http://localhost:5203/node_modules/.vite/deps/chunk-A3MENGQB.js?v=32a57f49:151:14)"
+    },
+    {
+      "name": "Error",
+      "message": "Cannot call an event handler while rendering.",
+      "stack": "Error: Cannot call an event handler while rendering.\n    at Object.current (http://localhost:5203/node_modules/.vite/deps/@ariakit_react.js?v=ad1a8dde:977:11)\n    at http://localhost:5203/node_modules/.vite/deps/@ariakit_react.js?v=ad1a8dde:988:53\n    at HTMLDivElement.<anonymous> (http://localhost:5203/node_modules/.vite/deps/chunk-A3MENGQB.js?v=32a57f49:151:14)"
+    },
+    {
+      "name": "Error",
+      "message": "Cannot call an event handler while rendering.",
+      "stack": "Error: Cannot call an event handler while rendering.\n    at Object.current (http://localhost:5203/node_modules/.vite/deps/@ariakit_react.js?v=ad1a8dde:977:11)\n    at http://localhost:5203/node_modules/.vite/deps/@ariakit_react.js?v=ad1a8dde:988:53\n    at HTMLDivElement.<anonymous> (http://localhost:5203/node_modules/.vite/deps/chunk-A3MENGQB.js?v=32a57f49:151:14)"
+    },
+    {
+      "name": "Error",
+      "message": "Cannot call an event handler while rendering.",
+      "stack": "Error: Cannot call an event handler while rendering.\n    at Object.current (http://localhost:5203/node_modules/.vite/deps/@ariakit_react.js?v=ad1a8dde:977:11)\n    at http://localhost:5203/node_modules/.vite/deps/@ariakit_react.js?v=ad1a8dde:988:53\n    at HTMLButtonElement.<anonymous> (http://localhost:5203/node_modules/.vite/deps/chunk-A3MENGQB.js?v=32a57f49:151:14)"
+    },
+    {
+      "name": "Error",
+      "message": "Cannot call an event handler while rendering.",
+      "stack": "Error: Cannot call an event handler while rendering.\n    at Object.current (http://localhost:5203/node_modules/.vite/deps/@ariakit_react.js?v=ad1a8dde:977:11)\n    at http://localhost:5203/node_modules/.vite/deps/@ariakit_react.js?v=ad1a8dde:988:53\n    at HTMLDivElement.<anonymous> (http://localhost:5203/node_modules/.vite/deps/chunk-A3MENGQB.js?v=32a57f49:151:14)"
+    },
+    {
+      "name": "Error",
+      "message": "Cannot call an event handler while rendering.",
+      "stack": "Error: Cannot call an event handler while rendering.\n    at Object.current (http://localhost:5203/node_modules/.vite/deps/@ariakit_react.js?v=ad1a8dde:977:11)\n    at http://localhost:5203/node_modules/.vite/deps/@ariakit_react.js?v=ad1a8dde:988:53\n    at HTMLButtonElement.<anonymous> (http://localhost:5203/node_modules/.vite/deps/chunk-A3MENGQB.js?v=32a57f49:151:14)"
+    },
+    {
+      "name": "Error",
+      "message": "Cannot call an event handler while rendering.",
+      "stack": "Error: Cannot call an event handler while rendering.\n    at Object.current (http://localhost:5203/node_modules/.vite/deps/@ariakit_react.js?v=ad1a8dde:977:11)\n    at http://localhost:5203/node_modules/.vite/deps/@ariakit_react.js?v=ad1a8dde:988:53\n    at HTMLButtonElement.<anonymous> (http://localhost:5203/node_modules/.vite/deps/chunk-A3MENGQB.js?v=32a57f49:151:14)"
+    },
+    {
+      "name": "Error",
+      "message": "Cannot call an event handler while rendering.",
+      "stack": "Error: Cannot call an event handler while rendering.\n    at Object.current (http://localhost:5203/node_modules/.vite/deps/@ariakit_react.js?v=ad1a8dde:977:11)\n    at http://localhost:5203/node_modules/.vite/deps/@ariakit_react.js?v=ad1a8dde:988:53\n    at HTMLDivElement.<anonymous> (http://localhost:5203/node_modules/.vite/deps/chunk-A3MENGQB.js?v=32a57f49:151:14)"
+    },
+    {
+      "name": "Error",
+      "message": "Cannot call an event handler while rendering.",
+      "stack": "Error: Cannot call an event handler while rendering.\n    at Object.current (http://localhost:5203/node_modules/.vite/deps/@ariakit_react.js?v=ad1a8dde:977:11)\n    at http://localhost:5203/node_modules/.vite/deps/@ariakit_react.js?v=ad1a8dde:988:53\n    at HTMLDivElement.<anonymous> (http://localhost:5203/node_modules/.vite/deps/chunk-A3MENGQB.js?v=32a57f49:151:14)"
+    },
+    {
+      "name": "Error",
+      "message": "Cannot call an event handler while rendering.",
+      "stack": "Error: Cannot call an event handler while rendering.\n    at Object.current (http://localhost:5203/node_modules/.vite/deps/@ariakit_react.js?v=ad1a8dde:977:11)\n    at http://localhost:5203/node_modules/.vite/deps/@ariakit_react.js?v=ad1a8dde:988:53\n    at HTMLButtonElement.<anonymous> (http://localhost:5203/node_modules/.vite/deps/chunk-A3MENGQB.js?v=32a57f49:151:14)"
+    },
+    {
+      "name": "Error",
+      "message": "Cannot call an event handler while rendering.",
+      "stack": "Error: Cannot call an event handler while rendering.\n    at Object.current (http://localhost:5203/node_modules/.vite/deps/@ariakit_react.js?v=ad1a8dde:977:11)\n    at http://localhost:5203/node_modules/.vite/deps/@ariakit_react.js?v=ad1a8dde:988:53\n    at HTMLButtonElement.<anonymous> (http://localhost:5203/node_modules/.vite/deps/chunk-A3MENGQB.js?v=32a57f49:151:14)"
+    },
+    {
+      "name": "Error",
+      "message": "Cannot call an event handler while rendering.",
+      "stack": "Error: Cannot call an event handler while rendering.\n    at Object.current (http://localhost:5203/node_modules/.vite/deps/@ariakit_react.js?v=ad1a8dde:977:11)\n    at http://localhost:5203/node_modules/.vite/deps/@ariakit_react.js?v=ad1a8dde:988:53\n    at HTMLDivElement.<anonymous> (http://localhost:5203/node_modules/.vite/deps/chunk-A3MENGQB.js?v=32a57f49:151:14)"
+    },
+    {
+      "name": "Error",
+      "message": "Cannot call an event handler while rendering.",
+      "stack": "Error: Cannot call an event handler while rendering.\n    at Object.current (http://localhost:5203/node_modules/.vite/deps/@ariakit_react.js?v=ad1a8dde:977:11)\n    at http://localhost:5203/node_modules/.vite/deps/@ariakit_react.js?v=ad1a8dde:988:53\n    at HTMLButtonElement.<anonymous> (http://localhost:5203/node_modules/.vite/deps/chunk-A3MENGQB.js?v=32a57f49:151:14)"
+    },
+    {
+      "name": "Error",
+      "message": "Cannot call an event handler while rendering.",
+      "stack": "Error: Cannot call an event handler while rendering.\n    at Object.current (http://localhost:5203/node_modules/.vite/deps/@ariakit_react.js?v=ad1a8dde:977:11)\n    at http://localhost:5203/node_modules/.vite/deps/@ariakit_react.js?v=ad1a8dde:988:53\n    at HTMLButtonElement.<anonymous> (http://localhost:5203/node_modules/.vite/deps/chunk-A3MENGQB.js?v=32a57f49:151:14)"
+    },
+    {
+      "name": "Error",
+      "message": "Cannot call an event handler while rendering.",
+      "stack": "Error: Cannot call an event handler while rendering.\n    at Object.current (http://localhost:5203/node_modules/.vite/deps/@ariakit_react.js?v=ad1a8dde:977:11)\n    at http://localhost:5203/node_modules/.vite/deps/@ariakit_react.js?v=ad1a8dde:988:53\n    at HTMLDivElement.<anonymous> (http://localhost:5203/node_modules/.vite/deps/chunk-A3MENGQB.js?v=32a57f49:151:14)"
+    },
+    {
+      "name": "Error",
+      "message": "Cannot call an event handler while rendering.",
+      "stack": "Error: Cannot call an event handler while rendering.\n    at Object.current (http://localhost:5203/node_modules/.vite/deps/@ariakit_react.js?v=ad1a8dde:977:11)\n    at http://localhost:5203/node_modules/.vite/deps/@ariakit_react.js?v=ad1a8dde:988:53\n    at HTMLButtonElement.<anonymous> (http://localhost:5203/node_modules/.vite/deps/chunk-A3MENGQB.js?v=32a57f49:151:14)"
+    },
+    {
+      "name": "Error",
+      "message": "Cannot call an event handler while rendering.",
+      "stack": "Error: Cannot call an event handler while rendering.\n    at Object.current (http://localhost:5203/node_modules/.vite/deps/@ariakit_react.js?v=ad1a8dde:977:11)\n    at http://localhost:5203/node_modules/.vite/deps/@ariakit_react.js?v=ad1a8dde:988:53\n    at HTMLButtonElement.<anonymous> (http://localhost:5203/node_modules/.vite/deps/chunk-A3MENGQB.js?v=32a57f49:151:14)"
+    },
+    {
+      "name": "Error",
+      "message": "Cannot call an event handler while rendering.",
+      "stack": "Error: Cannot call an event handler while rendering.\n    at Object.current (http://localhost:5203/node_modules/.vite/deps/@ariakit_react.js?v=ad1a8dde:977:11)\n    at http://localhost:5203/node_modules/.vite/deps/@ariakit_react.js?v=ad1a8dde:988:53\n    at HTMLButtonElement.<anonymous> (http://localhost:5203/node_modules/.vite/deps/chunk-A3MENGQB.js?v=32a57f49:151:14)"
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "baseline_preact_only": {
+    "file": "dist-baseline/baseline.js",
+    "raw": 10804,
+    "gzip": 4603
+  },
+  "full_with_radix": {
+    "file": "dist-full/full.js",
+    "raw": 95258,
+    "gzip": 34119
+  },
+  "delta_raw_bytes": 84454,
+  "delta_gzip_bytes": 29516,
+  "delta_gzip_kb": "28.82"
+}

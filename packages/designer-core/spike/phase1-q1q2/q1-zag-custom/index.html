@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Q1 Zag.js + 자체 Preact 어댑터 Spike</title>
+    <style>
+      body { font-family: -apple-system, 'Noto Sans KR', sans-serif; padding: 24px; color: #222; }
+      button { padding: 8px 16px; cursor: pointer; }
+      .dialog-backdrop {
+        position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 40;
+      }
+      .dialog-positioner {
+        position: fixed; inset: 0; display: flex; align-items: center;
+        justify-content: center; z-index: 50;
+      }
+      .dialog-content {
+        background: white; padding: 24px; border-radius: 8px; min-width: 320px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+      }
+      .popover-positioner { z-index: 20; }
+      .popover-content {
+        background: #fff8e1; padding: 12px 16px; border: 1px solid #f1c40f;
+        border-radius: 6px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); color: #5b3a00;
+      }
+      .tabs-list { display: flex; gap: 4px; border-bottom: 1px solid #ddd; }
+      .tabs-trigger {
+        padding: 8px 16px; border: none; background: transparent; cursor: pointer; color: #222;
+      }
+      .tabs-trigger[data-selected] { border-bottom: 2px solid #1d4ed8; color: #1d4ed8; }
+      .tabs-content { padding: 16px 0; }
+      section { margin-bottom: 32px; }
+      h2 { margin-bottom: 8px; }
+    </style>
+  </head>
+  <body>
+    <header><h1>Q1 후보 B — Zag.js 저수준 + 자체 Preact 어댑터</h1></header>
+    <div id="app"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

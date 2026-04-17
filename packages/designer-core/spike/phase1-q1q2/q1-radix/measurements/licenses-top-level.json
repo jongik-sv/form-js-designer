@@ -1,0 +1,57 @@
+[
+  {
+    "name": "@axe-core/playwright",
+    "version": "4.11.1",
+    "license": "MPL-2.0"
+  },
+  {
+    "name": "@playwright/test",
+    "version": "1.59.1",
+    "license": "Apache-2.0"
+  },
+  {
+    "name": "@preact/preset-vite",
+    "version": "2.10.5",
+    "license": "MIT"
+  },
+  {
+    "name": "@radix-ui/react-dialog",
+    "version": "1.1.15",
+    "license": "MIT"
+  },
+  {
+    "name": "@radix-ui/react-popover",
+    "version": "1.1.15",
+    "license": "MIT"
+  },
+  {
+    "name": "@radix-ui/react-tabs",
+    "version": "1.1.13",
+    "license": "MIT"
+  },
+  {
+    "name": "axe-core",
+    "version": "4.11.3",
+    "license": "MPL-2.0"
+  },
+  {
+    "name": "preact",
+    "version": "10.29.1",
+    "license": "MIT"
+  },
+  {
+    "name": "rollup-plugin-visualizer",
+    "version": "5.14.0",
+    "license": "MIT"
+  },
+  {
+    "name": "typescript",
+    "version": "5.9.3",
+    "license": "Apache-2.0"
+  },
+  {
+    "name": "vite",
+    "version": "5.4.21",
+    "license": "MIT"
+  }
+]

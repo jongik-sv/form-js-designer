@@ -91,20 +91,33 @@
 ### UI 라이브러리 (1차)
 | 항목 | 선택 | 라이선스 | 비고 |
 |---|---|---|---|
-| 헤드리스 프리미티브 | Radix UI Primitives (preact/compat) | MIT | 접근성 표준 |
+| 헤드리스 프리미티브 | **Radix UI + preact/compat (Phase 1 본체, 조건부)** / Zag.js 저수준 + 자체 Preact 어댑터 (fallback) | MIT | spike 완료 · ADR-0002 작성 중 — 아래 §3 각주 참조 |
 | 스타일 | Tailwind CSS | MIT | |
 | variant 패턴 | CVA + tailwind-merge | Apache-2.0 / MIT | shadcn 표준 |
 | 컴포넌트 카탈로그 | shadcn/ui (코드 복사) | MIT | 패키지 X, 본인 코드화 |
 | 아이콘 | Lucide | ISC | |
 
-> **Q1·Q2 결정 게이트**: 위 조합은 idea.md 권장안 기반의 *기본값*이다. Phase 1 시작 시점에 1주 spike로 (a) Radix vs Ark UI, (b) TanStack Table vs Glide Data Grid 를 실측 비교 후 확정. 결정은 본 TRD §3을 갱신.
+> **Q1 spike 결과 (Phase 1 §2, 2026-04-17)**: `docs/phase-1-plan.md §2.1` 에 재설계된 5후보 동일 게이트 실측 완료.
+>
+> - **1순위 (Phase 1 본체, 조건부 채택)**: Radix UI + `preact/compat` — gzip 증분 28.82 KB (합격선 30 KB), workaround 0 LOC/컴포넌트 (공유 alias 12줄), 사전 조사 버그(`radix-ui/primitives#1056`, `preactjs/preact#3297`) 전수 미재현. **채택 조건**:
+>   1. 모노레포 root `overrides` (또는 `resolutions`) 로 `preact` 단일 인스턴스 고정.
+>   2. Radix `Portal.container` 를 호스트 앱의 `<main>` 내부 노드로 주입 — 또는 axe `region` 규칙을 컴포넌트 범위로 완화 (axe region 2건 호스트 레벨 해결).
+>   3. Radix/Preact 버전 업데이트 시 별도 PR + `*.parity.spec.ts` + `*.golden.spec.ts` 재실행.
+> - **2순위 (fallback)**: Zag.js 저수준 + 자체 Preact 어댑터 — gzip 33.99 KB (+3.99 KB 초과), axe 0 위반 (4후보 중 유일), 어댑터 309 LOC + 컴포넌트당 ≤47 LOC. 본체 보안·라이선스·회귀 사유 차단 시 1주 내 전환 가능.
+> - **3순위**: Headless UI + `preact/compat` — gzip 46.17 KB 초과 + Popover `aria-hidden-focus` serious 1건.
+> - **탈락**: Ariakit — `preact/compat` 하에 pageerror 25건 (`Cannot call an event handler while rendering.`) + 해소 shim 200~400 LOC 추정.
+> - **자작(E)**: Dialog 한정 실측 진행 중. 결과는 ADR-0002 에만 반영, 본 TRD 는 "extrapolated fallback only" 표기.
+>
+> 최종 결정서: `docs/adr/0002-ui-primitives.md` (작성 중, 자작 E Dialog 실측 완료 후 최종 머지) · `docs/phase-1-plan.md §2.1`.
 
 ### 테이블
-| 항목 | 선택 | 라이선스 |
-|---|---|---|
-| 헤드리스 테이블 | TanStack Table v8 | MIT |
-| 컬럼 드래그 | dnd-kit | MIT |
-| 가상화 | TanStack Virtual | MIT |
+| 항목 | 선택 | 라이선스 | 비고 |
+|---|---|---|---|
+| 헤드리스 테이블 | **TanStack Table v8** | MIT | **확정** (Phase 1 §2 spike task-1 FPS 59.99 @ 10k rows, 합격선 55) — 아래 각주 참조 |
+| 가상화 | TanStack Virtual | MIT | 확정 (위와 동일 조합) |
+| 컬럼 드래그 | dnd-kit | MIT | 확정 (위와 동일 조합) |
+
+> **Q2 spike 결과 (Phase 1 §2, 2026-04-17)**: `docs/phase-1-plan.md §2.2` 정의 단계형 실측에서 TanStack Table v8 + TanStack Virtual + dnd-kit + `preact/compat` 조합이 1만 행 평균 FPS **59.99** (보조 확인 60.42), 멀티헤더 3단계, dnd-kit 컬럼 이동, preact/compat hooks 호환 전부 통과. **PD1-A 자동 확정** — ADR-0001 D1/D6 "단일 컴포넌트 DOM · 픽셀 파리티" 전제 그대로 유지, canvas 예외 조항 불필요. Step 2/3 (DOM 최적화, Glide 폴백) 생략. 최종 결정서: `docs/adr/0003-table-library.md` (작성 중·task-7) · `docs/phase-1-plan.md §2.2`.
 
 ### 빌드·테스트·DX (신규 패키지에만 적용. 기존 패키지는 그대로 유지)
 | 항목 | 선택 | 비고 |
@@ -413,13 +426,26 @@ PRD 1차 릴리스 = Phase 0 + Phase 1. 그 외는 후속.
 
 | 코드 | 항목 | 본 TRD에서의 처리 |
 |---|---|---|
-| Q1 | 컴포넌트 라이브러리 베이스 | 기본값: Radix UI + Tailwind + CVA. Phase 0 spike 후 §3 갱신. |
-| Q2 | 테이블 라이브러리 | 기본값: TanStack Table v8. Phase 0 spike 후 §3 갱신. |
+| Q1 | 컴포넌트 라이브러리 베이스 | **Phase 1 §2 spike 완료 (2026-04-17)**. 1순위 Radix UI + `preact/compat` 조건부 채택, 2순위 Zag+자체 Preact 어댑터 fallback. Headless UI 3순위, Ariakit 탈락. 자작(E)는 Dialog 한정 실측 진행 중. `docs/adr/0002-ui-primitives.md` 작성 중 (자작 E Dialog 실측 완료 후 최종 머지). 상세 수치: §3 UI 라이브러리 각주 + §13.1. |
+| Q2 | 테이블 라이브러리 | **Phase 1 §2 spike 완료 (2026-04-17)**. TanStack Table v8 + TanStack Virtual + dnd-kit 확정 (FPS 59.99 @ 10k rows, PD1-A 자동 확정, canvas 예외 조항 불필요). `docs/adr/0003-table-library.md` 작성 중 (task-7). 상세: §3 테이블 각주 + §13.1. |
 | Q3 | AI 진입점 | 확정: Claude Code CLI only. (§6.4) |
 | Q4 | eject | Future. designer-codegen은 Phase 2+. |
 | Q5 | JSON 배포 | 확정: 정적·API 양쪽 모두. (§6.2) |
 | Q6 | i18n | 확정: 패턴 도입, ko 1차. (§4.4) |
 | Q7 | 협업/권한/BPMN/테마/마켓 | Out of scope. idea.md에 청사진 보존. |
+
+### 13.1 Q1·Q2 spike 수치 요약 (Phase 1 §2, 2026-04-17)
+
+| 후보 | pageerror | axe 3상태 합 | gzip 증분 | workaround | 판정 |
+|---|---|---|---|---|---|
+| **Radix UI + preact/compat** (Q1 1순위) | 0 | 2 region moderate (호스트 완화) | **28.82 KB** | 공유 alias 12줄 · 컴포넌트 0 LOC | **본체 조건부 채택** |
+| **Zag.js + 자체 어댑터** (Q1 2순위) | 0 | **0** (4후보 유일) | 33.99 KB (+3.99) | 어댑터 309 LOC + 컴포넌트 ≤47 LOC | **fallback** |
+| Headless UI + preact/compat (Q1 3순위) | 0 | 1 serious (`aria-hidden-focus`) | 46.17 KB | config 16줄 · 컴포넌트 0 LOC | 조건부 (번들 예산 재협상 시) |
+| Ariakit + preact/compat | **25 fatal** | 1 region (기능 미작동으로 은폐) | 34.38 KB | 해소 shim 200~400 LOC 추정 | **탈락** |
+| 자작 + WAI-ARIA (E) | Dialog 한정 실측 진행 중 (task-6) | — | — | — | extrapolated fallback only (ADR-0002 전용) |
+| **TanStack Table v8** (Q2 확정) | — | — | 45.3 KB (테이블 단독) | — | **확정** (FPS 59.99 / 10k rows · PD1-A) |
+
+원본: `packages/designer-core/spike/phase1-q1q2/q1-{radix,zag-custom,headlessui,ariakit}/RESULT.md`, `.../q2-tanstack/RESULT.md`, `/tmp/claude-signals/phase1-spike/task-{1..5}.done`.
 
 ---
 

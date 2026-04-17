@@ -1,0 +1,1 @@
+dist/assets/index.js gzip: 40.69 KB  (total page bundle)
