@@ -15,6 +15,7 @@ import { h, createContext } from 'preact';
 import { useContext, useMemo } from 'preact/hooks';
 import type { ComponentChildren } from 'preact';
 import { createFallbackT } from './fallbackT';
+import { isProductionEnv } from '../envUtils';
 import type { LocaleT, LocaleContextValue } from './localeTypes';
 
 // ---------------------------------------------------------------------------
@@ -40,7 +41,7 @@ export function LocaleProvider({ lang, t, children }: LocaleProviderProps) {
   // t가 function이 아닌 경우 dev 경고 + fallback
   let safeT = t;
   if (typeof t !== 'function') {
-    if (typeof process === 'undefined' || process.env['NODE_ENV'] !== 'production') {
+    if (!isProductionEnv()) {
       console.warn(
         '[designer-i18n] LocaleProvider received a non-function value for "t" prop. ' +
           'Falling back to default t (key as-is).',

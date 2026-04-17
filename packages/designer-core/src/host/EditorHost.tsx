@@ -41,7 +41,7 @@ export function EditorHost({
   const overlayRootRef = useRef<HTMLDivElement>(null);
 
   // -------------------------------------------------------------------------
-  // ViewerHost + OverlayLayer nested render
+  // Mount: ViewerHost + OverlayLayer nested render (최초 1회)
   // -------------------------------------------------------------------------
   useLayoutEffect(() => {
     const formRootEl = formRootRef.current;
@@ -85,28 +85,7 @@ export function EditorHost({
   }, []);
 
   // -------------------------------------------------------------------------
-  // selectedIds / schema / data 변경 시 OverlayLayer 업데이트
-  // -------------------------------------------------------------------------
-  useLayoutEffect(() => {
-    const overlayRootEl = overlayRootRef.current;
-    const formRootEl = formRootRef.current;
-    const shellEl = shellRef.current;
-
-    if (!overlayRootEl || !formRootEl || !shellEl) return;
-
-    render(
-      <OverlayLayer
-        formRoot={formRootEl}
-        selectedIds={selectedIds}
-        overlayContainer={shellEl}
-      />,
-      overlayRootEl,
-    );
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedIds, schema, data]);
-
-  // -------------------------------------------------------------------------
-  // ViewerHost 업데이트 (schema/data/locale 변경)
+  // Update: ViewerHost (schema/data/locale/viewport 변경)
   // -------------------------------------------------------------------------
   useLayoutEffect(() => {
     const formRootEl = formRootRef.current;
@@ -126,7 +105,28 @@ export function EditorHost({
       formRootEl,
     );
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [schema, data, locale]);
+  }, [schema, data, locale, viewport]);
+
+  // -------------------------------------------------------------------------
+  // Update: OverlayLayer (selectedIds 변경)
+  // -------------------------------------------------------------------------
+  useLayoutEffect(() => {
+    const overlayRootEl = overlayRootRef.current;
+    const formRootEl = formRootRef.current;
+    const shellEl = shellRef.current;
+
+    if (!overlayRootEl || !formRootEl || !shellEl) return;
+
+    render(
+      <OverlayLayer
+        formRoot={formRootEl}
+        selectedIds={selectedIds}
+        overlayContainer={shellEl}
+      />,
+      overlayRootEl,
+    );
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedIds]);
 
   // -------------------------------------------------------------------------
   // Click 이벤트 위임 (onSelect)
