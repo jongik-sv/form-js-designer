@@ -152,6 +152,60 @@ Phase 1에서 Table에 한해 ADR-0001 D1/D6 예외를 허용할지 먼저 결�
 
 이 PR 머지 = §3 이하 작업 착수 전제 조건.
 
+### 2.4 Spike 실행 결과 (2026-04-17)
+
+#### Q1 결론: **Radix UI + `preact/compat` 조건부 채택 (1순위)**
+
+5개 후보 전수 측정(q1-radix, q1-headlessui, q1-ariakit, q1-zag-custom, q1-custom-aria) 결과:
+
+| 후보 | 번들 gzip | 접근성 | Preact 동작 | 결정 |
+|---|---|---|---|---|
+| **A. Radix** | 28.82 KB ✅ | axe 0위반 ✅ | pass ✅ | **채택 (조건 4개)** |
+| B. Zag + 어댑터 | 33.99 KB | axe 0위반 ✅ | pass ✅ | Fallback (미채택) |
+| C. Headless UI | 46.17 KB ❌ | aria-hidden-focus | pass | 3순위 |
+| D. Ariakit | 34.38 KB | 키보드 미동작 ❌ | pageerror 25건 ❌ | 탈락 |
+| E. 자작 ARIA | - | - | - | 탈락 |
+
+**Radix 채택 조건 4개**:
+1. monorepo root `overrides.preact` 단일 인스턴스 고정
+2. Dialog/Popover Content 는 `aria-label` 또는 `Title` 필수
+3. Host 앱이 `Portal.container` 주입 또는 axe region 예외
+4. Radix/preact 업데이트는 별도 PR + parity/golden spec 재실행 의무
+
+**Fallback**: Zag.js + 자체 Preact 어댑터 (309 LOC, axe 0위반 유일). Radix 조건 차단 시 1주 내 전환 가능. (`docs/adr/0002-ui-primitives.md` D2 세부)
+
+#### Q2 결론: **TanStack Table v8 + Virtual + dnd-kit / PD1-A 자동 확정**
+
+TanStack DOM 성능 실측(q2-tanstack, 10k행, Preact alias):
+
+| 축 | 측정값 | 기준 | 결과 |
+|---|---|---|---|
+| **FPS** | **59.99** | ≥ 55 | ✅ PD1-A 확정 |
+| 멀티헤더 3단계 | 동작 ✅ | 필수 | ✅ |
+| dnd-kit 컬럼이동 | 동작 ✅ | 필수 | ✅ |
+| 번들 gzip | 45.3 KB | ≤ 100 KB | ✅ (demo 포함) |
+| preact/compat hooks | 호환 ✅ | 필수 | ✅ |
+
+**PD1-A 정책**: 모든 컴포넌트 DOM 렌더 의무 유지. ADR-0001 D1/D6 예외 조항 불필요 — Phase 1 ADR 세트는 DOM 단일 전제로 종결.
+
+**신규 요건** (spike 발견 반영):
+- D5: TanStack `state` 값 memoize 의무 (useSyncExternalStore 무한 재렌더 방지)
+- D6: Vite alias 에 `react-dom/test-utils → preact/test-utils` 강제
+
+#### 결과물 커밋
+
+**`04fb477` 커밋** (2026-04-17): 9건 spike 결과 + ADR 2개 Accepted 승격 + TRD/WBS 갱신
+- `docs/adr/0002-ui-primitives.md` Accepted (Q1 5후보 측정 + D1~D5 상세)
+- `docs/adr/0003-table-library.md` Accepted (Q2 TanStack + PD1-A + D1~D6 spike 발견)
+- 검증 산출물: `packages/designer-core/spike/phase1-q1q2/{q1-radix,q1-headlessui,q1-ariakit,q1-zag-custom,q1-custom-aria,q2-tanstack}/`
+  - 각 폴더: `RESULT.md` (정성 결론) + `measurements/` (정량 데이터) + `.gitignore` 처리 (`dist/`, `dist-baseline/`, `node_modules/`)
+- `.gitignore`: dist-baseline/dist-full/.playwright-mcp 추가
+- `docs/TRD.md` §3/§13 갱신 (UI 라이브러리·테이블 기본값, Q1/Q2 수치 표)
+- `docs/wbs.md` 신규 (3단계 구조, 11 WP · 28 Task, Phase 0/§1/§2 ✅ 표기)
+- `docs/idea.md` "JSON 한 방 렌더 스킬" → "차후 계획" 프레이밍
+
+**Phase 1 §3 착수 전제 조건 충족** — 추후 WP-02 이상에서 designer-components/designer-table 구현 시 본 결정을 기초로 진행.
+
 ---
 
 ## 3. 작업 분해 구조 (WBS)
