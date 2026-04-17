@@ -1,0 +1,56 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://form-js-designer/propsSchema.meta.schema.json",
+  "title": "PropsSchema meta-schema",
+  "description": "Validates a component's propsSchema declaration (schema of schemas)",
+  "type": "object",
+  "required": ["properties"],
+  "additionalProperties": false,
+  "properties": {
+    "properties": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/PropertyDef"
+      }
+    }
+  },
+  "definitions": {
+    "PropertyDef": {
+      "type": "object",
+      "required": ["type"],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["string", "number", "boolean", "enum", "color", "spacing", "expression", "i18n"]
+        },
+        "label": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "default": {},
+        "enum": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "min": {
+          "type": "number"
+        },
+        "max": {
+          "type": "number"
+        },
+        "group": {
+          "type": "string"
+        },
+        "showIf": {
+          "type": "string"
+        },
+        "collapsed": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}
