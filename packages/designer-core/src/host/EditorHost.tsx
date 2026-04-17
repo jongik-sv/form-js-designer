@@ -105,7 +105,7 @@ export function EditorHost({
       formRootEl,
     );
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [schema, data, locale, viewport]);
+  }, [schema, data, locale, viewport, onChange]);
 
   // -------------------------------------------------------------------------
   // Update: OverlayLayer (selectedIds 변경)

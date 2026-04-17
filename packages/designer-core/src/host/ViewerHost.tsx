@@ -51,6 +51,13 @@ export function ViewerHost({
   // 초기 마운트 여부 추적 — useEffect([schema]) / useEffect([data]) 이중 호출 방지
   const schemaInitialRef = useRef(true);
   const dataInitialRef = useRef(true);
+  // stale closure 방지: onChange 최신 참조를 항상 ref에 유지
+  const onChangeRef = useRef(onChange);
+
+  // onChange가 바뀔 때마다 ref를 최신 값으로 갱신 (리스너 재등록 불필요)
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  }, [onChange]);
 
   // 외부 containerRef 지원
   const resolvedRef = (containerRef ?? internalRef) as typeof internalRef;
@@ -70,11 +77,11 @@ export function ViewerHost({
         form = new FormClass({ container: el, additionalModules });
         formRef.current = form;
 
-        // changed 이벤트 등록
+        // changed 이벤트 등록 — onChangeRef를 통해 항상 최신 콜백 참조 (stale closure 방지)
         form.on('changed', (e: unknown) => {
-          if (onChange) {
+          if (onChangeRef.current) {
             const ev = e as { data?: Record<string, unknown>; schema?: unknown; errors?: Record<string, unknown> };
-            onChange({
+            onChangeRef.current({
               data: ev.data ?? {},
               schema: ev.schema as typeof schema,
               errors: ev.errors ?? {},
