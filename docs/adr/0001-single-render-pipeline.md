@@ -1,9 +1,11 @@
 # ADR 0001 — Single Render Pipeline & Designer Overlay
 
-- **상태**: Draft
-- **일자**: 2026-04-17
-- **관련 문서**: [PRD §4 #4-1](../PRD.md), [TRD §7](../TRD.md)
-- **결정자**: (Phase 0 진입 시 승인)
+- **상태**: Accepted (Phase 0 spike 검증 완료)
+- **초안일**: 2026-04-17
+- **승격일**: 2026-04-17
+- **결정자**: jongik-sv (repo owner)
+- **검증 커밋**: `2e36d6a` — *feat: Phase 0 spike validates ADR-0001 single render pipeline*
+- **관련 문서**: [PRD §4 #4-1](../PRD.md), [TRD §7](../TRD.md), [Spike README](../../packages/designer-core/spike/wysiwyg/README.md)
 
 ---
 
@@ -179,24 +181,223 @@ export function defineComponent(def: ComponentDefinition) {
 
 ## 6. 검증 (Spike 산출물)
 
-ADR 승인 후 1주 spike. 폐기 가능 코드, `packages/designer-core/spike/wysiwyg/`.
+Phase 0에서 1주 spike를 수행하여 D1~D6를 종단 검증했다. 폐기 가능 코드는 `packages/designer-core/spike/wysiwyg/`에 보존한다.
 
 **목표**: Card 컴포넌트 1개로 D1~D6를 종단 검증.
 
-산출물:
-1. `defineComponent`로 작성된 Card (`spike/Card.tsx`)
+원래 계획된 산출물 6가지는 §6.2 대조표에서 항목별 달성 여부를 확인한다:
+1. `defineComponent`로 작성된 Card
 2. ViewerHost: 단순 `<Form schema={cardSchema}/>`
-3. EditorHost: 동일 schema를 `<Form>`으로 렌더 + OverlayLayer + 선택 핸들
-4. Playwright 테스트: ViewerHost vs EditorHost 캡처 → pixelmatch diff ≤ 0.1%
+3. EditorHost: 동일 schema + OverlayLayer + 선택 핸들
+4. Playwright 테스트: ViewerHost vs EditorHost → pixelmatch diff ≤ 0.1%
 5. CSS Cascade Layers 적용 사례
 6. ResizeObserver 기반 viewport 동기화 데모
 
-**Spike 통과 조건**:
-- diff ≤ 0.1% (마스킹 후)
-- Card.tsx에 디자이너 분기 0건
-- OverlayLayer가 Card DOM을 변형하지 않음 (DOM snapshot diff 0)
+### 6.1 Spike 검증 결과 (2026-04-17)
 
-Spike 결과로 본 ADR을 *Accepted*로 승격하고 `defineComponent` API를 `designer-core`에 정식 반영한다.
+**검증 커밋**: [`2e36d6a`](#) — *feat: Phase 0 spike validates ADR-0001 single render pipeline*
+
+Phase 0 스파이크는 **Single Render Pipeline & Designer Overlay** 아키텍처를 실제 코드·테스트·브라우저 실사용으로 동시 검증했다. viewer/editor 양쪽이 동일한 Card 컴포넌트 트리를 렌더하고, 에디터는 그 위에 투명 오버레이만 얹는다는 핵심 가설이 **픽셀 diff 0**으로 입증되었다.
+
+#### 테스트 매트릭스
+
+| 범주 | 건수 | 상태 | 비고 |
+|---|---|---|---|
+| Unit (designer-core) | 19/19 | ✅ | Vitest + happy-dom. `defineComponent` 9건 + `assertPureRender` 10건 (`process.env` ReferenceError 회귀 포함) |
+| Unit (spike: Card) | 27/27 | ✅ | `Card.test.tsx` — 순수 렌더, propsSchema 검증, Card.css 클래스 계약 |
+| Unit (spike: OverlayLayer) | 10/10 | ✅ | `OverlayLayer.test.tsx` — 선택 박스 위치 계산, DOM 비변형, pointer-events 격리 |
+| **Unit 소계** | **56/56** | ✅ | `npm --prefix packages/designer-core run test:unit` |
+| E2E (Playwright + pixelmatch) | 5/5 | ✅ | D6 픽셀 파리티, D1 DOM 스냅샷, D3 오버레이 비변형, 1440px 정렬 회귀, bpmn.io 워터마크 가시성 |
+
+#### 핵심 수치
+
+- **픽셀 diff**: `0 / 786432` px (1024×768 뷰포트, `#FF00FF` 핑크 마스크로 선택 박스 영역 상쇄 후 `pixelmatch` 비교). 허용 상한 786 px (0.1 %) 대비 완전 일치.
+- **에디터 분기**: `packages/designer-core/spike/wysiwyg/src/card/Card.tsx` 내 `editing` / `isPreview` / `useService` 사용 **0건** (grep 검증 완료). 단일 렌더 파이프라인이 코드 레벨에서 강제된다.
+- **DOM 변형**: `OverlayLayer`는 `#form-root` 내부 DOM을 한 줄도 수정하지 않는다. D3 테스트는 `fjs-designer-*` 클래스가 `#form-root` 하위에 단 하나라도 누출되면 실패한다 (현재 0건).
+- **오버레이 정렬 회귀**: 1024 px은 원래 `#editor-shell width:100%` 때문에 우연히 정렬이 맞았다. 1440 px 뷰포트에서 오버레이가 Card 좌측으로 밀리는 버그를 발견 → `#editor-shell`을 `1024 px margin auto`로 재구조화하여 `#form-root`와 `#overlay-root`가 동일 origin을 공유하도록 수정. 1440 px 전용 회귀 테스트(Test 4) 추가.
+- **BPMN.io 워터마크**: viewer·editor 양쪽에서 `.fjs-powered-by`가 visible · `display≠none` · `opacity>0.1` · 박스 크기>0 · 오버레이에 의해 완전히 가려지지 않음(`pointer-events:none`) 확인. 라이선스 요구사항 충족.
+
+#### 실행 명령
+
+```bash
+npm --prefix packages/designer-core run test:unit   # 56/56 PASS
+npm --prefix packages/designer-core run test:e2e    # 5/5 PASS, diff 0 / 786432 px
+```
+
+#### 브라우저 실사용 검증
+
+사용자가 로컬 dev 서버(`npm --prefix packages/designer-core run dev:spike`)에서 `viewer.html` · `editor.html`을 직접 열어 다음을 확인했다 (세션 로그 2026-04-17 17:09 기준):
+
+- Card 컴포넌트의 border · padding · typography 등 CSS가 양쪽에서 동일하게 적용됨
+- 1024 px 및 1440 px 창에서 선택 박스가 Card를 정확히 감싸고 handle 위치가 맞음
+- BPMN.io 워터마크가 하단에 정상 노출됨
+
+자동 테스트가 검증한 정량 지표 + 사람의 눈으로 확인한 정성 지표가 모두 일치하므로 **ADR-0001의 D1·D3·D6 인수 기준을 모두 충족**한다고 판단한다.
+
+### 6.2 Spike 통과 조건 달성 대조
+
+| 조건 | 결과 | 증거 |
+|---|---|---|
+| diff ≤ 0.1% (마스킹 후) | 달성 | `packages/designer-core/spike/wysiwyg/tests/wysiwyg.spec.ts:30-31` — `VIEWPORT_PIXELS = 1024 * 768 = 786,432`, `MAX_DIFF_PX = 786` (0.1%). 임계 단언: 같은 파일 `:176-180` (`expect(diffPixels).toBeLessThanOrEqual(MAX_DIFF_PX)`). 마스킹 로직: `:137-138` (`applyPinkMask` 로 viewer/editor 동일 rect 적용). 실행 결과는 `:169-171` 에 콘솔 출력됨 |
+| Card.tsx에 디자이너 분기 0건 | 달성 | `packages/designer-core/spike/wysiwyg/src/card/Card.tsx` 전체 55행 — `editing`, `isPreview`, `useService('selection')` 패턴 grep 결과 0건. `:27` `render: ({ field, domId }) =>` 는 순수 함수이며 prop 이외 외부 상태 참조 없음. 매칭된 "designer-"는 전부 컴포넌트 자체 CSS 클래스(`designer-card`, `designer-card__header` 등)로 ADR D1 예외 규정 밖 |
+| OverlayLayer가 Card DOM 변형 0건 | 달성 | `wysiwyg.spec.ts:214-261` (Test 3, D3) — `#form-root` innerHTML snapshot을 500ms 간격으로 비교(`:221-234`), 이후 `#form-root` 하위에서 `fjs-designer-*` 클래스 누수 검사(`:242-260`). 구조적 근거: `OverlayLayer.tsx:19-78` 는 `formRoot`를 read-only로만 사용하고 (`:27` `querySelector`, `:29` `getBoundingClientRect`) 자체 DOM은 별도 `#overlay-root` 형제 노드에 렌더(`editor.tsx:21-24`, `layers.css:38-43` `pointer-events: none`) |
+
+#### 산출물 체크리스트 (§6 1~6번)
+
+- [x] 1. `defineComponent`로 작성된 Card — `packages/designer-core/spike/wysiwyg/src/card/Card.tsx:3` `defineComponent({...})`
+- [x] 2. ViewerHost: 단순 `<Form schema={cardSchema}/>` — `packages/designer-core/spike/wysiwyg/src/viewer.tsx:7-12` (`new Form({container: #viewer-root})` + `importSchema(cardSchema)`; 오버레이 미사용)
+- [x] 3. EditorHost: 동일 schema를 `<Form>`으로 렌더 + OverlayLayer + 선택 핸들 — `packages/designer-core/spike/wysiwyg/src/editor.tsx:13-26` (`Form` + `render(h(OverlayLayer, {formRoot, selectedIds:['card-1']}), overlayRoot)`), 8방향 핸들은 `overlay/OverlayLayer.tsx:17` `HANDLES = ['nw','n','ne','e','se','s','sw','w']`
+- [x] 4. Playwright 테스트: ViewerHost vs EditorHost 캡처 → pixelmatch diff ≤ 0.1% — `packages/designer-core/spike/wysiwyg/tests/wysiwyg.spec.ts:51-181` (Test 1, D6)
+- [x] 5. CSS Cascade Layers 적용 사례 — `packages/designer-core/spike/wysiwyg/src/layers.css:3` `@layer reset, layout, components, designer-overlay;` (Spike README "검증 사항" 표에도 동일 순서 기재)
+- [x] 6. ResizeObserver 기반 viewport 동기화 데모 — `packages/designer-core/spike/wysiwyg/src/overlay/OverlayLayer.tsx:43-45` (`new ResizeObserver(sync)`, `formRoot` 및 모든 `[data-fjs-id]` 요소 관찰) + `:46` `window.addEventListener('resize', sync)` + 1440px 뷰포트 회귀 테스트 `wysiwyg.spec.ts:273-298`
+
+### 6.3 발견된 3개 이슈와 해결 전략
+
+Phase 0 spike 중 D1~D6 조건을 실제 구현에 적용하다 발견된 구현 레벨 이슈들. ADR 본문 결정은 유지하되, **Phase 1 이후 신규 컴포넌트 작성 시 동일 함정을 피하기 위한 가드**로 남긴다.
+
+#### 이슈 1 — `process.env.NODE_ENV` 브라우저 ReferenceError
+
+**증상**: 번들 없이 Vite dev에서 `viewer.html` / `editor.html`을 직접 로드할 때, `defineComponent` 모듈 평가 시점에 `ReferenceError: process is not defined`가 발생하여 초기 렌더가 실패한다.
+
+**원인**: D7에서 제시한 예시 코드 `if (process.env.NODE_ENV !== 'production')`는 Node 환경 또는 webpack/Rollup의 `DefinePlugin`류로 빌드 시점에 치환되는 환경에서만 유효하다. Vite 개발 서버는 ESM을 그대로 브라우저에 전달하므로 `process` 식별자가 전역에 없고, 모듈 최상위에서 이 값을 참조하면 즉시 ReferenceError로 전파된다.
+
+**수정**: `packages/designer-core/src/defineComponent.ts`에 런타임 환경을 감지하는 `isProductionEnv()` 헬퍼를 도입했다. `import.meta.env`를 우선 참조하고, 없으면 `process` 존재 여부를 `typeof`로 가드한 뒤 Node/bundler 폴백을 쓰며, 둘 다 실패하면 안전한 기본값(비프로덕션)으로 되돌아간다.
+
+```ts
+// packages/designer-core/src/defineComponent.ts:43-52
+function isProductionEnv(): boolean {
+  const meta = (import.meta as { env?: { PROD?: boolean } }).env;
+  if (meta !== undefined) {
+    return meta.PROD === true;
+  }
+  if (typeof process !== 'undefined' && process.env != null) {
+    return process.env['NODE_ENV'] === 'production';
+  }
+  return false;
+}
+```
+
+호출부는 다음과 같이 변경되었다 (`defineComponent.ts:57-60`):
+
+```ts
+if (!isProductionEnv()) {
+  assertPureRender(def.render as unknown as (...args: unknown[]) => unknown);
+}
+```
+
+**회귀 테스트**: `packages/designer-core/src/__tests__/defineComponent.test.tsx:231-243`에 "vanilla browser simulation" 케이스를 추가했다. `globalThis.process`를 `delete`하여 브라우저에서 `process`가 아예 없는 상황을 재현한 뒤 `defineComponent(makeMinimalDef())`가 throw하지 않음을 단언한다.
+
+```ts
+it('does not throw when `process` is undefined (vanilla browser simulation)', () => {
+  const globals = globalThis as unknown as { process?: unknown };
+  const savedProcess = globals.process;
+  ...
+  delete globals.process;
+  expect(() => defineComponent(makeMinimalDef())).not.toThrow();
+  ...
+});
+```
+
+**ADR 업데이트 필요**: §3 D7의 코드 예시를 `isProductionEnv()` 사용으로 교체하거나, 각주로 "런타임 환경 감지는 `import.meta.env`/`process` 이중 가드 유틸로 추상화한다"를 명시한다.
+
+#### 이슈 2 — CSS Modules 파일명 함정
+
+**증상**: Card 스타일이 시각적으로 전혀 적용되지 않은 상태에서도 D6 파리티 테스트가 **통과**했다. viewer와 editor 모두 동일하게 미적용이므로 픽셀 diff가 0에 가까웠다.
+
+**원인**: 최초 구현에서 스타일 파일명을 `Card.module.css`로 두었다. Vite는 `*.module.css` 접미사를 **암묵 규칙**으로 CSS Modules로 처리한다 — 클래스명이 해시로 재작성되고 default export로 매핑 객체가 반환된다. 그러나 `Card.tsx`의 JSX는 원본 클래스명 문자열(`designer-card`, `designer-card--pad-md` 등)을 그대로 사용했기 때문에, 해시화된 실제 CSS와 DOM의 클래스 이름이 일치하지 않아 스타일이 적용되지 않았다. 양쪽 페이지(viewer/editor)가 동일 컴포넌트를 쓰므로 **둘 다 깨진 상태**였고, D6 픽셀 diff는 이를 감지하지 못했다.
+
+**수정**: 파일명을 `Card.css`로 rename하여 CSS Modules 자동 트리거를 해제하고 전역 평문 CSS로 취급하게 했다. 현재 `packages/designer-core/spike/wysiwyg/src/card/Card.css:1-25`는 `@layer components { .designer-card { ... } }` 구조로 원본 클래스명을 그대로 선언한다.
+
+```css
+/* packages/designer-core/spike/wysiwyg/src/card/Card.css */
+@layer components {
+  .designer-card {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    ...
+  }
+  .designer-card--pad-md   { padding: 16px; }
+  .designer-card--elev-1 { box-shadow: 0 1px 2px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.10); }
+  ...
+}
+```
+
+`Card.tsx:38-41`은 이 클래스명을 직접 참조한다:
+
+```tsx
+<div
+  class={`designer-card designer-card--pad-${padding} designer-card--elev-${elevation}`}
+  data-fjs-id={id}
+  id={domId}
+>
+```
+
+**교훈 — 파리티 테스트의 blind spot**:
+> 픽셀 동일성만으로는 "스타일이 의도대로 적용됐다"를 증명할 수 없다. 양쪽이 똑같이 깨져도 diff=0이 된다. D6는 "viewer와 editor가 같다"를 보장하지만 "그 결과가 **옳다**"는 보장하지 못한다.
+>
+> Phase 1부터는 **스타일 적용 자체를 검증하는 별도 가드**를 둔다:
+> - 파리티 테스트와 별도로, 주요 요소에 대해 `getComputedStyle` 스냅샷을 검증하거나, 알려진 기준 스크린샷(골든 이미지)과의 절대 비교를 병행한다.
+> - CSS Modules 의도 여부를 파일명에 명시한다. Phase 1 기본 정책: **`*.module.css` 사용 금지**(쓰려면 의도적으로만, 그리고 import에서 매핑 객체를 받는 코드와 세트로 리뷰).
+
+**ADR 업데이트 필요**: §3 D4 표 하단에 "CSS 파일명 규칙: `*.module.css` 접미사는 Vite에서 CSS Modules를 자동 트리거한다. Phase 0 컴포넌트는 전역 평문 `*.css`만 사용한다"라는 규칙과, "D6는 상대 동등성 게이트이지 스타일 정확성 게이트가 아니다"라는 단서 조항을 추가한다.
+
+#### 이슈 3 — `#editor-shell` viewport 원점 불일치
+
+**증상**: 1024px를 초과하는 뷰포트(예: 1440×900)에서 오버레이 선택 박스가 Card 본체보다 **왼쪽으로 이탈**해 그려졌다. Playwright 기본 뷰포트가 1024px여서 이 버그는 기본 E2E에서는 감지되지 않았다.
+
+**원인**: 초기 `layers.css`에서 `#editor-shell`을 뷰포트 전체(`width: 100%`)로 두고, 그 내부의 `#form-root`만 1024px 고정·`margin: 0 auto`로 중앙 정렬했다. 1440px 뷰포트 기준 `editor-shell`의 좌측 원점은 0, `form-root`의 좌측 원점은 `(1440 - 1024)/2 = 208px`다. OverlayLayer가 `#overlay-root`(= `#editor-shell`의 자식)를 기준으로 `getBoundingClientRect()`를 누적하면, Card의 실제 좌표와 오버레이 좌표계 사이에 항상 208px 오프셋이 발생한다.
+
+**수정**: `packages/designer-core/spike/wysiwyg/src/layers.css:26-43`에서 `#editor-shell`을 `form-root`와 동일한 폭·중앙정렬로 재구조화하여 **같은 원점**을 공유하게 했다. `#overlay-root`는 `#editor-shell`의 자식으로서 `inset: 0`으로 shell 전체를 덮고, `#form-root`도 같은 shell 내부에서 `width: 100%`로 shell을 가득 채운다 — 결과적으로 세 요소의 bounding box origin이 일치한다.
+
+```css
+/* packages/designer-core/spike/wysiwyg/src/layers.css:26-43 */
+#editor-shell {
+  position: relative;
+  width: 1024px;
+  margin: 0 auto;
+}
+#form-root {
+  position: relative;
+  width: 100%;
+  padding: 24px;
+  box-sizing: border-box;
+  background: #ffffff;
+}
+#overlay-root {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10;
+}
+```
+
+CSS 주석 자체에 이 결정의 근거가 박혀 있다 (`layers.css:19-25`): *"#editor-shell is the centered stacking container so that #form-root and #overlay-root share the SAME origin and size. (Previously #overlay-root covered the whole viewport while #form-root was centered, so selection boxes appeared shifted on viewports wider than 1024 px. Playwright's 1024-px viewport hid the bug by coincidence.)"*
+
+**회귀 테스트**: `packages/designer-core/spike/wysiwyg/tests/wysiwyg.spec.ts:273-298`에 1440×900 뷰포트 전용 케이스 "ADR-0001: overlay aligns with Card at wider viewport (1440 px)"를 추가했다. `page.setViewportSize({ width: 1440, height: 900 })`로 뷰포트를 키운 뒤 Card와 selection 박스의 `getBoundingClientRect()`를 각 변(`left`, `top`, `width`, `height`)마다 2px 허용치로 비교한다.
+
+```ts
+const TOL = 2;
+expect(Math.abs(selRect.left   - cardRect.left),   ...).toBeLessThanOrEqual(TOL);
+expect(Math.abs(selRect.top    - cardRect.top),    ...).toBeLessThanOrEqual(TOL);
+expect(Math.abs(selRect.width  - cardRect.width),  ...).toBeLessThanOrEqual(TOL);
+expect(Math.abs(selRect.height - cardRect.height), ...).toBeLessThanOrEqual(TOL);
+```
+
+**D3 명세 보강 필요**: ADR §3 D3 "OverlayLayer는 캔버스의 형제 요소"라는 구조 규칙만으로는 이 버그를 막을 수 없다. "**OverlayLayer의 부모 컨테이너는 `#form-root`와 동일한 bounding box origin과 폭을 공유해야 한다**"라는 불변식을 D3에 명시적으로 추가하고, E2E 회귀 테스트는 기본 뷰포트(1024) 외에 최소 한 개 이상의 **wider viewport** 케이스를 의무화한다.
+
+#### 종합
+
+세 이슈 모두 **ADR 본문 결정(D1~D7)을 부정하지 않는다**. 오히려 구현 레벨에서 D3·D6·D7의 빈틈을 드러냈다:
+
+1. **개발 환경 불일치 (D7)** → Node 가정을 런타임 감지로 추상화하는 구현 가이드 추가.
+2. **파리티 테스트의 blind spot (D6)** → D6는 "동등성" 게이트임을 명시하고, "스타일 적용 자체" 검증을 위한 computed-style/golden-image 보조 게이트를 추가.
+3. **좌표 원점 불일치 (D3)** → OverlayLayer 부모-form-root 원점 공유 불변식을 명시하고, 회귀 테스트를 wider viewport로 확장.
+
+이 세 가드를 **Phase 1 착수 전 ADR 보강 PR** 또는 TRD Acceptance Criteria에 반영하여, 새 컴포넌트가 추가될 때 동일 함정에 재차 빠지지 않도록 한다.
+
+### 6.4 결론
+
+위 검증 결과와 통과 조건 달성, 발견된 이슈의 구체적 해결을 근거로 본 ADR을 **Accepted (2026-04-17)** 로 승격하고 `defineComponent` API를 `designer-core`에 정식 반영했다 (커밋 `2e36d6a`). §6.3의 세 이슈는 후속 ADR 보강 PR로 D3·D4·D6·D7에 가드 조항을 추가하여 반영한다.
 
 ---
 
