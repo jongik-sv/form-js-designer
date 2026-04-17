@@ -214,22 +214,24 @@ node, vitest, vite, playwright
 - depends: TSK-02-03
 - note: task-9 완료. `docs/adr/0002-ui-primitives.md` 303 라인 Accepted. D1 Radix 조건부(1순위)·D2 Zag fallback(2순위)·D3 Headless 제외·D4 Ariakit 탈락·D5 자작 긴급·D6 공유 alias(react-dom/test-utils→preact)·D7 재평가 게이트. 추가로 `docs/idea.md` 에 "JSON 한 방 렌더 스킬" 섹션 append.
 
-### TSK-02-06: §2.4 결과 노트 + spike 일괄 커밋 (gitignore 정리 포함) ⬜
+### TSK-02-06: §2.4 결과 노트 + spike 일괄 커밋 (gitignore 정리 포함) 🔄
 - category: infrastructure
 - domain: docs
 - model: sonnet
-- status: [ ]
+- status: [im]
 - priority: high
 - assignee: -
-- schedule: 2026-04-18 ~ 2026-04-19
+- schedule: 2026-04-17 ~ 2026-04-18
 - tags: plan, commit, phase1-s2
 - depends: TSK-02-04, TSK-02-05
 - requirements:
-  - phase-1-plan §2.4 "Spike 실행 결과 (2026-04-17)" 서브섹션 추가
-  - `.gitignore` 에 spike node_modules/dist/dist-baseline/dist-full 추가
-  - ADR-0002/0003 + TRD 갱신 + phase-1-plan §2.4 + spike 소스 일괄 커밋
+  - phase-1-plan §2.4 "Spike 실행 결과 (2026-04-17)" 서브섹션 추가 ⬜
+  - `.gitignore` 에 dist-baseline/dist-full/.playwright-mcp 추가 ✅
+  - ADR-0002/0003 + TRD 갱신 + WBS 신규 + idea.md 차후계획 + spike 소스 일괄 커밋 ✅ (`04fb477`)
+  - 루트 임시 PNG 5개 + `.playwright-mcp/` 삭제 ✅
 - acceptance:
-  - 단일 또는 2~3 커밋으로 origin push 준비 완료
+  - 원격 push 준비 완료 (origin/develop +9 커밋). phase-1-plan §2.4 서브섹션만 남음.
+- note: 다음 세션에서 §2.4 결과 노트만 추가 후 커밋 → TSK-02-06 완료 → WP-03 착수.
 
 ---
 
