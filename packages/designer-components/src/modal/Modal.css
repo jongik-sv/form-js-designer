@@ -141,6 +141,11 @@
     flex: 1;
   }
 
+  /* 빈 body 슬롯은 flex gap을 먹지 않도록 숨김 — 상/하 padding 비대칭 방지 */
+  .dc-modal__body:empty {
+    display: none;
+  }
+
   /* Open/close animations */
   .dc-modal__content[data-state="open"] {
     animation: dc-modal-content-in 150ms ease;
