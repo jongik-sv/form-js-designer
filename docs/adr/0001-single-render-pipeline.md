@@ -74,6 +74,8 @@ render(props: { field, value, onChange?, domId, errors? }): preact.JSX.Element
 - 좌표는 `getBoundingClientRect()` + `ResizeObserver` + `IntersectionObserver`로 계산.
 - 컴포넌트 DOM에 `data-fjs-id={field.id}` 속성만 부여(읽기 전용). OverlayLayer는 이 속성으로 박스를 찾아 그린다.
 - OverlayLayer 내부 모든 클래스는 `.fjs-designer-*` 접두사. `pointer-events: auto`는 핸들 자체에만.
+- **원점 공유 불변식**: OverlayLayer의 부모 컨테이너는 `#form-root`와 **동일한 bounding-box origin(`left`·`top`)과 `width`**를 공유해야 한다. viewport 너비에 따라 `#form-root`가 중앙 정렬되면 OverlayLayer 부모도 같은 stacking container 안에서 같은 중앙 정렬을 받아야 한다. 두 요소의 `getBoundingClientRect()`가 일치하지 않으면 선택 박스가 좌우로 밀리는 좌표 오프셋 버그가 발생한다 (§6.3 이슈 3).
+- **wider viewport 회귀 의무**: E2E 회귀 테스트는 기본 1024 px 외에 **최소 1개 이상의 wider viewport(≥ 1440 px)** 케이스를 포함해야 한다. 기본 뷰포트만으로는 원점 불일치 버그가 감지되지 않는다.
 
 → 디자이너 표시는 **viewer 결과물 DOM을 단 한 줄도 변형하지 않는다.**
 
@@ -89,6 +91,7 @@ render(props: { field, value, onChange?, domId, errors? }): preact.JSX.Element
 - 컴포넌트 CSS는 `.fjs-designer-*`를 **선택자에 포함하면 안 된다** (역참조 금지). CI 정적 검사로 차단.
 - editor 전용 CSS는 컴포넌트 클래스에 영향을 주는 룰을 작성할 수 없다 (`!important` 포함). 빌드 시 SCSS lint.
 - CSS Cascade Layers (`@layer components, designer-overlay;`) 도입을 검토 — 우선순위 충돌 원천 차단.
+- **CSS 파일명 규칙 (`*.module.css` 금지)**: Vite와 webpack은 `*.module.css` 접미사를 암묵 규칙으로 **CSS Modules 자동 트리거**에 쓴다 — 클래스명이 해시로 재작성되어 JSX의 원본 문자열과 불일치하면 스타일이 조용히 실패한다 (§6.3 이슈 2). `packages/designer-*` 하위에서는 전역 평문 `*.css`만 허용하고, `*.module.css` 파일 존재 시 CI lint(`scripts/ci/no-css-modules.mjs`)로 exit 1 처리한다. CSS Modules를 의도적으로 쓰려면 별도 ADR 승인과 매핑 객체 import를 세트로 리뷰한다.
 
 ### D5. Viewport·Theme·Data 패리티
 
@@ -113,6 +116,15 @@ Playwright:
 
 신규 컴포넌트마다 **최소 1개** 패리티 케이스. 실패 시 PR 차단.
 
+**단서 — D6는 상대 동등성 게이트이지 스타일 정확성 게이트가 아니다**: D6는 "viewer ≡ editor"를 보장할 뿐 "그 결과가 **옳다**"를 증명하지 못한다. 양쪽이 동일하게 깨진 상태(예: CSS Modules 해시 불일치로 두 페이지 모두 스타일 미적용)에서도 diff=0이 성립한다 (§6.3 이슈 2).
+
+따라서 신규 컴포넌트마다 D6 파리티 케이스 외에 **아래 보조 게이트 중 최소 1개를 의무**로 추가한다:
+
+1. **computed-style 스냅샷**: 컴포넌트의 주요 시각 요소(루트, 1차 자식)에 대해 `window.getComputedStyle(el)`을 호출하여 `background`, `border`, `padding`, `font-size`, `color` 등 핵심 속성을 기대값(또는 저장된 스냅샷)과 비교.
+2. **골든 이미지(절대 비교)**: 기대 상태를 한 번 수동 검증한 후 기준 PNG로 저장하고, 이후 PR에서는 viewer 캡처와 이 골든 이미지를 pixelmatch로 비교(diff ≤ 0.1%).
+
+둘 중 어느 쪽을 택하든 D6 파리티 케이스와는 **별도 테스트**로 작성해야 한다 (같은 assertion에 묶지 않음). wider viewport(§D3) 케이스는 D6와 보조 게이트에서 모두 커버되어야 한다.
+
 ### D7. `defineComponent` API가 위 규칙을 강제
 
 `designer-core/defineComponent.ts`는 위 D1~D5를 **타입과 런타임 양쪽에서** 강제한다.
@@ -129,14 +141,26 @@ interface PureRenderProps {
 }
 
 export function defineComponent(def: ComponentDefinition) {
-  if (process.env.NODE_ENV !== 'production') {
+  if (!isProductionEnv()) {
     assertPureRender(def.render);          // 휴리스틱: 함수 본문 정적 검사
   }
   return def;
 }
+
+// 런타임 환경 감지: import.meta.env 우선, process 가드 폴백, 둘 다 없으면 non-production 기본값
+function isProductionEnv(): boolean {
+  const meta = (import.meta as { env?: { PROD?: boolean } }).env;
+  if (meta !== undefined) return meta.PROD === true;
+  if (typeof process !== 'undefined' && process.env != null) {
+    return process.env['NODE_ENV'] === 'production';
+  }
+  return false;
+}
 ```
 
 타입 시스템이 D1을 강제하고, dev 빌드의 휴리스틱 정적 검사가 `useService('selection')` 같은 패턴을 잡는다(false positive 가능 — 경고만).
+
+**주의 — `process.env.NODE_ENV` 직접 참조 금지**: Vite dev 서버는 ESM을 브라우저에 그대로 전달하므로 `process` 전역이 없다. `defineComponent` 모듈 최상위에서 `process.env.NODE_ENV`를 참조하면 즉시 `ReferenceError: process is not defined`로 전파되어 초기 렌더가 실패한다 (§6.3 이슈 1). `designer-*` 패키지에서 환경 분기가 필요할 때는 반드시 `isProductionEnv()` 같은 이중-가드 헬퍼를 거쳐야 한다. 현재 구현은 `packages/designer-core/src/defineComponent.ts:43-52` 참조.
 
 ---
 
