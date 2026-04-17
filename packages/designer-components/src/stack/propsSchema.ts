@@ -1,10 +1,12 @@
 import type { PropsSchema } from '@form-js-designer/designer-core';
 
+export type StackGap = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+
 export interface StackSchema {
   id: string;
   type: 'stack';
   direction?: 'horizontal' | 'vertical';
-  gap?: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+  gap?: StackGap;
   align?: 'start' | 'center' | 'end' | 'stretch' | 'baseline';
   justify?: 'start' | 'center' | 'end' | 'space-between' | 'space-around' | 'space-evenly';
   [key: string]: unknown;

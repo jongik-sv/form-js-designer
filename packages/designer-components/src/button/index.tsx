@@ -33,6 +33,7 @@ function ButtonRender(props: PureRenderProps<ButtonSchema>) {
 
   const variant = field.variant ?? 'primary';
   const size = field.size ?? 'md';
+  // props.disabled (editor-host overlay) overrides field.disabled only when field value is absent
   const disabled = field.disabled ?? props.disabled ?? false;
   const label = field.label ?? 'Button';
 

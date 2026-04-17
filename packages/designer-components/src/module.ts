@@ -12,17 +12,20 @@ import { CardComponent } from './card/index';
 import { StackComponent } from './stack/index';
 import { ButtonComponent } from './button/index';
 
+/** form-js didi 컨테이너가 주입하는 FormFieldRegistry 최소 인터페이스 */
 interface FormFieldRegistry {
   register: (type: string, componentDef: unknown) => void;
 }
+
+const COMPONENTS = [CardComponent, StackComponent, ButtonComponent] as const;
 
 /**
  * Registration service — form-js didi 컨테이너가 FormFieldRegistry를 주입한다.
  */
 function DesignerComponentsRegistration(formFieldRegistry: FormFieldRegistry) {
-  formFieldRegistry.register(CardComponent.type, CardComponent);
-  formFieldRegistry.register(StackComponent.type, StackComponent);
-  formFieldRegistry.register(ButtonComponent.type, ButtonComponent);
+  for (const component of COMPONENTS) {
+    formFieldRegistry.register(component.type, component);
+  }
 }
 
 // didi 컨테이너 주입 표기: $inject 배열로 의존성 선언

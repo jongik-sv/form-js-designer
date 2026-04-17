@@ -3,7 +3,7 @@ import { cva } from 'class-variance-authority';
 import { twMerge } from 'tailwind-merge';
 import { defineComponent } from '@form-js-designer/designer-core';
 import type { PureRenderProps } from '@form-js-designer/designer-core';
-import type { CardSchema } from './propsSchema';
+import type { CardSchema, CardElevation, CardHeaderTag } from './propsSchema';
 import { cardPropsSchema } from './propsSchema';
 import './Card.css';
 
@@ -35,15 +35,13 @@ function CardRender(props: PureRenderProps<CardSchema>) {
   const errors = props.errors ?? [];
 
   const padding = field.padding ?? 'md';
-  const elevation = (field.elevation ?? 1) as 0 | 1 | 2 | 3;
+  const elevation: CardElevation = field.elevation ?? 1;
   const header = field.header;
-  const headerTag = field.headerTag ?? 'h3';
+  const headerTag: CardHeaderTag = field.headerTag ?? 'h3';
 
-  const className = twMerge(
-    cardVariants({ padding, elevation }),
-  );
+  const className = twMerge(cardVariants({ padding, elevation }));
 
-  const HeaderTag = headerTag as 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
+  const HeaderTag = headerTag;
 
   return (
     <div class={className} data-component="card" id={props.domId}>

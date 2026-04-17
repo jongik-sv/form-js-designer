@@ -3,7 +3,7 @@ import { cva } from 'class-variance-authority';
 import { twMerge } from 'tailwind-merge';
 import { defineComponent } from '@form-js-designer/designer-core';
 import type { PureRenderProps } from '@form-js-designer/designer-core';
-import type { StackSchema } from './propsSchema';
+import type { StackSchema, StackGap } from './propsSchema';
 import { stackPropsSchema } from './propsSchema';
 import './Stack.css';
 
@@ -54,13 +54,11 @@ function StackRender(props: PureRenderProps<StackSchema>) {
   const field = props.field as StackSchema;
 
   const direction = field.direction ?? 'vertical';
-  const gap = (field.gap ?? 0) as 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+  const gap: StackGap = field.gap ?? 0;
   const align = field.align ?? 'start';
   const justify = field.justify ?? 'start';
 
-  const className = twMerge(
-    stackVariants({ direction, gap, align, justify }),
-  );
+  const className = twMerge(stackVariants({ direction, gap, align, justify }));
 
   return (
     <div

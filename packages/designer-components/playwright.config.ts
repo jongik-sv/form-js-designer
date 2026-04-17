@@ -5,6 +5,7 @@ import { defineConfig, devices } from '@playwright/test';
  * - 3 viewport 매트릭스: 1024 / 1440 / 1920
  * - fixture HTML Vite dev 서버 (port 5174)
  */
+
 export default defineConfig({
   testDir: './test',
   testMatch: [
@@ -49,10 +50,10 @@ export default defineConfig({
     },
   ],
 
-  webServer: {
-    command: 'npm --prefix packages/designer-components run dev',
+  webServer: process.env['PLAYWRIGHT_SKIP_SERVER'] ? undefined : {
+    command: 'vite --host --port 5174',
     url: 'http://localhost:5174',
     reuseExistingServer: !process.env['CI'],
-    timeout: 30000,
+    timeout: 60000,
   },
 });

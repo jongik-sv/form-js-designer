@@ -1,12 +1,16 @@
 import type { PropsSchema } from '@form-js-designer/designer-core';
 
+export type CardPadding = 'none' | 'sm' | 'md' | 'lg';
+export type CardElevation = 0 | 1 | 2 | 3;
+export type CardHeaderTag = 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
+
 export interface CardSchema {
   id: string;
   type: 'card';
-  padding?: 'none' | 'sm' | 'md' | 'lg';
-  elevation?: 0 | 1 | 2 | 3;
+  padding?: CardPadding;
+  elevation?: CardElevation;
   header?: string;
-  headerTag?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
+  headerTag?: CardHeaderTag;
   [key: string]: unknown;
 }
 
