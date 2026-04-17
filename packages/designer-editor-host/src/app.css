@@ -1,0 +1,108 @@
+@layer app {
+  * {
+    box-sizing: border-box;
+  }
+
+  html,
+  body,
+  #app {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  .app-layout {
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+    font-family: sans-serif;
+  }
+
+  .outline-container {
+    width: 240px;
+    flex-shrink: 0;
+    border-right: 1px solid #e0e0e0;
+    overflow-y: auto;
+    background: #fafafa;
+    padding: 8px 0;
+  }
+
+  .outline-container h3 {
+    margin: 0 12px 8px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .editor-container {
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .editor-container .fjs-editor-container {
+    height: 100%;
+  }
+
+  .outline-panel {
+    padding: 4px 0;
+  }
+
+  .outline-panel--empty {
+    padding: 16px 12px;
+    color: #999;
+    font-size: 13px;
+  }
+
+  .outline-panel__tree {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .outline-node {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    padding: 4px 12px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    font-size: 13px;
+    color: #333;
+    border-radius: 4px;
+    transition: background 0.1s;
+  }
+
+  .outline-node:hover {
+    background: #e8e8e8;
+  }
+
+  .outline-node--selected {
+    background: #dbeafe;
+    color: #1d4ed8;
+  }
+
+  .outline-node__type {
+    font-weight: 500;
+  }
+
+  .outline-node__label {
+    color: #666;
+    font-size: 12px;
+  }
+
+  .outline-node--selected .outline-node__label {
+    color: #3b82f6;
+  }
+
+  .outline-node__children {
+    list-style: none;
+    margin: 0;
+    padding: 0 0 0 16px;
+  }
+}
