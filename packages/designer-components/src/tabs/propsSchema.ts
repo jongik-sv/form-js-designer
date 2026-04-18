@@ -18,6 +18,8 @@ export interface TabsSchema {
   tabs?: TabItem[];
   defaultValue?: string;
   orientation?: 'horizontal' | 'vertical';
+  /** Trigger height in pixels. Undefined = content-based auto height. */
+  tabHeight?: number;
   [key: string]: unknown;
 }
 
@@ -32,6 +34,13 @@ export const tabsPropsSchema: PropsSchema = {
       label: 'designer.components.tabs.orientation',
       default: 'horizontal',
       enum: ['horizontal', 'vertical'] as const,
+    },
+    tabHeight: {
+      type: 'number',
+      label: 'designer.components.tabs.tabHeight',
+      // 0 = 부모 꽉 채움, 그 외는 min-height(px). 컴포넌트가 많으면 자동 확장.
+      min: 0,
+      max: 4096,
     },
   },
 };

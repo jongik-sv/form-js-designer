@@ -1,8 +1,9 @@
 /**
- * Sidebar — 에디터 호스트 앱 사이드바 (TSK-06-02)
+ * Sidebar — side-panel 상단 탭 바 (TSK-06-02)
  *
- * 메뉴 항목: Properties (#/props), Live Preview (#/preview)
- * 클릭 시 hash 탭 전환.
+ * Properties / Live Preview 두 항목을 가로 탭으로 전환한다.
+ * 해시(#/props, #/preview) 기반 라우팅은 그대로 유지하며,
+ * 접근성을 위해 role="tablist" / role="tab" / aria-selected 를 사용한다.
  */
 
 import { h } from 'preact';
@@ -28,25 +29,34 @@ interface SidebarProps {
 
 export function Sidebar({ activeTab, onTabChange }: SidebarProps): h.JSX.Element {
   return (
-    <nav class="sidebar" role="navigation" aria-label="에디터 사이드바" data-testid="sidebar">
-      <ul class="sidebar__nav">
-        {navItems.map((item) => (
-          <li key={item.id} class="sidebar__item">
-            <a
-              href={item.hash}
-              class={`sidebar__link${activeTab === item.tab ? ' sidebar__link--active' : ''}`}
-              data-testid={`sidebar-${item.id}`}
-              aria-current={activeTab === item.tab ? 'page' : undefined}
-              onClick={(e) => {
-                e.preventDefault();
-                onTabChange(item.tab);
-              }}
-            >
-              {item.label}
-            </a>
-          </li>
-        ))}
-      </ul>
+    <nav
+      class="sidebar"
+      role="tablist"
+      aria-label="사이드 패널 탭"
+      aria-orientation="horizontal"
+      data-testid="sidebar"
+    >
+      {navItems.map((item) => {
+        const selected = activeTab === item.tab;
+        return (
+          <a
+            key={item.id}
+            href={item.hash}
+            role="tab"
+            class={`sidebar__link${selected ? ' sidebar__link--active' : ''}`}
+            data-testid={`sidebar-${item.id}`}
+            aria-selected={selected}
+            aria-controls="side-panel"
+            tabIndex={selected ? 0 : -1}
+            onClick={(e) => {
+              e.preventDefault();
+              onTabChange(item.tab);
+            }}
+          >
+            {item.label}
+          </a>
+        );
+      })}
     </nav>
   );
 }

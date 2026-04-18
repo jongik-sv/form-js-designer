@@ -19,6 +19,7 @@ export interface PanelEntryContext {
 
 export interface FormJsPanelEntry {
   id: string;
+  label?: string;
   component: ((props: Record<string, unknown>) => unknown) | unknown;
   isEdited: (node: unknown) => boolean;
   set: (value: unknown, field?: unknown) => void;
@@ -37,6 +38,7 @@ export function panelEntryAdapter(
 
   return {
     id: key,
+    label: entry.label,
 
     /**
      * component — form-js-editor의 propertiesPanel에서 렌더하는 컴포넌트 팩토리.

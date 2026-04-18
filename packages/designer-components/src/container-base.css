@@ -18,4 +18,37 @@
     margin-left: 0;
     margin-right: 0;
   }
+
+  .fjs-container .fjs-button[type='submit'],
+  .fjs-container .fjs-button[type='button'],
+  .fjs-container .fjs-button[type='reset'] {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 36px;
+    padding: 6px 16px;
+    border-radius: 6px;
+    border: 1px solid #2563eb;
+    background-color: #2563eb;
+    color: #ffffff;
+    font-size: 0.875rem;
+    font-weight: 500;
+    line-height: 1.5;
+    cursor: pointer;
+    transition: background-color 150ms ease, border-color 150ms ease;
+  }
+
+  .fjs-container .fjs-button[type='submit']:hover:not(:disabled),
+  .fjs-container .fjs-button[type='button']:hover:not(:disabled),
+  .fjs-container .fjs-button[type='reset']:hover:not(:disabled) {
+    background-color: #1d4ed8;
+    border-color: #1d4ed8;
+  }
+
+  .fjs-container .fjs-button[type='submit']:disabled,
+  .fjs-container .fjs-button[type='button']:disabled,
+  .fjs-container .fjs-button[type='reset']:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 }

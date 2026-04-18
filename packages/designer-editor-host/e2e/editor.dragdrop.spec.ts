@@ -93,24 +93,11 @@ test.describe('Editor Drag & Drop — 6 컴포넌트', () => {
         await expect(outlineNode).toBeVisible({ timeout: 3000 });
       }
 
-      // 6. table 전용 어서션: 3 컬럼 헤더 + tbody 행 + John Doe 가시성
+      // 6. table 전용 어서션: form-js native Table 컨테이너 가시성 확인
+      // (컬럼 구성은 속성 패널의 "Header items" 로 사용자가 설정; 기본은 비어있음)
       if (comp.type === 'table') {
-        const tableEl = page.locator('[data-testid="designer-table"]').first();
+        const tableEl = page.locator('.fjs-table').first();
         await expect(tableEl).toBeVisible({ timeout: 5000 });
-
-        // thead th 에 ID / Name / Date 텍스트 가시성 확인
-        const thead = tableEl.locator('thead');
-        await expect(thead.locator('th', { hasText: 'ID' }).first()).toBeVisible({ timeout: 3000 });
-        await expect(thead.locator('th', { hasText: 'Name' }).first()).toBeVisible({ timeout: 3000 });
-        await expect(thead.locator('th', { hasText: 'Date' }).first()).toBeVisible({ timeout: 3000 });
-
-        // tbody tr 1개 이상 존재
-        const rows = tableEl.locator('tbody tr');
-        await expect(rows.first()).toBeVisible({ timeout: 3000 });
-
-        // 첫 번째 행에 John Doe 텍스트 포함
-        const firstRow = rows.first();
-        await expect(firstRow.locator('text=John Doe')).toBeVisible({ timeout: 3000 });
       }
     });
   }

@@ -5,6 +5,7 @@
 // TSK-06-01
 export { PaletteModule } from './PaletteModule';
 export { OutlineModule } from './OutlineModule';
+export { ShortcutModule } from './ShortcutModule';
 
 // TSK-06-02
 export { PropsPanelModule } from './PropsPanelModule';

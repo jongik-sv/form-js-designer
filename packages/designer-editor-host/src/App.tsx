@@ -2,26 +2,26 @@
  * App — form-js Editor Host 앱 컴포넌트 (TSK-06-01 + TSK-06-02)
  *
  * FormEditor 인스턴스를 useLayoutEffect로 생성하고
- * DesignerComponentsModule + DesignerTableModule + PaletteModule + OutlineModule +
+ * DesignerComponentsModule + PaletteModule + OutlineModule +
  * PropsPanelModule + LivePreviewModule + ValidateModule + ExportModule을
- * additionalModules로 주입한다.
+ * additionalModules로 주입한다. Table 은 form-js native 컴포넌트를 그대로 사용한다.
  *
  * 레이아웃:
- *   [Sidebar] [Outline + EditorHost] [PropsPanelContainer | LivePreviewPanel]
+ *   [Outline + EditorHost] [side-panel: Sidebar(탭) + PropsPanelContainer | LivePreviewPanel]
  *   상단 툴바: Validate / Export JSON / Copy CLI 버튼
  *   상태바: ValidationBadge
  */
 
 import { h } from 'preact';
-import { useLayoutEffect, useRef, useState } from 'preact/hooks';
+import { useEffect, useLayoutEffect, useRef, useState } from 'preact/hooks';
 // @ts-ignore — form-js-editor has no bundled type declarations; skip lib check
 import { FormEditor } from '@bpmn-io/form-js-editor';
 import { DesignerContainerModule } from '@form-js-designer/designer-core';
 import type { ValidationResult } from '@form-js-designer/designer-core';
 import { DesignerComponentsModule, migrateLegacyTabsSchema } from '@form-js-designer/designer-components';
-import { DesignerTableModule } from '@form-js-designer/designer-table';
 import { PaletteModule } from './modules/PaletteModule';
 import { OutlineModule } from './modules/OutlineModule';
+import { ShortcutModule } from './modules/ShortcutModule';
 import { PropsPanelModule } from './modules/PropsPanelModule';
 import { PropsPanelService } from './modules/PropsPanelService';
 import { LivePreviewModule } from './modules/LivePreviewModule';
@@ -35,6 +35,10 @@ import { PropsPanelContainer } from './components/PropsPanelContainer';
 import { LivePreviewPanel } from './components/LivePreviewPanel';
 import { ToolbarButtons } from './components/ToolbarButtons';
 import { ValidationBadge } from './components/ValidationBadge';
+import { PanelSplitter } from './components/PanelSplitter';
+import { SidePanelToggle } from './components/SidePanelToggle';
+import { usePanelResize } from './hooks/usePanelResize';
+import { installPropsPanelFocusGuard } from './hooks/usePropsPanelFocusGuard';
 import { useSidePanelTab } from './router';
 // form-js.css is the full viewer stylesheet (superset of form-js-base.css).
 // Required for the Carbon grid column distribution rules (.cds--col-lg-*,
@@ -54,6 +58,7 @@ const DEFAULT_SCHEMA = {
 
 export function App(): h.JSX.Element {
   const editorRef = useRef<HTMLDivElement>(null);
+  const nativePropsPanelRef = useRef<HTMLDivElement>(null);
   const outlineRef = useRef<HTMLDivElement>(null);
   const editorInstanceRef = useRef<InstanceType<typeof FormEditor> | null>(null);
 
@@ -74,10 +79,38 @@ export function App(): h.JSX.Element {
 
   const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
   const [tab, setTab] = useSidePanelTab();
+  const [outlineCollapsed, setOutlineCollapsed] = useState<boolean>(false);
+
+  // 패널 max 너비는 viewport 기반(최소 900, 최대 1600, 좌측 영역 400px 확보)
+  const computeMaxPanelWidth = (): number => {
+    const vw = typeof window !== 'undefined' ? window.innerWidth : 1600;
+    return Math.min(1600, Math.max(900, vw - 400));
+  };
+  const [maxPanelWidth, setMaxPanelWidth] = useState<number>(computeMaxPanelWidth);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const onResize = () => setMaxPanelWidth(computeMaxPanelWidth());
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  // 패널 리사이즈 상태
+  const {
+    width: panelWidth,
+    collapsed: panelCollapsed,
+    toggleCollapse,
+    startDrag,
+    adjustWidth,
+  } = usePanelResize({ initialWidth: 300, minWidth: 180, maxWidth: maxPanelWidth });
 
   useLayoutEffect(() => {
     const container = editorRef.current;
     if (!container) return;
+
+    // form-js가 canvas의 fjs-editor-selected 요소로 focus 를 자동 이동시키는 동작을
+    // props-panel input 포커스 상태에서는 차단한다 (숫자/문자 입력 중 focus steal 방지).
+    const uninstallFocusGuard = installPropsPanelFocusGuard();
 
     let editor: InstanceType<typeof FormEditor> | null = null;
 
@@ -87,19 +120,24 @@ export function App(): h.JSX.Element {
         // 다른 모듈이 formLayouter를 주입받기 전에 로드되어야 함.
         DesignerContainerModule,
         DesignerComponentsModule,
-        DesignerTableModule,
         PaletteModule,
         OutlineModule,
+        ShortcutModule,
         PropsPanelModule,
         LivePreviewModule,
         ValidateModule,
         ExportModule,
       ];
 
+      // propertiesPanel.parent 를 제공하면 form-js 내장 "fjs-editor-properties-container"
+      // 자동 attach 로직이 비활성화된다 (form-js source: defaultPropertiesPanel()).
+      // 이 때 호스트가 propertiesPanel.attachTo() 로 side-panel 에 직접 마운트한다.
+      const offscreenPropsParent = document.createElement('div');
       editor = new FormEditor({
         container,
         additionalModules,
-      });
+        propertiesPanel: { parent: offscreenPropsParent },
+      } as ConstructorParameters<typeof FormEditor>[0]);
 
       editorInstanceRef.current = editor;
       // expose editor for e2e debugging
@@ -138,6 +176,7 @@ export function App(): h.JSX.Element {
               exportSvc: exportSvc ?? null,
               eventBus: eventBus ?? null,
             });
+
           } catch (err) {
             console.warn('[App] DI 서비스 획득 실패:', err);
           }
@@ -154,15 +193,33 @@ export function App(): h.JSX.Element {
         try { editor.destroy(); } catch { /* cleanup 오류 무시 */ }
         editorInstanceRef.current = null;
       }
+      uninstallFocusGuard();
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // form-js 내장 propertiesPanel 을 side-panel(ref div) 에 attach.
+  // tab 이 'props' 로 바뀔 때마다 ref 가 새로 마운트되므로 attach/detach 를 재실행한다.
+  useEffect(() => {
+    const editor = editorInstanceRef.current;
+    const mountEl = nativePropsPanelRef.current;
+    if (!editor || !mountEl || panelCollapsed || tab !== 'props') return;
+
+    const nativePP = editor.get('propertiesPanel', false) as
+      | { attachTo: (el: HTMLElement) => void; detach: () => void }
+      | undefined;
+    if (!nativePP) return;
+
+    try { nativePP.attachTo(mountEl); } catch (err) {
+      console.warn('[App] propertiesPanel.attachTo 실패:', err);
+    }
+    return () => {
+      try { nativePP.detach(); } catch { /* ignore */ }
+    };
+  }, [tab, panelCollapsed, services.propsPanel]);
+
   return (
     <div class="app-layout">
-      {/* 사이드바 */}
-      <Sidebar activeTab={tab} onTabChange={setTab} />
-
       {/* 아웃라인 + 에디터 */}
       <div class="editor-area">
         {/* 툴바 */}
@@ -176,28 +233,81 @@ export function App(): h.JSX.Element {
         </div>
 
         <div class="editor-main">
-          <div class="outline-container" data-outline-container>
-            <h3>아웃라인</h3>
-            <div ref={outlineRef} data-testid="outline-root" />
+          <div
+            class={`outline-container${outlineCollapsed ? ' outline-container--collapsed' : ''}`}
+            data-outline-container
+          >
+            <div class="outline-header">
+              <button
+                class="outline-toggle-btn"
+                type="button"
+                aria-expanded={!outlineCollapsed}
+                aria-controls="outline-root"
+                aria-label={outlineCollapsed ? '아웃라인 열기' : '아웃라인 닫기'}
+                data-testid="outline-toggle"
+                onClick={() => setOutlineCollapsed((c) => !c)}
+              >
+                <span aria-hidden="true">☰</span>
+              </button>
+              <h3>아웃라인</h3>
+            </div>
+            <div
+              ref={outlineRef}
+              id="outline-root"
+              data-testid="outline-root"
+              class="outline-root"
+            />
           </div>
           <div class="editor-container" ref={editorRef} data-testid="editor-root" />
         </div>
       </div>
 
-      {/* 우측 패널 — Props / LivePreview 탭 */}
-      <div class="side-panel">
-        {tab === 'props' && (
-          <PropsPanelContainer
-            propsPanelService={services.propsPanel}
-            eventBus={services.eventBus}
-          />
+      {/* splitter — .editor-area 우측과 .side-panel 사이 */}
+      {!panelCollapsed && (
+        <PanelSplitter
+          width={panelWidth}
+          minWidth={180}
+          maxWidth={maxPanelWidth}
+          onDragStart={startDrag}
+          onAdjust={adjustWidth}
+        />
+      )}
+
+      {/* 토글 버튼 — splitter/side-panel 사이에 독립 배치 (overflow clip 방지) */}
+      <SidePanelToggle
+        collapsed={panelCollapsed}
+        onToggle={toggleCollapse}
+        panelLabel={tab === 'preview' ? '라이브 프리뷰' : '속성'}
+        panelId="side-panel"
+      />
+
+      {/* 우측 패널 — Properties / Live Preview 탭 + 선택된 콘텐츠 */}
+      <div
+        class={`side-panel${panelCollapsed ? ' side-panel--collapsed' : ''}`}
+        id="side-panel"
+        data-testid="side-panel"
+        style={panelCollapsed ? undefined : { '--side-panel-width': `${panelWidth}px` } as Record<string, string>}
+      >
+        {!panelCollapsed && (
+          <Sidebar activeTab={tab} onTabChange={setTab} />
         )}
-        {tab === 'preview' && (
+        {!panelCollapsed && tab === 'props' && (
+          <div class="props-panel-stack" data-testid="props-stack">
+            {/* 기본 form-js 속성 (General/Condition/Layout/Validation/Custom) */}
+            <div ref={nativePropsPanelRef} class="props-panel-native" data-testid="props-native" />
+            {/* designer-components 전용 속성 (padding, tabHeight, ...) */}
+            <PropsPanelContainer
+              propsPanelService={services.propsPanel}
+              eventBus={services.eventBus}
+            />
+          </div>
+        )}
+        {!panelCollapsed && tab === 'preview' && (
           <LivePreviewPanel livePreviewService={services.livePreview} />
         )}
-        {tab === null && (
+        {!panelCollapsed && tab === null && (
           <div class="side-panel--empty" data-testid="side-panel-empty">
-            <p>사이드바에서 패널을 선택하세요.</p>
+            <p>상단 탭에서 패널을 선택하세요.</p>
           </div>
         )}
       </div>

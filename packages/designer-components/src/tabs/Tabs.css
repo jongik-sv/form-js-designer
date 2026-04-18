@@ -1,8 +1,17 @@
 @layer components {
+  .dc-tabs-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    min-width: 0;
+  }
+
   .dc-tabs {
     display: flex;
     flex-direction: column;
     width: 100%;
+    height: 100%;
+    min-height: 0;
   }
 
   .dc-tabs[data-orientation="vertical"] {
@@ -82,12 +91,24 @@
     border-right-color: #3b82f6;
   }
 
+  /* Tab Contents wrapper — grid stacking
+     모든 TabsContent 를 같은 grid cell(1행 1열) 에 중첩해서 row 높이가 max(content) 로
+     결정되도록 한다. 탭 전환해도 높이가 유지된다. */
+  .dc-tabs__contents {
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: auto;
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
   /* Tab Content — dc-container-body 공용 클래스와 조합하여 cds--grid 음수마진 중화 (container-base.css) */
   .dc-tabs__content {
+    grid-column: 1;
+    grid-row: 1;
     padding: 16px;
-    flex: 1;
     outline: none;
-    overflow: hidden;
+    overflow: visible;
   }
 
   .dc-tabs__content:focus-visible {
@@ -96,8 +117,10 @@
     border-radius: 4px;
   }
 
+  /* 비활성 패널은 레이아웃에는 남겨두되 보이지 않게 + 상호작용 차단 */
   .dc-tabs__content[data-state="inactive"] {
-    display: none;
+    visibility: hidden;
+    pointer-events: none;
   }
 
   /* Reduced motion */

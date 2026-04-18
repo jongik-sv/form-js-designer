@@ -27,8 +27,7 @@
   },
   "dependencies": {
     "@form-js-designer/designer-components": "*",
-    "@form-js-designer/designer-core": "*",
-    "@form-js-designer/designer-table": "*"
+    "@form-js-designer/designer-core": "*"
   },
   "devDependencies": {
     "@playwright/test": "^1.47.2",

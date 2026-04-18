@@ -10,7 +10,7 @@ export interface TabPanelField {
 export const tabPanelPropsSchema: PropsSchema = {
   properties: {
     label: {
-      type: 'i18n',
+      type: 'string',
       label: 'designer.components.tabPanel.label',
     },
   },

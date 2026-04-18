@@ -109,6 +109,7 @@ export function defineComponent<F extends FieldSchema = FieldSchema>(
     group: def.group,
     icon: def.icon ?? DefaultPaletteIcon,
     create: def.create as (options?: Record<string, unknown>) => Record<string, unknown>,
+    propsSchema: def.propsSchema,
   };
 
   const component = DesignerComponent as unknown as FormJsFieldComponent;

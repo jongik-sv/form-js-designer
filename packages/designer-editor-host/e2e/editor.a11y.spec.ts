@@ -171,7 +171,7 @@ test.describe('Editor a11y — axe-core critical+serious=0', () => {
 
     // 테이블 셀 더블클릭으로 inline edit 활성화
     const tableCell = page
-      .locator('[data-testid="designer-table"] td, .fjs-table td, table td')
+      .locator('.fjs-table td, table td')
       .first();
 
     if (await tableCell.count() > 0) {

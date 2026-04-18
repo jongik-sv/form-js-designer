@@ -54,8 +54,9 @@ describe('PropsPanelService', () => {
     vi.clearAllMocks();
   });
 
-  // Case 1: 생성자에서 propertiesPanel.registerProvider 호출
-  it('1: 생성자에서 propertiesPanel.registerProvider 가 호출됨', () => {
+  // Case 1: bio-properties-panel 과 직접 통합하지 않는다 (updater 계약 불일치로 패널 깨짐).
+  // 호스트의 PropsPanelContainer 가 getGroups 를 직접 호출하는 분리 구조.
+  it('1: propertiesPanel.registerProvider 는 호출되지 않는다', () => {
     const deps = makeDeps();
     new PropsPanelService(
       deps.eventBus,
@@ -63,21 +64,18 @@ describe('PropsPanelService', () => {
       deps.propertiesPanel,
       deps.modeling,
     );
-    expect(deps.propertiesPanel.registerProvider).toHaveBeenCalledTimes(1);
+    expect(deps.propertiesPanel.registerProvider).not.toHaveBeenCalled();
   });
 
-  // Case 2: registerProvider에 priority 500 이상으로 등록
-  it('2: registerProvider 호출 시 priority >= 500으로 등록됨', () => {
-    const deps = makeDeps();
-    new PropsPanelService(
+  // Case 2: propertiesPanel 이 null 이어도 서비스는 정상 구성되어야 한다.
+  it('2: propertiesPanel 이 null 이어도 생성자가 throw 하지 않는다', () => {
+    const deps = makeDeps({ propertiesPanel: null });
+    expect(() => new PropsPanelService(
       deps.eventBus,
       deps.formFieldRegistry,
       deps.propertiesPanel,
       deps.modeling,
-    );
-    const [priority] = deps.propertiesPanel.registerProvider.mock.calls[0] as unknown[];
-    expect(typeof priority).toBe('number');
-    expect(priority as number).toBeGreaterThanOrEqual(500);
+    )).not.toThrow();
   });
 
   // Case 3: getGroups(field) — formFieldRegistry.get 호출

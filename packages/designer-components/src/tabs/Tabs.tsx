@@ -58,10 +58,30 @@ interface EventBusLike {
   off: (event: string, cb: (e?: unknown) => void) => void;
 }
 
+interface SelectionLike {
+  set: (element: unknown) => void;
+}
+
+interface FormFieldRegistryLike {
+  get: (id: string) => unknown;
+}
+
 function TabsRender(props: PureRenderProps<TabsSchema>) {
   const field = props.field as TabsSchema;
   const { tabPanels, effectiveDefaultValue, orientation } = validateAndSanitize(field);
   const panelIds = tabPanels.map((tp) => tp.id);
+
+  // tabHeight 해석:
+  //   > 0 : 컨테이너 최소 높이(min-height) — 컴포넌트가 더 많으면 자동 증가
+  //   = 0 : 부모(캔버스/폼 영역)에 꽉 차게 (height:100%)
+  //   undefined/누락 : 자연 높이 (content-based)
+  const tabHeight = typeof field.tabHeight === 'number' ? field.tabHeight : undefined;
+  const containerStyle =
+    tabHeight === 0
+      ? ({ height: '100%' } as Record<string, string>)
+      : tabHeight !== undefined && tabHeight > 0
+        ? ({ minHeight: `${tabHeight}px` } as Record<string, string>)
+        : undefined;
 
   const [activeId, setActiveId] = useState<string>(effectiveDefaultValue);
 
@@ -99,6 +119,7 @@ function TabsRender(props: PureRenderProps<TabsSchema>) {
       data-component="tabs"
       data-orientation={orientation}
       id={props.domId}
+      style={containerStyle}
     >
       <TabsPrimitive.Root
         class="dc-tabs"
@@ -116,31 +137,52 @@ function TabsRender(props: PureRenderProps<TabsSchema>) {
               // cancels the synthesized mousedown Radix relies on for tab
               // activation. Use click (still fires) + explicit setState so the
               // trigger works inside the designer canvas.
-              onClick={() => setActiveId(tp.id)}
+              // Also select the tabPanel in form-js so the designer props
+              // panel shows its label editor (otherwise users must dig into
+              // the outline to rename tabs).
+              onClick={(e: MouseEvent) => {
+                e.stopPropagation();
+                setActiveId(tp.id);
+                const getService = ctx?.getService;
+                if (!getService) return;
+                const registry = getService<FormFieldRegistryLike>('formFieldRegistry', false);
+                const selection = getService<SelectionLike>('selection', false);
+                const panel = registry?.get(tp.id);
+                if (panel && selection) selection.set(panel);
+              }}
             >
               {tp.label || tp.id}
             </TabsPrimitive.Trigger>
           ))}
         </TabsPrimitive.List>
-        {tabPanels.map((tp) => (
-          <TabsPrimitive.Content
-            key={tp.id}
-            class="dc-tabs__content dc-container-body"
-            value={tp.id}
-            data-tab-id={tp.id}
-          >
-            {/*
-             * Delegate tabPanel render to form-js FormField.
-             * FormField wraps the child with a `.fjs-element[data-id=tabPanel.id]`
-             * wrapper (via FormRenderContext.Element). That wrapper is required by
-             * form-js drop routing (`getFormParent = node => node.closest('.fjs-element')`)
-             * so dragula resolves drop target to the tabPanel, not its parent tabs.
-             * Without this, `tabs-tabpanel-refactor` fix: dropped fields land as
-             * siblings of tabPanels in tabs.components[] and never render.
-             */}
-            <FormField field={tp as never} />
-          </TabsPrimitive.Content>
-        ))}
+        {/*
+         * Grid stacking: 모든 tabPanel 을 동일 grid cell 에 쌓아 DOM 에 유지한다.
+         * - grid 셀 크기는 가장 큰 콘텐츠에 맞춰지므로 탭을 전환해도 높이가 줄지 않음
+         * - 비활성 패널은 visibility:hidden 으로 숨김 (레이아웃은 유지)
+         * - forceMount 로 Radix 가 비활성 패널을 unmount/hidden 하지 않도록 함
+         */}
+        <div class="dc-tabs__contents">
+          {tabPanels.map((tp) => (
+            <TabsPrimitive.Content
+              key={tp.id}
+              class="dc-tabs__content dc-container-body"
+              value={tp.id}
+              data-tab-id={tp.id}
+              forceMount
+            >
+              {/*
+               * Delegate tabPanel render to form-js FormField.
+               * FormField wraps the child with a `.fjs-element[data-id=tabPanel.id]`
+               * wrapper (via FormRenderContext.Element). That wrapper is required by
+               * form-js drop routing (`getFormParent = node => node.closest('.fjs-element')`)
+               * so dragula resolves drop target to the tabPanel, not its parent tabs.
+               * Without this, `tabs-tabpanel-refactor` fix: dropped fields land as
+               * siblings of tabPanels in tabs.components[] and never render.
+               */}
+              <FormField field={tp as never} />
+            </TabsPrimitive.Content>
+          ))}
+        </div>
       </TabsPrimitive.Root>
     </div>
   );
@@ -173,6 +215,7 @@ export const TabsComponent = defineComponent<TabsSchema>({
       components: [tabA, tabB],
       defaultValue: tabA.id,
       orientation: 'horizontal',
+      tabHeight: 300,
       ...options,
     };
   },

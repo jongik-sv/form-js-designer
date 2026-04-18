@@ -1,12 +1,14 @@
 /**
  * ToolbarButtons — TSK-06-02
  *
- * 에디터 상단 툴바의 Validate / Export JSON / Copy CLI 버튼 3개.
+ * 에디터 상단 툴바의 View JSON / Validate / Export JSON / Copy CLI 버튼.
+ * View JSON 클릭 시 JsonModal 을 열어 현재 스키마를 표시/복사/붙여넣기로 반영한다.
  */
 
 import { h } from 'preact';
 import { useState } from 'preact/hooks';
 import type { ValidationResult } from '@form-js-designer/designer-core';
+import { JsonModal } from './JsonModal';
 
 interface ToolbarButtonsProps {
   validateService: {
@@ -15,6 +17,8 @@ interface ToolbarButtonsProps {
   exportService: {
     downloadJson(): void;
     buildPublishCommand(target: 'static' | 'api', url?: string): string;
+    getSchemaJson(): string;
+    importSchemaJson(text: string): Promise<void>;
   } | null;
   onValidateResult?: (result: ValidationResult) => void;
 }
@@ -25,6 +29,8 @@ export function ToolbarButtons({
   onValidateResult,
 }: ToolbarButtonsProps): h.JSX.Element {
   const [toast, setToast] = useState<string | null>(null);
+  const [jsonModalOpen, setJsonModalOpen] = useState<boolean>(false);
+  const [jsonModalText, setJsonModalText] = useState<string>('');
 
   const showToast = (msg: string) => {
     setToast(msg);
@@ -73,8 +79,32 @@ export function ToolbarButtons({
     }
   };
 
+  const handleOpenJsonModal = () => {
+    if (!exportService) return;
+    try {
+      setJsonModalText(exportService.getSchemaJson());
+      setJsonModalOpen(true);
+    } catch (err) {
+      showToast(`JSON 로드 실패: ${String(err)}`);
+    }
+  };
+
+  const handleApplyJson = async (text: string) => {
+    if (!exportService) throw new Error('exportService 가 아직 준비되지 않았습니다');
+    await exportService.importSchemaJson(text);
+    showToast('JSON 적용 완료');
+  };
+
   return (
     <div class="toolbar-buttons" data-testid="toolbar-buttons">
+      <button
+        type="button"
+        class="toolbar-btn toolbar-btn--view-json"
+        data-testid="btn-view-json"
+        onClick={handleOpenJsonModal}
+      >
+        View JSON
+      </button>
       <button
         type="button"
         class="toolbar-btn toolbar-btn--validate"
@@ -104,6 +134,12 @@ export function ToolbarButtons({
           {toast}
         </div>
       )}
+      <JsonModal
+        open={jsonModalOpen}
+        initialText={jsonModalText}
+        onApply={handleApplyJson}
+        onClose={() => setJsonModalOpen(false)}
+      />
     </div>
   );
 }

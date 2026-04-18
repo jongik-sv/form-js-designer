@@ -2,13 +2,13 @@
  * PaletteModule — form-js additionalModules 규약 모듈 객체
  * TSK-06-01
  *
- * designer-components + designer-table 그룹에 한국어 i18n 라벨을 매핑하는 thin wrapper.
- * 실 컴포넌트 등록은 DesignerComponentsModule / DesignerTableModule이 담당.
+ * designer-components 그룹에 한국어 i18n 라벨을 매핑하는 thin wrapper.
+ * 실 컴포넌트 등록은 DesignerComponentsModule 이 담당한다. Button / Table 은 form-js
+ * native 컴포넌트를 그대로 사용한다.
  */
 
 const GROUP_LABELS: Record<string, string> = {
   'designer-components': '디자이너 컴포넌트',
-  'designer-table': '테이블',
   container: '컨테이너',
   basic: '기본',
 };

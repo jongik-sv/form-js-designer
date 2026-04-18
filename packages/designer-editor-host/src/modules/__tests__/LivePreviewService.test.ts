@@ -11,9 +11,15 @@ vi.mock('preact', () => ({
   render: vi.fn(),
 }));
 
-// ViewerHost mock
+// ViewerHost + DesignerContainerModule mock
 vi.mock('@form-js-designer/designer-core', () => ({
   ViewerHost: vi.fn(),
+  DesignerContainerModule: { __mock__: 'container' },
+}));
+
+// DesignerComponentsModule mock (실제 번들 import 회피)
+vi.mock('@form-js-designer/designer-components', () => ({
+  DesignerComponentsModule: { __mock__: 'components' },
 }));
 
 import { render } from 'preact';
@@ -47,11 +53,21 @@ function makeDeps(overrides: Record<string, unknown> = {}) {
 }
 
 describe('LivePreviewService', () => {
+  let rafSpy: ReturnType<typeof vi.spyOn> | null = null;
+
   beforeEach(() => {
     vi.clearAllMocks();
+    // rAF를 동기 실행으로 치환 — coalesce 로직은 단위 테스트에서 즉시 반영되도록
+    rafSpy = vi
+      .spyOn(globalThis as unknown as { requestAnimationFrame: FrameRequestCallback }, 'requestAnimationFrame' as never)
+      .mockImplementation((cb: FrameRequestCallback) => {
+        cb(0);
+        return 0 as unknown as number;
+      });
   });
 
   afterEach(() => {
+    rafSpy?.mockRestore();
     vi.restoreAllMocks();
   });
 
@@ -136,5 +152,38 @@ describe('LivePreviewService', () => {
       service.mount(target);
       service.mount(target);
     }).not.toThrow();
+  });
+
+  // Case 9: 동일 tick에 commandStack.changed + elements.changed 가 여러 번
+  // 연속 발화해도 rAF coalesce 로 render는 1회만 증가 (과다 리렌더 방지)
+  it('9: 동일 프레임 다중 change 이벤트 → render 1회로 coalesce', () => {
+    // 이 테스트만 rAF를 지연시켜 실제 coalesce 동작을 관찰
+    rafSpy?.mockRestore();
+    const queued: FrameRequestCallback[] = [];
+    rafSpy = vi
+      .spyOn(globalThis as unknown as { requestAnimationFrame: FrameRequestCallback }, 'requestAnimationFrame' as never)
+      .mockImplementation((cb: FrameRequestCallback) => {
+        queued.push(cb);
+        return queued.length as unknown as number;
+      });
+
+    const deps = makeDeps();
+    const service = new LivePreviewService(deps.eventBus, deps.formEditor);
+    const target = makeTarget();
+    service.mount(target);
+    const callsBefore = mockRender.mock.calls.length;
+
+    // 같은 tick에 여러 번 fire
+    deps._listeners['commandStack.changed']?.[0]?.();
+    deps._listeners['elements.changed']?.[0]?.();
+    deps._listeners['elements.changed']?.[0]?.();
+    deps._listeners['commandStack.changed']?.[0]?.();
+
+    // rAF 실행 전이므로 아직 render 증가 없음
+    expect(mockRender.mock.calls.length).toBe(callsBefore);
+
+    // 프레임 flush — 한 번만 증가
+    queued.forEach((cb) => cb(0));
+    expect(mockRender.mock.calls.length).toBe(callsBefore + 1);
   });
 });

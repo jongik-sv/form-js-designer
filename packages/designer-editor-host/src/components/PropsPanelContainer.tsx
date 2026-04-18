@@ -9,6 +9,17 @@ import { h } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
 import type { PropsGroup } from '../modules/PropsPanelService';
 
+/**
+ * i18n 키("designer.components.tabs.tabHeight") 또는 camelCase 식별자를
+ * 사람이 읽는 라벨로 변환. LocaleProvider 통합 전 임시 fallback.
+ */
+function humanizeLabel(label: string | undefined, fallbackKey: string): string {
+  const raw = label ?? fallbackKey;
+  const last = raw.includes('.') ? raw.split('.').pop()! : raw;
+  const spaced = last.replace(/([a-z])([A-Z])/g, '$1 $2');
+  return spaced.charAt(0).toUpperCase() + spaced.slice(1);
+}
+
 interface PropsPanelContainerProps {
   propsPanelService: {
     getGroups(field: { type: string; id?: string } | null): PropsGroup[];
@@ -28,8 +39,16 @@ export function PropsPanelContainer({ propsPanelService, eventBus }: PropsPanelC
     if (!eventBus) return;
 
     const onSelectionChanged = (e: unknown) => {
-      const event = e as { selection?: Array<{ type: string; id?: string }> };
-      const field = event?.selection?.[0] ?? null;
+      // form-js selection service fires with `selection` as a single field
+      // (sometimes null). Legacy shapes may pass an array — handle both.
+      const event = e as {
+        selection?:
+          | { type: string; id?: string }
+          | Array<{ type: string; id?: string }>
+          | null;
+      };
+      const raw = event?.selection ?? null;
+      const field = Array.isArray(raw) ? raw[0] ?? null : raw;
       setSelectedField(field);
       setError(null);
 
@@ -85,6 +104,13 @@ export function PropsPanelContainer({ propsPanelService, eventBus }: PropsPanelC
           <div class="props-group__entries">
             {group.entries.map((entry) => (
               <div key={entry.id} class="props-entry" data-testid={`props-entry-${entry.id}`}>
+                <label
+                  class="props-entry__label"
+                  htmlFor={`props-${entry.id}`}
+                  data-testid={`props-label-${entry.id}`}
+                >
+                  {humanizeLabel((entry as { label?: string }).label, entry.id)}
+                </label>
                 {typeof entry.component === 'function'
                   ? (entry.component as (p: Record<string, unknown>) => h.JSX.Element)({
                       value: (selectedField as Record<string, unknown>)[entry.id],

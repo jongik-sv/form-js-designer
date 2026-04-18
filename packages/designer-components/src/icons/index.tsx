@@ -31,31 +31,6 @@ const SVG_BASE = {
   fill: 'none',
 } as const;
 
-export const ButtonIcon: ComponentType<IconProps> = (props) => (
-  <svg {...SVG_BASE} {...props}>
-    <rect
-      x={8}
-      y={18}
-      width={38}
-      height={18}
-      rx={4}
-      fill="currentColor"
-      fillOpacity={0.12}
-      stroke="currentColor"
-      strokeWidth={2}
-    />
-    <line
-      x1={19}
-      y1={27}
-      x2={35}
-      y2={27}
-      stroke="currentColor"
-      strokeWidth={2}
-      strokeLinecap="round"
-    />
-  </svg>
-);
-
 export const CardIcon: ComponentType<IconProps> = (props) => (
   <svg {...SVG_BASE} {...props}>
     <rect

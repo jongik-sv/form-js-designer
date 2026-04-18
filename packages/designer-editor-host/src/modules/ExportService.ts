@@ -10,6 +10,7 @@ import type { ValidationResult } from '@form-js-designer/designer-core';
 
 interface FormEditorLike {
   getSchema(): Record<string, unknown>;
+  importSchema?(schema: Record<string, unknown>): Promise<unknown> | unknown;
 }
 
 interface ValidateServiceLike {
@@ -67,6 +68,35 @@ export class ExportService {
       console.error('[ExportService] downloadJson 실패:', err);
       throw err;
     }
+  }
+
+  /**
+   * 현재 스키마를 pretty-printed JSON 문자열로 반환한다.
+   * View JSON 모달/클립보드 복사 용도.
+   */
+  getSchemaJson(): string {
+    const schema = this.formEditor.getSchema();
+    return JSON.stringify(schema, null, 2);
+  }
+
+  /**
+   * JSON 문자열을 파싱하여 에디터에 import 한다.
+   * 파싱 실패 시 Error throw (UI 레이어에서 처리).
+   */
+  async importSchemaJson(text: string): Promise<void> {
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(text);
+    } catch (err) {
+      throw new Error(`JSON 파싱 실패: ${(err as Error).message}`);
+    }
+    if (!parsed || typeof parsed !== 'object') {
+      throw new Error('JSON 루트가 객체가 아닙니다');
+    }
+    if (typeof this.formEditor.importSchema !== 'function') {
+      throw new Error('formEditor.importSchema 를 사용할 수 없습니다');
+    }
+    await Promise.resolve(this.formEditor.importSchema(parsed as Record<string, unknown>));
   }
 
   /**

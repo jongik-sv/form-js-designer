@@ -74,5 +74,6 @@ export type FormJsFieldComponent = ComponentType<PureRenderProps & { [k: string]
     group: string;
     icon?: ComponentType;
     create: (options?: Record<string, unknown>) => Record<string, unknown>;
+    propsSchema?: PropsSchema;
   };
 };

@@ -9,6 +9,7 @@
  */
 import { describe, it, expect } from 'vitest';
 import { TabsComponent } from '../Tabs';
+import { tabsPropsSchema } from '../propsSchema';
 
 describe('TabsComponent.create() — new tabPanel structure', () => {
   it('returns components array (not tabs[])', () => {
@@ -58,5 +59,22 @@ describe('TabsComponent.create() — new tabPanel structure', () => {
     expect(typeof comps[0].label).toBe('string');
     expect(comps[0].label!.length).toBeGreaterThan(0);
     expect(typeof comps[1].label).toBe('string');
+  });
+});
+
+describe('tabsPropsSchema — tabHeight', () => {
+  it('exposes a number widget with 0–4096 range (0=fill, >0=min-height px)', () => {
+    const prop = tabsPropsSchema.properties.tabHeight;
+    expect(prop).toBeDefined();
+    expect(prop!.type).toBe('number');
+    expect(prop!.min).toBe(0);
+    expect(prop!.max).toBe(4096);
+  });
+});
+
+describe('TabsComponent.create() — default tabHeight', () => {
+  it('sets tabHeight to 300 by default', () => {
+    const created = TabsComponent.create!();
+    expect(created.tabHeight).toBe(300);
   });
 });

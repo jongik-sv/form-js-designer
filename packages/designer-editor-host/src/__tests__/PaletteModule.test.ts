@@ -41,7 +41,6 @@ describe('PaletteModule', () => {
     expect(typeof instance.groupLabels).toBe('object');
     // 기본 그룹 라벨 포함
     expect(instance.groupLabels['designer-components']).toBe('디자이너 컴포넌트');
-    expect(instance.groupLabels['designer-table']).toBe('테이블');
   });
 
   it('PaletteGroupLabels collects groups from formFields.getAll()', () => {

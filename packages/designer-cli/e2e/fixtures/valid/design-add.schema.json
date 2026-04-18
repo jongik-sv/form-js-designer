@@ -14,10 +14,7 @@
       "type": "button",
       "id": "button-1716700011",
       "label": "",
-      "variant": "secondary",
-      "size": "lg",
-      "disabled": false,
-      "action": ""
+      "action": "submit"
     }
   ]
 }

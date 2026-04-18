@@ -337,6 +337,14 @@ class OutlinePanelService {
   }
 
   /**
+   * 필드 세로 복제 공개 API — ShortcutModule(Insert 키) 에서 호출.
+   * 내부 구현은 _duplicateFieldVertical 와 동일.
+   */
+  duplicateField(id: string) {
+    this._duplicateFieldVertical(id);
+  }
+
+  /**
    * 필드 세로 복제: form-js context-pad "세로로 복사" 버튼에서 호출.
    * - 원본 필드의 바로 다음 형제 위치에 deep clone을 삽입 (새 row)
    * - 기존 _duplicateField와 동일 동작 (rename)

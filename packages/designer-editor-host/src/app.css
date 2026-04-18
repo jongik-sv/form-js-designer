@@ -25,10 +25,55 @@
     overflow-y: auto;
     background: #fafafa;
     padding: 8px 0;
+    transition: width 0.15s ease;
+  }
+
+  .outline-container--collapsed {
+    width: 40px;
+    overflow: hidden;
+  }
+
+  .outline-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 8px 8px;
+  }
+
+  .outline-container--collapsed .outline-header {
+    justify-content: center;
+    padding: 0;
+  }
+
+  .outline-container--collapsed .outline-header h3,
+  .outline-container--collapsed .outline-root {
+    display: none;
+  }
+
+  .outline-toggle-btn {
+    background: transparent;
+    border: none;
+    padding: 4px 6px;
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+    color: #595959;
+    border-radius: 4px;
+    flex-shrink: 0;
+  }
+
+  .outline-toggle-btn:hover {
+    background: #e8e8e8;
+    color: #1f1f1f;
+  }
+
+  .outline-toggle-btn:focus-visible {
+    outline: 2px solid #3b82f6;
+    outline-offset: 1px;
   }
 
   .outline-container h3 {
-    margin: 0 12px 8px;
+    margin: 0;
     font-size: 12px;
     font-weight: 600;
     color: #666;
@@ -72,11 +117,19 @@
   }
 
   .side-panel {
-    width: 300px;
+    width: var(--side-panel-width, 300px);
     flex-shrink: 0;
     border-left: 1px solid #e0e0e0;
     overflow-y: auto;
     background: #fafafa;
+    transition: width 0.15s ease;
+    position: relative;
+  }
+
+  .side-panel--collapsed {
+    width: 0 !important;
+    overflow: hidden;
+    border-left: none;
   }
 
   .side-panel--empty {
@@ -85,47 +138,116 @@
     font-size: 13px;
   }
 
-  /* Sidebar navigation */
-  .sidebar {
-    width: 48px;
+  /* PanelSplitter */
+  .panel-splitter {
+    width: 5px;
     flex-shrink: 0;
-    border-right: 1px solid #e0e0e0;
-    background: #2c2c2c;
-    display: flex;
-    flex-direction: column;
+    cursor: col-resize;
+    background: transparent;
+    border: none;
+    position: relative;
+    z-index: 10;
+    transition: background 0.1s;
   }
 
-  .sidebar__nav {
-    list-style: none;
-    margin: 0;
-    padding: 8px 0;
+  .panel-splitter::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: #e0e0e0;
+    transform: translateX(-50%);
   }
 
-  .sidebar__item {
-    margin: 0;
+  .panel-splitter:hover,
+  .panel-splitter:focus {
+    background: rgba(59, 130, 246, 0.15);
+    outline: none;
   }
 
-  .sidebar__link {
+  .panel-splitter:focus-visible {
+    outline: 2px solid #3b82f6;
+    outline-offset: -1px;
+  }
+
+  /* SidePanelToggle — .app-layout의 독립 flex item으로 배치 */
+  .side-panel-toggle {
+    flex-shrink: 0;
+    align-self: flex-start;
+    margin-top: 8px;
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 48px;
-    height: 40px;
-    color: #ccc;
+    width: 20px;
+    height: 32px;
+    background: #f5f5f5;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    color: #555;
+    padding: 0;
+    transition: background 0.1s;
+    z-index: 20;
+  }
+
+  .side-panel-toggle:hover {
+    background: #e0e0e0;
+  }
+
+  .side-panel-toggle:focus-visible {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+  }
+
+  /* Sidebar — side-panel 상단 가로 탭 바 */
+  .sidebar {
+    display: flex;
+    flex-direction: row;
+    flex-shrink: 0;
+    border-bottom: 1px solid #e0e0e0;
+    background: #f5f5f5;
+    padding: 0 8px;
+    gap: 2px;
+  }
+
+  .sidebar__link {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 14px;
+    color: #555;
     text-decoration: none;
-    font-size: 10px;
-    text-align: center;
-    transition: background 0.1s, color 0.1s;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 1;
+    border: 1px solid transparent;
+    border-bottom: none;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    margin-bottom: -1px;
+    transition: background 0.1s, color 0.1s, border-color 0.1s;
+    cursor: pointer;
   }
 
   .sidebar__link:hover {
-    background: #444;
-    color: #fff;
+    background: #ececec;
+    color: #1f1f1f;
+  }
+
+  .sidebar__link:focus-visible {
+    outline: 2px solid #3b82f6;
+    outline-offset: -2px;
   }
 
   .sidebar__link--active {
-    background: #1565c0;
-    color: #fff;
+    background: #fafafa;
+    color: #1565c0;
+    border-color: #e0e0e0;
+    border-bottom-color: #fafafa;
   }
 
   /* Toolbar buttons */
@@ -148,6 +270,115 @@
 
   .toolbar-btn:hover {
     background: #e8e8e8;
+  }
+
+  .toolbar-btn--primary {
+    background: #1565c0;
+    color: #fff;
+    border-color: #1565c0;
+  }
+
+  .toolbar-btn--primary:hover {
+    background: #0d47a1;
+  }
+
+  /* JSON Modal */
+  .json-modal__backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+
+  .json-modal {
+    width: min(820px, 92vw);
+    height: min(640px, 86vh);
+    background: #fff;
+    border-radius: 6px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .json-modal__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    border-bottom: 1px solid #e0e0e0;
+    background: #f5f5f5;
+  }
+
+  .json-modal__title {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #222;
+  }
+
+  .json-modal__close {
+    background: transparent;
+    border: none;
+    font-size: 20px;
+    line-height: 1;
+    color: #555;
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+
+  .json-modal__close:hover {
+    background: #e0e0e0;
+    color: #222;
+  }
+
+  .json-modal__textarea {
+    flex: 1;
+    margin: 0;
+    padding: 12px;
+    border: none;
+    outline: none;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: #222;
+    background: #fafafa;
+    resize: none;
+    white-space: pre;
+    overflow: auto;
+  }
+
+  .json-modal__status {
+    padding: 6px 12px;
+    font-size: 12px;
+    border-top: 1px solid #e0e0e0;
+  }
+
+  .json-modal__status--ok {
+    background: #d4edda;
+    color: #155724;
+  }
+
+  .json-modal__status--error {
+    background: #f8d7da;
+    color: #721c24;
+  }
+
+  .json-modal__footer {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-top: 1px solid #e0e0e0;
+    background: #f5f5f5;
+  }
+
+  .json-modal__spacer {
+    flex: 1;
   }
 
   .toolbar-toast {
@@ -211,8 +442,43 @@
     margin: 0 0 8px;
   }
 
+  /* bio-properties-panel(form-js 기본) 엔트리와 시각 일치.
+     - label: 13px / 400 / #22242a, 마진 2px 0 1px
+     - input: 28.5px / border #b9bcc6 / bg #f7f7f8 / radius 2px / padding 4px 6px */
   .props-entry {
-    margin-bottom: 8px;
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 10px;
+  }
+
+  .props-entry__label {
+    display: flex;
+    font-size: 13px;
+    font-weight: 400;
+    color: #22242a;
+    margin: 2px 0 1px;
+  }
+
+  .props-entry input,
+  .props-entry select,
+  .props-entry textarea {
+    width: 100%;
+    font-size: 14px;
+    font-family: inherit;
+    color: #22242a;
+    background-color: #f7f7f8;
+    border: 1px solid #b9bcc6;
+    border-radius: 2px;
+    padding: 4px 6px;
+    box-sizing: border-box;
+  }
+
+  .props-entry input:focus,
+  .props-entry select:focus,
+  .props-entry textarea:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 1px #3b82f6;
   }
 
   /* LivePreview */
@@ -395,5 +661,20 @@
   /* 드래그 오버 중 노드 */
   .outline-node--drag-over {
     background: rgba(59, 130, 246, 0.06);
+  }
+
+  /*
+   * ContainerHoverGuard: 커스텀 컨테이너 주변 sibling drop placeholder를
+   * 드래그 시작 후 1초간 지연. row/wrapper의 pointer-events를 차단하되
+   * 내부 drop zone은 auto로 복원해 안쪽 드롭만 우선 활성화한다.
+   */
+  .fjs-editor-container .designer-container-hover-guard {
+    pointer-events: none;
+  }
+
+  .fjs-editor-container .designer-container-hover-guard .fjs-drop-container-vertical,
+  .fjs-editor-container .designer-container-hover-guard .fjs-vertical-layout,
+  .fjs-editor-container .designer-container-hover-guard .fjs-children {
+    pointer-events: auto;
   }
 }

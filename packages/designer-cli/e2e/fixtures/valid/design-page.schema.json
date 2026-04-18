@@ -20,10 +20,7 @@
               "type": "button",
               "id": "button-1716700003",
               "label": "",
-              "variant": "primary",
-              "size": "md",
-              "disabled": false,
-              "action": ""
+              "action": "submit"
             }
           ]
         }

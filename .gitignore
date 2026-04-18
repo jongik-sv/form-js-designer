@@ -13,6 +13,9 @@ playwright-report/
 .playwright-mcp/
 packages/*/spike/*/tests/artifacts/
 
+# Root-level E2E/debug screenshots (should be saved under docs/features/*/ or test output dirs)
+/*.png
+
 .DS_Store
 *.log
 *.tsbuildinfo

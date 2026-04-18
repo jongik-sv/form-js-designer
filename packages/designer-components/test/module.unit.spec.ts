@@ -2,7 +2,7 @@
  * TSK-04-01: DesignerComponentsModule 단위 테스트
  *
  * QA 체크리스트 항목:
- * - DesignerComponentsModule 등록: mock FormFieldRegistry에 register 호출 시 card/stack/button 3종 등록
+ * - DesignerComponentsModule 등록: mock FormFieldRegistry에 register 호출 시 card/stack/tabs/modal/tabPanel 5종 등록
  * - i18n 키 규칙: designer.components.{name}.* 키 형식
  * - spec.json 존재: 유효한 JSON + type/propsSchema 필드
  * - defineComponent 순수 렌더 계약: assertPureRender 경고 없이 렌더
@@ -11,15 +11,10 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { DesignerComponentsModule } from '../src/module';
 import { CardComponent } from '../src/card/index';
 import { StackComponent } from '../src/stack/index';
-import { ButtonComponent } from '../src/button/index';
-import { TabsComponent } from '../src/tabs/Tabs';
-import { ModalComponent } from '../src/modal/Modal';
 import { cardPropsSchema } from '../src/card/propsSchema';
 import { stackPropsSchema } from '../src/stack/propsSchema';
-import { buttonPropsSchema } from '../src/button/propsSchema';
 import cardSpec from '../src/card/spec.json';
 import stackSpec from '../src/stack/spec.json';
-import buttonSpec from '../src/button/spec.json';
 
 // ---------------------------------------------------------------------------
 // Mock FormFieldRegistry (form-js didi 컨테이너 규약 흉내)
@@ -119,14 +114,6 @@ describe('DesignerComponentsModule registration', () => {
     expect(registered.config?.type).toBe('stack');
   });
 
-  it('registers "button" component (Preact component with static .config)', () => {
-    const call = registry.register.mock.calls.find((c) => c[0] === 'button');
-    expect(call).toBeDefined();
-    const registered = call![1] as { config?: { type?: string } };
-    expect(typeof registered).toBe('function');
-    expect(registered.config?.type).toBe('button');
-  });
-
   it('registers "tabs" component (Preact component with static .config)', () => {
     const call = registry.register.mock.calls.find((c) => c[0] === 'tabs');
     expect(call).toBeDefined();
@@ -143,8 +130,8 @@ describe('DesignerComponentsModule registration', () => {
     expect(registered.config?.type).toBe('modal');
   });
 
-  it('registers exactly 6 components (card, stack, button, tabs, modal, tabPanel)', () => {
-    expect(registry.register).toHaveBeenCalledTimes(6);
+  it('registers exactly 5 components (card, stack, tabs, modal, tabPanel)', () => {
+    expect(registry.register).toHaveBeenCalledTimes(5);
   });
 
   it('registers "tabPanel" component (Preact component with static .config)', () => {
@@ -201,25 +188,6 @@ describe('StackComponent', () => {
   });
 });
 
-describe('ButtonComponent', () => {
-  it('has type "button"', () => {
-    expect(ButtonComponent.type).toBe('button');
-  });
-
-  it('has a non-empty display name', () => {
-    expect(typeof ButtonComponent.name).toBe('string');
-    expect(ButtonComponent.name.length).toBeGreaterThan(0);
-  });
-
-  it('has component function', () => {
-    expect(typeof ButtonComponent.component).toBe('function');
-  });
-
-  it('component has static .config with type "button"', () => {
-    expect(ButtonComponent.component.config.type).toBe('button');
-  });
-});
-
 // ---------------------------------------------------------------------------
 // 4. propsSchema 검증
 // ---------------------------------------------------------------------------
@@ -243,13 +211,6 @@ describe('propsSchema', () => {
     expect(stackPropsSchema.properties).toHaveProperty('justify');
   });
 
-  it('buttonPropsSchema has variant, size, disabled, label, action properties', () => {
-    expect(buttonPropsSchema.properties).toHaveProperty('variant');
-    expect(buttonPropsSchema.properties).toHaveProperty('size');
-    expect(buttonPropsSchema.properties).toHaveProperty('disabled');
-    expect(buttonPropsSchema.properties).toHaveProperty('label');
-    expect(buttonPropsSchema.properties).toHaveProperty('action');
-  });
 });
 
 // ---------------------------------------------------------------------------
@@ -270,14 +231,6 @@ describe('spec.json', () => {
 
   it('stackSpec has propsSchema field', () => {
     expect((stackSpec as Record<string, unknown>)['propsSchema']).toBeDefined();
-  });
-
-  it('buttonSpec has type field "button"', () => {
-    expect((buttonSpec as Record<string, unknown>)['type']).toBe('button');
-  });
-
-  it('buttonSpec has propsSchema field', () => {
-    expect((buttonSpec as Record<string, unknown>)['propsSchema']).toBeDefined();
   });
 });
 

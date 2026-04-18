@@ -11,8 +11,8 @@ describe('getCLIRegistry', () => {
     }
   });
 
-  it('designer-table 타입 존재 확인', () => {
-    // SYNC with packages/designer-table/src/index.ts
+  it('form-js native table 타입 존재 확인', () => {
+    // form-js viewer 기본 Table 필드
     const registry = getCLIRegistry();
     expect(registry.has('table')).toBe(true);
   });

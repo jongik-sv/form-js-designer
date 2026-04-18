@@ -11,7 +11,6 @@ import { useState, useEffect } from 'preact/hooks';
 import { ViewerHost } from '@form-js-designer/designer-core/host';
 import { DesignerContainerModule } from '@form-js-designer/designer-core';
 import { DesignerComponentsModule } from '@form-js-designer/designer-components';
-import { DesignerTableModule } from '@form-js-designer/designer-table';
 import { createApiLoader, bootWithSchema, MemoryStorage, SchemaBootError } from '../../src/index';
 import type { FormSchema } from '../../src/index';
 import type { BootResult } from '../../src/boot/bootTypes';
@@ -21,10 +20,10 @@ import '@bpmn-io/form-js-viewer/dist/assets/form-js-base.css';
 import '@bpmn-io/form-js-viewer/dist/assets/form-js.css';
 
 // ViewerHost에 주입할 additionalModules
+// Button / Table 은 form-js native 컴포넌트를 그대로 사용한다.
 const VIEWER_MODULES: unknown[] = [
   DesignerContainerModule,
   DesignerComponentsModule,
-  DesignerTableModule,
 ];
 
 // 간단한 테스트용 registry mock

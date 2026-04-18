@@ -1,7 +1,33 @@
 {
   "name": "panel-resize-toggle",
-  "status": "[ ]",
-  "last": null,
-  "phase_history": [],
-  "updated": "2026-04-18T14:01:50Z"
+  "status": "[ts]",
+  "last": {
+    "event": "test.ok",
+    "at": "2026-04-18T14:19:14Z"
+  },
+  "phase_history": [
+    {
+      "event": "design.ok",
+      "from": "[ ]",
+      "to": "[dd]",
+      "at": "2026-04-18T14:06:04Z",
+      "elapsed_seconds": 0
+    },
+    {
+      "event": "build.ok",
+      "from": "[dd]",
+      "to": "[im]",
+      "at": "2026-04-18T14:11:39Z",
+      "elapsed_seconds": 335
+    },
+    {
+      "event": "test.ok",
+      "from": "[im]",
+      "to": "[ts]",
+      "at": "2026-04-18T14:19:14Z",
+      "elapsed_seconds": 455
+    }
+  ],
+  "updated": "2026-04-18T14:19:14Z",
+  "started_at": "2026-04-18T14:06:04Z"
 }
