@@ -409,7 +409,7 @@ function TableRender(allProps: PureRenderProps<TableField> & { onChange?: unknow
 export const TableComponent = defineComponent<TableField>({
   type: 'table',
   name: 'Table',
-  group: 'data',
+  group: 'presentation',
   propsSchema: tablePropsSchema,
   create: (options?: Record<string, unknown>) => ({
     type: 'table' as const,

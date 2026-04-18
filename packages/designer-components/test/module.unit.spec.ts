@@ -75,38 +75,23 @@ describe('DesignerComponentsModule registration', () => {
   });
 
   it('registers "card" component', () => {
-    expect(registry.register).toHaveBeenCalledWith(
-      'card',
-      expect.objectContaining({ component: expect.any(Function) }),
-    );
+    expect(registry.register).toHaveBeenCalledWith('card', expect.any(Function));
   });
 
   it('registers "stack" component', () => {
-    expect(registry.register).toHaveBeenCalledWith(
-      'stack',
-      expect.objectContaining({ component: expect.any(Function) }),
-    );
+    expect(registry.register).toHaveBeenCalledWith('stack', expect.any(Function));
   });
 
   it('registers "button" component', () => {
-    expect(registry.register).toHaveBeenCalledWith(
-      'button',
-      expect.objectContaining({ component: expect.any(Function) }),
-    );
+    expect(registry.register).toHaveBeenCalledWith('button', expect.any(Function));
   });
 
   it('registers "tabs" component', () => {
-    expect(registry.register).toHaveBeenCalledWith(
-      'tabs',
-      expect.objectContaining({ component: expect.any(Function) }),
-    );
+    expect(registry.register).toHaveBeenCalledWith('tabs', expect.any(Function));
   });
 
   it('registers "modal" component', () => {
-    expect(registry.register).toHaveBeenCalledWith(
-      'modal',
-      expect.objectContaining({ component: expect.any(Function) }),
-    );
+    expect(registry.register).toHaveBeenCalledWith('modal', expect.any(Function));
   });
 
   it('registers exactly 5 components (card, stack, button, tabs, modal)', () => {

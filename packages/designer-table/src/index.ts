@@ -51,7 +51,17 @@ export { VirtualRows } from './virtualization/VirtualRows';
  *     additionalModules: [DesignerTableModule],
  *   });
  */
+/** form-js didi 컨테이너가 주입하는 FormFields 최소 인터페이스 */
+interface FormFieldsService {
+  register: (type: string, componentDef: unknown) => void;
+}
+
+function DesignerTableRegistration(formFields: FormFieldsService) {
+  formFields.register(TableComponent.component.config.type, TableComponent.component);
+}
+(DesignerTableRegistration as unknown as { $inject: string[] }).$inject = ['formFields'];
+
 export const DesignerTableModule = {
-  __init__: ['tableRenderer'],
-  tableRenderer: ['type', TableComponent],
+  __init__: ['designerTableRegistration'],
+  designerTableRegistration: ['type', DesignerTableRegistration],
 };

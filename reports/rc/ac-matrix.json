@@ -1,0 +1,459 @@
+{
+  "overallStatus": "FAIL",
+  "totalPassed": 34,
+  "totalFailed": 0,
+  "totalExpected": 130,
+  "byAc": {
+    "1": {
+      "passed": 0,
+      "failed": 0,
+      "skipped": 0,
+      "expected": 6,
+      "specs": [
+        {
+          "ac": 1,
+          "path": "packages/designer-editor-host/e2e/editor.dragdrop.spec.ts",
+          "kind": "e2e",
+          "expectedCases": 6,
+          "passed": 0,
+          "failed": 0,
+          "skipped": 0,
+          "status": "pending"
+        }
+      ]
+    },
+    "2": {
+      "passed": 0,
+      "failed": 0,
+      "skipped": 0,
+      "expected": 8,
+      "specs": [
+        {
+          "ac": 2,
+          "path": "packages/designer-cli/e2e/ai-skill.spec.ts",
+          "kind": "e2e",
+          "expectedCases": 8,
+          "passed": 0,
+          "failed": 0,
+          "skipped": 0,
+          "status": "missing"
+        }
+      ]
+    },
+    "3": {
+      "passed": 0,
+      "failed": 0,
+      "skipped": 0,
+      "expected": 3,
+      "specs": [
+        {
+          "ac": 3,
+          "path": "packages/designer-cli/e2e/cli.roundtrip.spec.ts",
+          "kind": "e2e",
+          "expectedCases": 3,
+          "passed": 0,
+          "failed": 0,
+          "skipped": 0,
+          "status": "missing"
+        }
+      ]
+    },
+    "4": {
+      "passed": 0,
+      "failed": 0,
+      "skipped": 0,
+      "expected": 12,
+      "specs": [
+        {
+          "ac": 4,
+          "path": "packages/designer-runtime/e2e/roundtrip.static.spec.ts",
+          "kind": "e2e",
+          "expectedCases": 6,
+          "passed": 0,
+          "failed": 0,
+          "skipped": 0,
+          "status": "missing"
+        },
+        {
+          "ac": 4,
+          "path": "packages/designer-runtime/e2e/roundtrip.api.spec.ts",
+          "kind": "e2e",
+          "expectedCases": 6,
+          "passed": 0,
+          "failed": 0,
+          "skipped": 0,
+          "status": "missing"
+        }
+      ]
+    },
+    "5": {
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0,
+      "expected": 1,
+      "specs": [
+        {
+          "ac": 5,
+          "path": "packages/designer-i18n/src/__tests__/coverage.test.ts",
+          "kind": "unit",
+          "expectedCases": 1,
+          "passed": 2,
+          "failed": 0,
+          "skipped": 0,
+          "status": "pass"
+        }
+      ]
+    },
+    "6": {
+      "passed": 13,
+      "failed": 0,
+      "skipped": 0,
+      "expected": 19,
+      "specs": [
+        {
+          "ac": 6,
+          "path": "packages/designer-editor-host/e2e/editor.validate-export.spec.ts",
+          "kind": "e2e",
+          "expectedCases": 6,
+          "passed": 0,
+          "failed": 0,
+          "skipped": 0,
+          "status": "pending"
+        },
+        {
+          "ac": 6,
+          "path": "scripts/ci/__tests__/watermark-scss-lint.test.mjs",
+          "kind": "unit",
+          "expectedCases": 7,
+          "passed": 7,
+          "failed": 0,
+          "skipped": 0,
+          "status": "pass"
+        },
+        {
+          "ac": 6,
+          "path": "scripts/ci/__tests__/license-gate.test.mjs",
+          "kind": "unit",
+          "expectedCases": 6,
+          "passed": 6,
+          "failed": 0,
+          "skipped": 0,
+          "status": "pass"
+        }
+      ]
+    },
+    "7": {
+      "passed": 9,
+      "failed": 0,
+      "skipped": 0,
+      "expected": 24,
+      "specs": [
+        {
+          "ac": 7,
+          "path": "packages/designer-core/src/panel/__tests__/propsSchemaToPanel.test.tsx",
+          "kind": "unit",
+          "expectedCases": 24,
+          "passed": 9,
+          "failed": 0,
+          "skipped": 0,
+          "status": "pass"
+        }
+      ]
+    },
+    "8": {
+      "passed": 0,
+      "failed": 0,
+      "skipped": 0,
+      "expected": 13,
+      "specs": [
+        {
+          "ac": 8,
+          "path": "packages/designer-table/e2e/table.editing.spec.ts",
+          "kind": "e2e",
+          "expectedCases": 5,
+          "passed": 0,
+          "failed": 0,
+          "skipped": 0,
+          "status": "pending"
+        },
+        {
+          "ac": 8,
+          "path": "packages/designer-table/e2e/table.filter.spec.ts",
+          "kind": "e2e",
+          "expectedCases": 3,
+          "passed": 0,
+          "failed": 0,
+          "skipped": 0,
+          "status": "pending"
+        },
+        {
+          "ac": 8,
+          "path": "packages/designer-table/e2e/table.reorder.spec.ts",
+          "kind": "e2e",
+          "expectedCases": 2,
+          "passed": 0,
+          "failed": 0,
+          "skipped": 0,
+          "status": "pending"
+        },
+        {
+          "ac": 8,
+          "path": "packages/designer-table/e2e/table.virtualization.spec.ts",
+          "kind": "e2e",
+          "expectedCases": 3,
+          "passed": 0,
+          "failed": 0,
+          "skipped": 0,
+          "status": "pending"
+        }
+      ]
+    },
+    "9": {
+      "passed": 0,
+      "failed": 0,
+      "skipped": 0,
+      "expected": 7,
+      "specs": [
+        {
+          "ac": 9,
+          "path": "packages/designer-runtime/e2e/deploy.static.spec.ts",
+          "kind": "e2e",
+          "expectedCases": 3,
+          "passed": 0,
+          "failed": 0,
+          "skipped": 0,
+          "status": "missing"
+        },
+        {
+          "ac": 9,
+          "path": "packages/designer-runtime/e2e/deploy.api.spec.ts",
+          "kind": "e2e",
+          "expectedCases": 4,
+          "passed": 0,
+          "failed": 0,
+          "skipped": 0,
+          "status": "missing"
+        }
+      ]
+    },
+    "10": {
+      "passed": 10,
+      "failed": 0,
+      "skipped": 0,
+      "expected": 1,
+      "specs": [
+        {
+          "ac": 10,
+          "path": "packages/designer-i18n/src/__tests__/diff.test.ts",
+          "kind": "unit",
+          "expectedCases": 1,
+          "passed": 10,
+          "failed": 0,
+          "skipped": 0,
+          "status": "pass"
+        }
+      ]
+    },
+    "4-1": {
+      "passed": 0,
+      "failed": 0,
+      "skipped": 0,
+      "expected": 36,
+      "specs": [
+        {
+          "ac": "4-1",
+          "path": "packages/designer-editor-host/e2e/editor.livepreview.spec.ts",
+          "kind": "e2e",
+          "expectedCases": 36,
+          "passed": 0,
+          "failed": 0,
+          "skipped": 0,
+          "status": "pending"
+        }
+      ]
+    }
+  },
+  "results": [
+    {
+      "ac": 1,
+      "path": "packages/designer-editor-host/e2e/editor.dragdrop.spec.ts",
+      "kind": "e2e",
+      "expectedCases": 6,
+      "passed": 0,
+      "failed": 0,
+      "skipped": 0,
+      "status": "pending"
+    },
+    {
+      "ac": 2,
+      "path": "packages/designer-cli/e2e/ai-skill.spec.ts",
+      "kind": "e2e",
+      "expectedCases": 8,
+      "passed": 0,
+      "failed": 0,
+      "skipped": 0,
+      "status": "missing"
+    },
+    {
+      "ac": 3,
+      "path": "packages/designer-cli/e2e/cli.roundtrip.spec.ts",
+      "kind": "e2e",
+      "expectedCases": 3,
+      "passed": 0,
+      "failed": 0,
+      "skipped": 0,
+      "status": "missing"
+    },
+    {
+      "ac": 4,
+      "path": "packages/designer-runtime/e2e/roundtrip.static.spec.ts",
+      "kind": "e2e",
+      "expectedCases": 6,
+      "passed": 0,
+      "failed": 0,
+      "skipped": 0,
+      "status": "missing"
+    },
+    {
+      "ac": 4,
+      "path": "packages/designer-runtime/e2e/roundtrip.api.spec.ts",
+      "kind": "e2e",
+      "expectedCases": 6,
+      "passed": 0,
+      "failed": 0,
+      "skipped": 0,
+      "status": "missing"
+    },
+    {
+      "ac": "4-1",
+      "path": "packages/designer-editor-host/e2e/editor.livepreview.spec.ts",
+      "kind": "e2e",
+      "expectedCases": 36,
+      "passed": 0,
+      "failed": 0,
+      "skipped": 0,
+      "status": "pending"
+    },
+    {
+      "ac": 5,
+      "path": "packages/designer-i18n/src/__tests__/coverage.test.ts",
+      "kind": "unit",
+      "expectedCases": 1,
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0,
+      "status": "pass"
+    },
+    {
+      "ac": 6,
+      "path": "packages/designer-editor-host/e2e/editor.validate-export.spec.ts",
+      "kind": "e2e",
+      "expectedCases": 6,
+      "passed": 0,
+      "failed": 0,
+      "skipped": 0,
+      "status": "pending"
+    },
+    {
+      "ac": 6,
+      "path": "scripts/ci/__tests__/watermark-scss-lint.test.mjs",
+      "kind": "unit",
+      "expectedCases": 7,
+      "passed": 7,
+      "failed": 0,
+      "skipped": 0,
+      "status": "pass"
+    },
+    {
+      "ac": 6,
+      "path": "scripts/ci/__tests__/license-gate.test.mjs",
+      "kind": "unit",
+      "expectedCases": 6,
+      "passed": 6,
+      "failed": 0,
+      "skipped": 0,
+      "status": "pass"
+    },
+    {
+      "ac": 7,
+      "path": "packages/designer-core/src/panel/__tests__/propsSchemaToPanel.test.tsx",
+      "kind": "unit",
+      "expectedCases": 24,
+      "passed": 9,
+      "failed": 0,
+      "skipped": 0,
+      "status": "pass"
+    },
+    {
+      "ac": 8,
+      "path": "packages/designer-table/e2e/table.editing.spec.ts",
+      "kind": "e2e",
+      "expectedCases": 5,
+      "passed": 0,
+      "failed": 0,
+      "skipped": 0,
+      "status": "pending"
+    },
+    {
+      "ac": 8,
+      "path": "packages/designer-table/e2e/table.filter.spec.ts",
+      "kind": "e2e",
+      "expectedCases": 3,
+      "passed": 0,
+      "failed": 0,
+      "skipped": 0,
+      "status": "pending"
+    },
+    {
+      "ac": 8,
+      "path": "packages/designer-table/e2e/table.reorder.spec.ts",
+      "kind": "e2e",
+      "expectedCases": 2,
+      "passed": 0,
+      "failed": 0,
+      "skipped": 0,
+      "status": "pending"
+    },
+    {
+      "ac": 8,
+      "path": "packages/designer-table/e2e/table.virtualization.spec.ts",
+      "kind": "e2e",
+      "expectedCases": 3,
+      "passed": 0,
+      "failed": 0,
+      "skipped": 0,
+      "status": "pending"
+    },
+    {
+      "ac": 9,
+      "path": "packages/designer-runtime/e2e/deploy.static.spec.ts",
+      "kind": "e2e",
+      "expectedCases": 3,
+      "passed": 0,
+      "failed": 0,
+      "skipped": 0,
+      "status": "missing"
+    },
+    {
+      "ac": 9,
+      "path": "packages/designer-runtime/e2e/deploy.api.spec.ts",
+      "kind": "e2e",
+      "expectedCases": 4,
+      "passed": 0,
+      "failed": 0,
+      "skipped": 0,
+      "status": "missing"
+    },
+    {
+      "ac": 10,
+      "path": "packages/designer-i18n/src/__tests__/diff.test.ts",
+      "kind": "unit",
+      "expectedCases": 1,
+      "passed": 10,
+      "failed": 0,
+      "skipped": 0,
+      "status": "pass"
+    }
+  ],
+  "generatedAt": "2026-04-18T10:37:32.182Z"
+}

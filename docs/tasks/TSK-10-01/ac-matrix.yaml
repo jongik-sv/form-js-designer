@@ -1,0 +1,102 @@
+# AC 매트릭스 선언 — TSK-10-01
+# phase-1-plan §4 "Acceptance Criteria 자동 테스트 매트릭스" 표 복제
+# 각 entry: ac(number), specs[]{path, kind:'unit'|'e2e', expectedCases}
+
+entries:
+  - ac: 1
+    description: "6종 컴포넌트 드래그·드롭 (Card/Stack/Tabs/Modal/Button/Table)"
+    specs:
+      - path: packages/designer-editor-host/e2e/editor.dragdrop.spec.ts
+        kind: e2e
+        expectedCases: 6
+
+  - ac: 2
+    description: "AI Skill 4 commands × 2 시나리오 = 8 (CLI + Ajv)"
+    specs:
+      - path: packages/designer-cli/e2e/ai-skill.spec.ts
+        kind: e2e
+        expectedCases: 8
+
+  - ac: 3
+    description: "CLI round-trip: save + load + validate = 3"
+    specs:
+      - path: packages/designer-cli/e2e/cli.roundtrip.spec.ts
+        kind: e2e
+        expectedCases: 3
+
+  - ac: 4
+    description: "JSON 배포 round-trip: 6 컴포넌트 × 2 채널 = 12"
+    specs:
+      - path: packages/designer-runtime/e2e/roundtrip.static.spec.ts
+        kind: e2e
+        expectedCases: 6
+      - path: packages/designer-runtime/e2e/roundtrip.api.spec.ts
+        kind: e2e
+        expectedCases: 6
+
+  - ac: 4-1
+    description: "픽셀 파리티: 6 컴포넌트 × 3 뷰포트 × 2 gate = 36"
+    specs:
+      - path: packages/designer-editor-host/e2e/editor.livepreview.spec.ts
+        kind: e2e
+        expectedCases: 36
+
+  - ac: 5
+    description: "ko 사전 coverage 100% = 1 (hard gate)"
+    specs:
+      - path: packages/designer-i18n/src/__tests__/coverage.test.ts
+        kind: unit
+        expectedCases: 1
+
+  - ac: 6
+    description: "워터마크 4중 가드: E2E 6 + CI lint 3 = 9"
+    specs:
+      - path: packages/designer-editor-host/e2e/editor.validate-export.spec.ts
+        kind: e2e
+        expectedCases: 6
+      - path: scripts/ci/__tests__/watermark-scss-lint.test.mjs
+        kind: unit
+        expectedCases: 7
+      - path: scripts/ci/__tests__/license-gate.test.mjs
+        kind: unit
+        expectedCases: 6
+
+  - ac: 7
+    description: "Props Panel: 위젯 8종 × {render,edit,validate} = 24"
+    specs:
+      - path: packages/designer-core/src/panel/__tests__/propsSchemaToPanel.test.tsx
+        kind: unit
+        expectedCases: 24
+
+  - ac: 8
+    description: "Table: editing(5)+filter(3)+multiheader(3)+reorder(2) = 13"
+    specs:
+      - path: packages/designer-table/e2e/table.editing.spec.ts
+        kind: e2e
+        expectedCases: 5
+      - path: packages/designer-table/e2e/table.filter.spec.ts
+        kind: e2e
+        expectedCases: 3
+      - path: packages/designer-table/e2e/table.reorder.spec.ts
+        kind: e2e
+        expectedCases: 2
+      - path: packages/designer-table/e2e/table.virtualization.spec.ts
+        kind: e2e
+        expectedCases: 3
+
+  - ac: 9
+    description: "배포 E2E: static(3)+api(4) = 7"
+    specs:
+      - path: packages/designer-runtime/e2e/deploy.static.spec.ts
+        kind: e2e
+        expectedCases: 3
+      - path: packages/designer-runtime/e2e/deploy.api.spec.ts
+        kind: e2e
+        expectedCases: 4
+
+  - ac: 10
+    description: "i18n CI gate: exit code 0 = 1"
+    specs:
+      - path: packages/designer-i18n/src/__tests__/diff.test.ts
+        kind: unit
+        expectedCases: 1

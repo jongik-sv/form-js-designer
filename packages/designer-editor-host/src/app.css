@@ -80,7 +80,7 @@
 
   .side-panel--empty {
     padding: 16px 12px;
-    color: #999;
+    color: #595959;
     font-size: 13px;
   }
 
@@ -181,7 +181,7 @@
   }
 
   .validation-badge--idle {
-    color: #999;
+    color: #595959;
   }
 
   /* PropsPanel */
@@ -191,7 +191,7 @@
 
   .props-panel--empty {
     padding: 16px 12px;
-    color: #999;
+    color: #595959;
     font-size: 13px;
   }
 
@@ -246,7 +246,7 @@
 
   .outline-panel--empty {
     padding: 16px 12px;
-    color: #999;
+    color: #595959;
     font-size: 13px;
   }
 
