@@ -5,6 +5,7 @@
 
 import { h, render } from 'preact';
 import { App } from './App';
+import { WatermarkMonitor } from '@form-js-designer/designer-runtime/watermark';
 
 const appEl = document.getElementById('app');
 if (!appEl) {
@@ -12,3 +13,7 @@ if (!appEl) {
 }
 
 render(h(App, {}), appEl);
+
+if (process.env.NODE_ENV === 'production') {
+  new WatermarkMonitor().start();
+}

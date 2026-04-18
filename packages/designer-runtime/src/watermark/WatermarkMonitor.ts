@@ -1,29 +1,16 @@
-/**
- * WatermarkMonitor — shell 구현 — TSK-09-02
- *
- * 본 Task에서는 빈 구현 + 타입 계약만 선배치.
- * 실제 MutationObserver 로직은 TSK-09-03에서 채운다.
- * 이 계약으로 TSK-09-02와 TSK-09-03이 병행 개발 가능.
- */
-
-// ---------------------------------------------------------------------------
-// 타입 계약
-// ---------------------------------------------------------------------------
-
 export type Dispose = () => void;
 
 export interface MonitorOptions {
-  /** 워터마크 요소 selector (기본: '[data-watermark]') */
   selector?: string;
-  /** 운영 환경 여부 판별 함수 (기본: process.env.NODE_ENV === 'production') */
   isProduction?: () => boolean;
-  /** 워터마크 제거 감지 시 콜백 */
   onViolation?: (element: Element) => void;
 }
 
-// ---------------------------------------------------------------------------
-// 환경 감지
-// ---------------------------------------------------------------------------
+export interface WatermarkViolationDetail {
+  kind: 'removed' | 'hidden';
+  reason: string;
+  targetPath?: string;
+}
 
 function isProductionEnv(): boolean {
   if (typeof process !== 'undefined' && process.env) {
@@ -32,29 +19,90 @@ function isProductionEnv(): boolean {
   return false;
 }
 
-// ---------------------------------------------------------------------------
-// initWatermarkMonitor — shell (no-op)
-// ---------------------------------------------------------------------------
+export class WatermarkMonitor {
+  private observer: MutationObserver | null = null;
+  private doc: Document | null = null;
+  private readonly selector: string;
+  private readonly checkProduction: () => boolean;
+  private lastViolationAt = 0;
+  private static readonly THROTTLE_MS = 500;
 
-/**
- * 워터마크 런타임 가드를 초기화한다.
- *
- * TSK-09-03이 실제 MutationObserver 로직을 채울 때까지 no-op 본체.
- *
- * @param opts - MonitorOptions (선택)
- * @returns Dispose 함수 (unsubscribe/cleanup)
- *
- * @todo TSK-09-03에서 MutationObserver 로직 추가
- */
-export function initWatermarkMonitor(opts?: MonitorOptions): Dispose {
-  // production 환경이 아니면 바로 no-op dispose 반환
-  const checkProduction = opts?.isProduction ?? isProductionEnv;
-  if (!checkProduction()) {
-    return () => {};
+  constructor(opts?: MonitorOptions) {
+    this.selector = opts?.selector ?? '.fjs-powered-by';
+    this.checkProduction = opts?.isProduction ?? isProductionEnv;
   }
 
-  // TSK-09-03에서 MutationObserver 로직이 여기에 추가됨
-  // 현재는 skeleton만 유지
+  start(doc: Document = document): void {
+    if (!this.checkProduction()) return;
+    if (this.observer) return;
 
-  return () => {};
+    this.doc = doc;
+    this.observer = new MutationObserver((records) => this.onMutation(records));
+    this.observer.observe(doc.body, {
+      childList: true,
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['style', 'class', 'hidden'],
+    });
+  }
+
+  stop(): void {
+    if (this.observer) {
+      this.observer.disconnect();
+      this.observer = null;
+    }
+    this.doc = null;
+  }
+
+  isWatching(): boolean {
+    return this.observer !== null;
+  }
+
+  private onMutation(records: MutationRecord[]): void {
+    for (const record of records) {
+      if (record.type === 'childList') {
+        for (const node of Array.from(record.removedNodes)) {
+          if (node.nodeType !== Node.ELEMENT_NODE) continue;
+          const el = node as Element;
+          if (el.matches(this.selector) || el.querySelector(this.selector)) {
+            this.emitViolation({ kind: 'removed', reason: 'watermark element removed from DOM', targetPath: this.selector });
+          }
+        }
+      } else if (record.type === 'attributes') {
+        const el = record.target as Element;
+        if (!el.matches(this.selector)) continue;
+        if (!this.assertVisible(el)) {
+          this.emitViolation({ kind: 'hidden', reason: `style attribute changed: ${record.attributeName}`, targetPath: this.selector });
+        }
+      }
+    }
+  }
+
+  private assertVisible(el: Element): boolean {
+    const style = (el as HTMLElement).style;
+    if (!style) return true;
+    if (style.display === 'none') return false;
+    if (style.visibility === 'hidden') return false;
+    const opacity = parseFloat(style.opacity);
+    if (!isNaN(opacity) && opacity <= 0.1) return false;
+    return true;
+  }
+
+  private emitViolation(detail: WatermarkViolationDetail): void {
+    const now = Date.now();
+    if (now - this.lastViolationAt < WatermarkMonitor.THROTTLE_MS) return;
+    this.lastViolationAt = now;
+
+    console.warn('[watermark] violation detected', detail);
+    const target = this.doc?.defaultView ?? (typeof window !== 'undefined' ? window : null);
+    if (target) {
+      target.dispatchEvent(new CustomEvent('designer:watermark-violation', { detail }));
+    }
+  }
+}
+
+export function initWatermarkMonitor(opts?: MonitorOptions): Dispose {
+  const monitor = new WatermarkMonitor(opts);
+  monitor.start();
+  return () => monitor.stop();
 }
