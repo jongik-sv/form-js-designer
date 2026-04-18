@@ -24,6 +24,7 @@ export const REPO_ROOT = resolve(__dirname, '../..');
  */
 export const ALLOWED_LICENSES = [
   'MIT',
+  'MIT-0',           // MIT보다 더 관대한 공개도메인 유사 라이선스
   'Apache-2.0',
   'ISC',
   'BSD-2-Clause',
@@ -37,6 +38,15 @@ export const ALLOWED_LICENSES = [
   'UNLICENSED',   // 내부 workspace 패키지
   'Python-2.0',
   'BlueOak-1.0.0',
+];
+
+/**
+ * 허용된 패키지 화이트리스트 (라이선스 탐지 불가 또는 검증된 커스텀 라이선스)
+ * @bpmn-io/form-js-*: Camunda 커스텀 MIT(워터마크 조항 포함) — 프로젝트에서 워터마크 보호 CI 게이트로 준수
+ */
+export const ALLOWED_PACKAGES = [
+  '@bpmn-io/form-js-editor',
+  '@bpmn-io/form-js-viewer',
 ];
 
 /**
@@ -61,7 +71,11 @@ export function checkLicenses(packages) {
     // 내부 패키지(@form-js-designer/*)는 무조건 허용
     const isInternal = pkgName.startsWith('@form-js-designer/');
 
-    if (!hasAllowed && !isInternal) {
+    // 화이트리스트 패키지: 검증된 커스텀 라이선스(워터마크 조항 MIT 등)
+    const pkgBaseName = pkgName.split('@').slice(0, -1).join('@') || pkgName;
+    const isWhitelisted = ALLOWED_PACKAGES.some((allowed) => pkgBaseName === allowed || pkgName.startsWith(allowed + '@'));
+
+    if (!hasAllowed && !isInternal && !isWhitelisted) {
       violations.push(`${pkgName}: ${licenseStr}`);
     }
   }
