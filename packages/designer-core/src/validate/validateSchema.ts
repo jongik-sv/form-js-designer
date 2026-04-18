@@ -58,6 +58,8 @@ export function validateFormSchema(
     return { ok: false, errors, warnings };
   }
 
+  const reg = registry;
+
   // 중복 경고 path 추적 (O(1) 조회)
   const warnedPaths = new Set<string>();
 
@@ -93,7 +95,7 @@ export function validateFormSchema(
       }
 
       // 레지스트리에서 정의 조회
-      const definition = registry.get(compType);
+      const definition = reg.get(compType);
       if (!definition) {
         errors.push({
           path: compId ?? compPath,
