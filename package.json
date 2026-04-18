@@ -9,9 +9,12 @@
   "scripts": {
     "build": "echo \"TODO: per-package build\" && exit 0",
     "test": "echo \"TODO: vitest\" && exit 0",
-    "lint": "npm run lint:no-css-modules && npm run lint:single-preact",
+    "lint": "npm run lint:no-css-modules && npm run lint:single-preact && npm run lint:watermark-hash && npm run lint:watermark-scss",
     "lint:no-css-modules": "node scripts/ci/no-css-modules.mjs",
-    "lint:single-preact": "node scripts/ci/assert-single-preact.mjs"
+    "lint:single-preact": "node scripts/ci/assert-single-preact.mjs",
+    "lint:watermark-hash": "node scripts/ci/watermark-hash.mjs",
+    "lint:watermark-scss": "node scripts/ci/watermark-scss-lint.mjs",
+    "test:ci-scripts": "node --test scripts/ci/__tests__/watermark-scss-lint.test.mjs && node --test scripts/ci/__tests__/watermark-hash.test.mjs"
   },
   "dependencies": {
     "@bpmn-io/form-js-editor": "^1.21.2",

@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 19,
+  "type": "default",
+  "components": [
+    {
+      "type": "card",
+      "id": "card-1716700020",
+      "header": "",
+      "padding": "lg",
+      "elevation": 1,
+      "headerTag": "h3"
+    },
+    {
+      "type": "tabs",
+      "id": "tabs-1716700021",
+      "tabs": [
+        { "label": "designer.tabs.tab1", "value": "tab1" },
+        { "label": "designer.tabs.tab2", "value": "tab2" }
+      ],
+      "defaultValue": "tab1",
+      "orientation": "horizontal"
+    }
+  ]
+}

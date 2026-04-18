@@ -5,7 +5,6 @@
 
 import { describe, it, expect } from 'vitest';
 import { validateFormSchema } from '../validateSchema';
-import type { PanelWidgetRegistry } from '../../panel/PanelWidgetRegistry';
 import type { ComponentDefinition } from '../../types';
 
 // ------- 테스트용 mock 레지스트리 -------
@@ -47,7 +46,7 @@ describe('validateFormSchema', () => {
   // Case 1: 빈 스키마는 ok=true
   it('1: 빈 components 배열이면 ok=true 반환', () => {
     const registry = makeMockRegistry([textDef]);
-    const result = validateFormSchema({ type: 'default', components: [] }, registry as unknown as PanelWidgetRegistry);
+    const result = validateFormSchema({ type: 'default', components: [] }, registry);
     expect(result.ok).toBe(true);
     expect(result.errors).toHaveLength(0);
   });
@@ -62,7 +61,7 @@ describe('validateFormSchema', () => {
         { id: 'f2', type: 'card', components: [] },
       ],
     };
-    const result = validateFormSchema(schema, registry as unknown as PanelWidgetRegistry);
+    const result = validateFormSchema(schema, registry);
     expect(result.ok).toBe(true);
     expect(result.errors).toHaveLength(0);
   });
@@ -74,7 +73,7 @@ describe('validateFormSchema', () => {
       type: 'default',
       components: [{ id: 'f1', type: 'unknown-widget' }],
     };
-    const result = validateFormSchema(schema, registry as unknown as PanelWidgetRegistry);
+    const result = validateFormSchema(schema, registry);
     expect(result.ok).toBe(false);
     expect(result.errors.some((e) => e.code === 'UNKNOWN_COMPONENT_TYPE')).toBe(true);
     expect(result.errors[0]?.path).toContain('f1');
@@ -83,7 +82,7 @@ describe('validateFormSchema', () => {
   // Case 4: schema가 null/undefined → 에러 반환
   it('4: schema가 null이면 INVALID_SCHEMA 에러', () => {
     const registry = makeMockRegistry([textDef]);
-    const result = validateFormSchema(null as unknown as Record<string, unknown>, registry as unknown as PanelWidgetRegistry);
+    const result = validateFormSchema(null as unknown as Record<string, unknown>, registry);
     expect(result.ok).toBe(false);
     expect(result.errors[0]?.code).toBe('INVALID_SCHEMA');
   });
@@ -91,7 +90,7 @@ describe('validateFormSchema', () => {
   // Case 5: components 배열이 없는 schema → 에러
   it('5: components 배열이 없으면 MISSING_COMPONENTS 에러', () => {
     const registry = makeMockRegistry([textDef]);
-    const result = validateFormSchema({ type: 'default' } as unknown as Record<string, unknown>, registry as unknown as PanelWidgetRegistry);
+    const result = validateFormSchema({ type: 'default' } as unknown as Record<string, unknown>, registry);
     expect(result.ok).toBe(false);
     expect(result.errors.some((e) => e.code === 'MISSING_COMPONENTS')).toBe(true);
   });
@@ -109,7 +108,7 @@ describe('validateFormSchema', () => {
         },
       ],
     };
-    const result = validateFormSchema(schema, registry as unknown as PanelWidgetRegistry);
+    const result = validateFormSchema(schema, registry);
     expect(result.ok).toBe(false);
     expect(result.errors.some((e) => e.code === 'UNKNOWN_COMPONENT_TYPE' && e.path.includes('f1'))).toBe(true);
   });
@@ -124,7 +123,7 @@ describe('validateFormSchema', () => {
         { id: 'f2', type: 'b' },
       ],
     };
-    const result = validateFormSchema(schema, registry as unknown as PanelWidgetRegistry);
+    const result = validateFormSchema(schema, registry);
     expect(result.ok).toBe(false);
     expect(result.errors.length).toBeGreaterThanOrEqual(2);
   });
@@ -145,7 +144,7 @@ describe('validateFormSchema', () => {
       type: 'default',
       components: [{ id: 'f1', type: 'text', maxLength: 'not-a-number' }],
     };
-    const result = validateFormSchema(schema, registry as unknown as PanelWidgetRegistry);
+    const result = validateFormSchema(schema, registry);
     // 타입 불일치는 warning 또는 error로 처리
     const hasIssue = result.errors.some((e) => e.path.includes('f1')) ||
                      result.warnings.some((w) => w.path.includes('f1'));
@@ -159,7 +158,7 @@ describe('validateFormSchema', () => {
       type: 'default',
       components: [{ type: 'text' }],  // id 없음
     };
-    const result = validateFormSchema(schema, registry as unknown as PanelWidgetRegistry);
+    const result = validateFormSchema(schema, registry);
     // id 없는 컴포넌트는 경고나 에러로 처리 (구현에 따라 다름)
     // 최소: ok 여부는 구현에 따르되 warnings 또는 errors 중 하나에 수집
     const hasNote = result.warnings.some((w) => w.code === 'MISSING_ID') ||
@@ -174,7 +173,7 @@ describe('validateFormSchema', () => {
       type: 'default',
       components: [{ id: 'c1', type: 'card', components: [] }],
     };
-    const result = validateFormSchema(schema, registry as unknown as PanelWidgetRegistry);
+    const result = validateFormSchema(schema, registry);
     expect(result.ok).toBe(true);
   });
 
@@ -182,7 +181,7 @@ describe('validateFormSchema', () => {
   it('11: registry가 null이면 에러 반환', () => {
     const result = validateFormSchema(
       { type: 'default', components: [] },
-      null as unknown as PanelWidgetRegistry,
+      null,
     );
     expect(result.ok).toBe(false);
     expect(result.errors[0]?.code).toBe('MISSING_REGISTRY');
@@ -195,7 +194,7 @@ describe('validateFormSchema', () => {
       type: 'default',
       components: [{ id: 'f1', type: 'unknown' }],
     };
-    const result = validateFormSchema(schema, registry as unknown as PanelWidgetRegistry);
+    const result = validateFormSchema(schema, registry);
     expect(result.errors.length).toBeGreaterThan(0);
     const err = result.errors[0]!;
     expect(err).toHaveProperty('path');

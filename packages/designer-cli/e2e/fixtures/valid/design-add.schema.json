@@ -1,0 +1,23 @@
+{
+  "schemaVersion": 19,
+  "type": "default",
+  "components": [
+    {
+      "type": "card",
+      "id": "card-1716700010",
+      "header": "",
+      "padding": "sm",
+      "elevation": 2,
+      "headerTag": "h2"
+    },
+    {
+      "type": "button",
+      "id": "button-1716700011",
+      "label": "",
+      "variant": "secondary",
+      "size": "lg",
+      "disabled": false,
+      "action": ""
+    }
+  ]
+}
