@@ -53,3 +53,93 @@ jobs:
         run: npm --prefix packages/designer-i18n run test:unit
       - name: Run i18n coverage check (hard gate — fails if missing > 0)
         run: npm --prefix packages/designer-i18n run i18n:check
+
+  lint-watermark-hash:
+    name: lint · watermark-hash (TSK-09-03 해시 게이트)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Run watermark hash gate
+        run: node scripts/ci/watermark-hash.mjs
+
+  lint-watermark-scss:
+    name: lint · watermark-scss (.fjs-powered-by 숨김 CSS 금지)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Run watermark SCSS lint
+        run: node scripts/ci/watermark-scss-lint.mjs
+
+  lint-license:
+    name: lint · license-gate (permissive 라이선스 전용)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Run license gate
+        run: node scripts/ci/license-gate.mjs
+
+  e2e-a11y-axe:
+    name: e2e · a11y axe-core critical+serious=0 (PRD §4 AC #6)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+      - name: Run a11y E2E spec
+        run: npm --prefix packages/designer-editor-host run test:a11y
+      - name: Upload a11y report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: a11y-report
+          path: packages/designer-editor-host/playwright-report/
+
+  rc-ac-matrix:
+    name: rc · AC 매트릭스 전수 통과 (phase-1-plan §4 ≥120 케이스)
+    runs-on: ubuntu-latest
+    needs:
+      - lint-no-css-modules
+      - lint-watermark-hash
+      - lint-watermark-scss
+      - lint-license
+      - i18n-check
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Run AC matrix orchestrator
+        run: node scripts/rc/run-ac-matrix.mjs
+      - name: Emit RC summary report
+        if: always()
+        run: node scripts/rc/emit-rc-report.mjs
+      - name: Upload RC report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rc-report
+          path: docs/tasks/TSK-10-01/reports/

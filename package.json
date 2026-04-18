@@ -11,13 +11,20 @@
     "test": "echo \"TODO: vitest\" && exit 0",
     "lint": "npm run lint:no-css-modules && npm run lint:single-preact",
     "lint:no-css-modules": "node scripts/ci/no-css-modules.mjs",
-    "lint:single-preact": "node scripts/ci/assert-single-preact.mjs"
+    "lint:single-preact": "node scripts/ci/assert-single-preact.mjs",
+    "lint:watermark-hash": "node scripts/ci/watermark-hash.mjs",
+    "lint:watermark-scss": "node scripts/ci/watermark-scss-lint.mjs",
+    "lint:license": "node scripts/ci/license-gate.mjs",
+    "test:ac-matrix": "node scripts/rc/run-ac-matrix.mjs",
+    "test:rc": "npm run lint && npm run lint:watermark-hash && npm run lint:watermark-scss && npm run lint:license && npm run test:ac-matrix"
   },
   "dependencies": {
     "@bpmn-io/form-js-editor": "^1.21.2",
     "@bpmn-io/form-js-viewer": "^1.21.2"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.11.2",
+    "js-yaml": "^4.1.1",
     "typescript": "^5.6.0"
   },
   "overrides": {

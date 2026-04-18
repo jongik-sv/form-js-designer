@@ -13,12 +13,11 @@
  * 5. YAML 스키마 위반 → exit 2
  */
 
-import { readFile, writeFile, access, unlink } from 'node:fs/promises';
+import { readFile, writeFile, access, unlink, mkdir } from 'node:fs/promises';
 import { constants as fsConstants } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { execSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import { mkdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import yaml from 'js-yaml';
 
@@ -120,7 +119,7 @@ export async function loadMatrix(yamlPath) {
 
 /**
  * 파일 존재 여부 확인. 없으면 'missing', 있으면 'pending' 반환.
- * @param {SpecEntry & {ac: number|string}} specs
+ * @param {Array<SpecEntry & {ac?: number|string}>} specs
  * @returns {Promise<SpecResult[]>}
  */
 export async function buildMissingReport(specs) {

@@ -603,7 +603,7 @@ node, vitest, vite, playwright
 - category: development
 - domain: fullstack
 - model: opus
-- status: [im]
+- status: [xx]
 - priority: critical
 - assignee: -
 - schedule: 2026-06-01 ~ 2026-06-04

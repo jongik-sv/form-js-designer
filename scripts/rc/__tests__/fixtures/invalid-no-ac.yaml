@@ -1,0 +1,6 @@
+entries:
+  - specs:
+      - path: packages/designer-editor-host/e2e/editor.dragdrop.spec.ts
+        kind: e2e
+        expectedCases: 6
+    # ac 필드 없음 → 스키마 위반 fixture

@@ -10,9 +10,11 @@
     "typecheck": "tsc --noEmit",
     "test:unit": "vitest run",
     "test:unit:watch": "vitest",
-    "test:e2e": "playwright test --config playwright.config.ts"
+    "test:e2e": "playwright test --config playwright.config.ts",
+    "test:a11y": "playwright test --config playwright.config.ts --project=chromium e2e/editor.a11y.spec.ts"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.10.0",
     "@bpmn-io/form-js-editor": "^1.21.2",
     "@form-js-designer/designer-components": "*",
     "@form-js-designer/designer-core": "*",
