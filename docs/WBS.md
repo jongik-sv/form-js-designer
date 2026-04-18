@@ -456,7 +456,7 @@ node, vitest, vite, playwright
 - category: development
 - domain: library
 - model: sonnet
-- status: [dd]
+- status: [xx]
 - priority: high
 - assignee: -
 - schedule: 2026-04-27 ~ 2026-05-04
