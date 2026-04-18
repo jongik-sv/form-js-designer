@@ -518,7 +518,7 @@ node, vitest, vite, playwright
 - category: development
 - domain: cli
 - model: opus
-- status: [ ]
+- status: [dd]
 - priority: critical
 - assignee: -
 - schedule: 2026-05-22 ~ 2026-05-29
