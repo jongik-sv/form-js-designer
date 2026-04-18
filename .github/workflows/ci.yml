@@ -37,3 +37,19 @@ jobs:
         run: npm --prefix packages/designer-core run typecheck
       - name: Unit tests (includes browserEnvContract ADR-0001 §3 D7 regression)
         run: npm --prefix packages/designer-core run test:unit
+
+  i18n-check:
+    name: i18n · ko.json 100% coverage gate (PRD §4 AC #5, #10)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Run i18n unit tests
+        run: npm --prefix packages/designer-i18n run test:unit
+      - name: Run i18n coverage check (hard gate — fails if missing > 0)
+        run: npm --prefix packages/designer-i18n run i18n:check

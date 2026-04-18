@@ -12,7 +12,9 @@
   "scripts": {
     "test:unit": "vitest run",
     "test:unit:watch": "vitest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "i18n:check": "npx tsx bin/i18n-check.mjs",
+    "i18n:extract": "npx tsx bin/i18n-check.mjs --dump"
   },
   "peerDependencies": {
     "@form-js-designer/designer-core": "*",
