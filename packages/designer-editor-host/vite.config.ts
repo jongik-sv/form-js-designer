@@ -3,6 +3,9 @@ import preact from '@preact/preset-vite';
 
 export default defineConfig({
   plugins: [preact()],
+  define: {
+    global: 'globalThis',
+  },
   resolve: {
     dedupe: ['preact'],
     alias: {
