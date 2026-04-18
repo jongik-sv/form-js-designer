@@ -1,0 +1,27 @@
+{
+  "name": "@form-js-designer/designer-cli",
+  "version": "0.0.0",
+  "private": true,
+  "description": "CLI for form-js designer: validate and import form schemas",
+  "type": "module",
+  "bin": {
+    "designer-cli": "./bin/designer-cli.mjs"
+  },
+  "scripts": {
+    "test:unit": "vitest run",
+    "test:unit:watch": "vitest",
+    "test:e2e": "echo 'N/A — CLI e2e not configured' && exit 0",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "ajv": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.16.10",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.2"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
