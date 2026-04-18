@@ -621,7 +621,7 @@ node, vitest, vite, playwright
 - category: infrastructure
 - domain: infra
 - model: sonnet
-- status: [ ]
+- status: [dd]
 - priority: high
 - assignee: -
 - schedule: 2026-06-04 ~ 2026-06-05
