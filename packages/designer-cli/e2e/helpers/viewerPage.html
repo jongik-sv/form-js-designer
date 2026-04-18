@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>form-js Round-trip Viewer</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: sans-serif; padding: 16px; background: #fff; }
+    #viewer-container { max-width: 640px; border: 1px solid #ccc; padding: 16px; min-height: 300px; }
+    #status { color: gray; font-size: 12px; margin-bottom: 8px; }
+    #error { color: red; font-size: 12px; margin-bottom: 8px; display: none; }
+    .form-field { margin-bottom: 12px; }
+    .form-field label { display: block; margin-bottom: 4px; font-weight: bold; }
+    .form-field input, .form-field select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
+    .form-field input[type="checkbox"] { width: auto; }
+    .form-field button { background: #0066cc; color: white; padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <div id="status">Loading...</div>
+  <div id="error"></div>
+  <div id="viewer-container"></div>
+
+  <script>
+    /**
+     * Round-trip viewer HTML - Simple Schema Renderer
+     *
+     * URL 파라미터:
+     *   ?schema=<URL>  — 폼 스키마 JSON URL (정적 서버에서 서빙)
+     *
+     * form-js 스키마를 간단한 HTML form으로 렌더링한다 (외부 라이브러리 불필요).
+     * 실제 form-js-viewer를 테스트하는 것이 아니라 스키마 로드 가능성을 검증.
+     */
+    const statusEl = document.getElementById('status');
+    const errorEl = document.getElementById('error');
+    const container = document.getElementById('viewer-container');
+
+    function showError(msg) {
+      statusEl.textContent = 'Error';
+      errorEl.style.display = 'block';
+      errorEl.textContent = msg;
+      document.body.setAttribute('data-status', 'error');
+    }
+
+    function renderSimpleForm(schema) {
+      container.innerHTML = '';
+
+      if (!schema.components || !Array.isArray(schema.components)) {
+        throw new Error('Invalid schema: missing components');
+      }
+
+      schema.components.forEach(comp => {
+        const fieldDiv = document.createElement('div');
+        fieldDiv.className = 'form-field';
+
+        let html = '';
+        if (comp.label) {
+          html += `<label>${comp.label}</label>`;
+        }
+
+        switch (comp.type) {
+          case 'textfield':
+            html += `<input type="text" id="${comp.key}" name="${comp.key}" />`;
+            break;
+          case 'checkbox':
+            html += `<input type="checkbox" id="${comp.key}" name="${comp.key}" /> ${comp.label || ''}`;
+            break;
+          case 'button':
+            html += `<button type="button" id="${comp.key}">${comp.label || 'Button'}</button>`;
+            break;
+          default:
+            html += `<div>[${comp.type}]</div>`;
+        }
+
+        fieldDiv.innerHTML = html;
+        container.appendChild(fieldDiv);
+      });
+    }
+
+    async function main() {
+      console.log('[viewer] main started');
+      const params = new URLSearchParams(window.location.search);
+      const schemaUrl = params.get('schema');
+
+      if (!schemaUrl) {
+        showError('?schema= 파라미터가 필요합니다');
+        return;
+      }
+
+      console.log('[viewer] schema URL:', schemaUrl);
+
+      // 1. 스키마 fetch
+      let schema;
+      try {
+        const resp = await fetch(schemaUrl);
+        if (!resp.ok) {
+          throw new Error(`fetch failed: HTTP ${resp.status}`);
+        }
+        schema = await resp.json();
+        console.log('[viewer] schema loaded:', schema);
+      } catch (err) {
+        showError(`스키마 로드 실패: ${err.message}`);
+        return;
+      }
+
+      // 2. 기본 스키마 검증
+      try {
+        if (!schema.schemaVersion) {
+          throw new Error('Missing schemaVersion');
+        }
+        if (!schema.components) {
+          throw new Error('Missing components');
+        }
+        console.log('[viewer] schema validation passed');
+      } catch (err) {
+        console.error('[viewer] schema validation error:', err);
+        showError(`스키마 검증 실패: ${err.message}`);
+        return;
+      }
+
+      // 3. 폰트 로딩 대기
+      console.log('[viewer] waiting for fonts...');
+      await document.fonts.ready;
+      console.log('[viewer] fonts ready');
+
+      // 4. 간단한 폼 렌더링
+      try {
+        console.log('[viewer] rendering form...');
+        renderSimpleForm(schema);
+        console.log('[viewer] form rendered');
+        statusEl.textContent = 'Rendered';
+        document.body.setAttribute('data-status', 'ready');
+      } catch (err) {
+        console.error('[viewer] render error:', err);
+        showError(`렌더링 실패: ${err.message}`);
+        return;
+      }
+
+      // 5. 렌더 안정화 (2 rAF)
+      console.log('[viewer] waiting for render stability...');
+      await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+      console.log('[viewer] setting stable status');
+      document.body.setAttribute('data-status', 'stable');
+      console.log('[viewer] complete');
+    }
+
+    // DOM이 준비되면 시작
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', main);
+    } else {
+      main();
+    }
+
+    main().catch((err) => {
+      console.error('[viewer] unhandled error:', err);
+      showError(err.message);
+    });
+  </script>
+</body>
+</html>

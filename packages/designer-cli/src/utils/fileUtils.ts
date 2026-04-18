@@ -3,8 +3,10 @@
  *
  * - resolveNonConflicting: 대상 디렉토리에서 중복 없는 파일명을 결정한다
  * - ensureDir: 재귀적으로 디렉토리를 생성한다
+ * - atomicCopyFile: tmp → rename 원자적 파일 복사
  */
 import * as fs from 'node:fs';
+import * as os from 'node:os';
 import * as path from 'node:path';
 
 /**
@@ -48,4 +50,28 @@ export function resolveNonConflicting(dir: string, basename: string): string {
  */
 export function ensureDir(dir: string): void {
   fs.mkdirSync(dir, { recursive: true });
+}
+
+/**
+ * 파일을 원자적으로 복사한다 (tmp → rename, cross-device fallback 포함).
+ *
+ * 동일 볼륨 내에서는 rename으로 원자성 보장.
+ * cross-device 등 rename 실패 시 copyFile + unlink fallback을 사용한다.
+ *
+ * @param src - 원본 파일 경로
+ * @param dest - 대상 파일 경로 (대상 디렉토리는 이미 존재해야 함)
+ */
+export function atomicCopyFile(src: string, dest: string): void {
+  const tmpPath = path.join(
+    os.tmpdir(),
+    `atomic-copy-${Date.now()}-${Math.random().toString(36).slice(2)}.tmp`,
+  );
+  fs.copyFileSync(src, tmpPath);
+  try {
+    fs.renameSync(tmpPath, dest);
+  } catch {
+    // cross-device 등 rename 실패 시 fallback
+    fs.copyFileSync(tmpPath, dest);
+    fs.unlinkSync(tmpPath);
+  }
 }

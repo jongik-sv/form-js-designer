@@ -8,7 +8,8 @@
  * 4. exit 0 (성공) / exit 1 (실패)
  */
 import * as fs from 'node:fs';
-import Ajv from 'ajv';
+import { Ajv } from 'ajv';
+import type { ErrorObject } from 'ajv';
 import type { CLIRegistry } from '../registry/types.js';
 import { getCLIRegistry } from '../registry/cliRegistry.js';
 import { checkI18n } from '../i18n/i18nCheck.js';
@@ -55,8 +56,9 @@ interface ValidationResult {
 /**
  * Ajv 에러 목록을 사람이 읽기 쉬운 문자열 배열로 변환한다.
  */
-function formatAjvErrors(errors: ReturnType<typeof validateFormStructure.errors>): string[] {
-  return (errors ?? []).map((e) => {
+function formatAjvErrors(errors: ErrorObject[] | null | undefined): string[] {
+  if (!errors) return [];
+  return errors.map((e) => {
     const prefix = e.instancePath ? `at ${e.instancePath}: ` : '';
     return `${prefix}${e.message ?? 'validation error'}`;
   });

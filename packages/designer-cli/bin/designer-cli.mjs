@@ -8,6 +8,7 @@
  */
 import { runValidate } from '../src/commands/validate.js';
 import { runImport } from '../src/commands/import.js';
+import { runPublish } from '../src/commands/publish.js';
 
 const argv = process.argv.slice(2);
 const subcommand = argv[0];
@@ -36,10 +37,13 @@ if (!subcommand || subcommand === '--help' || subcommand === '-h') {
 Usage:
   designer-cli validate <file>
   designer-cli import <file> --to <project-path>
+  designer-cli publish <file> --target static [--out <dir>] [--id <id>]
+  designer-cli publish <file> --target api --url <URL> --id <id> [--etag <prevEtag>]
 
 Commands:
   validate  Validate a form schema JSON file (Ajv + i18n check)
   import    Import an AI-generated form schema into a project
+  publish   Publish a form schema (static directory or API server)
 
 Options:
   -h, --help  Show this help message
@@ -67,6 +71,21 @@ async function main() {
     }
     const flags = parseFlags(restArgs, ['--to']);
     const code = await runImport(filePath, { to: flags['to'] ?? '' });
+    process.exit(code);
+  } else if (subcommand === 'publish') {
+    const filePath = argv[1];
+    if (!filePath) {
+      process.stderr.write('오류: 파일 경로가 필요합니다.\n사용법: designer-cli publish <file> --target <static|api>\n');
+      process.exit(1);
+    }
+    const flags = parseFlags(restArgs, ['--target', '--out', '--id', '--url', '--etag']);
+    const code = await runPublish(filePath, {
+      target: flags['target'] ?? '',
+      out: flags['out'],
+      id: flags['id'],
+      url: flags['url'],
+      etag: flags['etag'],
+    });
     process.exit(code);
   } else {
     process.stderr.write(`Error: unknown command "${subcommand}"\nRun designer-cli --help for usage.\n`);

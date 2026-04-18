@@ -16,6 +16,6 @@
     "noEmit": true,
     "types": ["node"]
   },
-  "include": ["src/**/*", "bin/**/*", "vitest.config.ts"],
+  "include": ["src/**/*", "bin/**/*", "e2e/**/*", "vitest.config.ts", "playwright.config.ts"],
   "exclude": ["node_modules", "dist"]
 }
