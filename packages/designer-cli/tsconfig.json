@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "skipLibCheck": true,
+    "outDir": "dist",
+    "rootDir": ".",
+    "paths": {
+      "@form-js-designer/designer-core": ["../designer-core/src/index.ts"],
+      "@form-js-designer/designer-core/validate": ["../designer-core/src/validate/index.ts"]
+    }
+  },
+  "include": ["src/**/*", "e2e/**/*"],
+  "exclude": ["node_modules", "dist"]
+}

@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 19,
+  "type": "default",
+  "components": [
+    {
+      "type": "modal",
+      "id": "modal-1716700030",
+      "title": "",
+      "description": "",
+      "triggerLabel": "",
+      "size": "md",
+      "portalContainerRef": ""
+    },
+    {
+      "type": "table",
+      "id": "table-1716700031",
+      "data": "= items",
+      "columns": [
+        { "key": "name", "label": "designer.table.col.name" },
+        { "key": "value", "label": "designer.table.col.value" }
+      ]
+    }
+  ]
+}

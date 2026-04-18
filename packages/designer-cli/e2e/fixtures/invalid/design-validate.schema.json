@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 19,
+  "type": "default",
+  "components": [
+    {
+      "type": "unknown-widget",
+      "id": "unknown-1716700120"
+    },
+    {
+      "type": "fake-input",
+      "id": "fake-1716700121"
+    }
+  ]
+}
