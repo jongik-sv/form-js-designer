@@ -105,16 +105,23 @@ export function scanPackages(root) {
 }
 
 /**
+ * argv 배열에서 특정 플래그의 값을 파싱한다.
+ * @param {string[]} argv
+ * @param {string} flag - 예: '--root'
+ * @param {string} defaultValue
+ * @returns {string}
+ */
+export function parseFlag(argv, flag, defaultValue) {
+  const idx = argv.indexOf(flag);
+  return idx !== -1 && argv[idx + 1] ? resolve(argv[idx + 1]) : defaultValue;
+}
+
+/**
  * main() — CLI 진입점
  */
 export async function main(argv = process.argv.slice(2)) {
-  let root = REPO_ROOT;
-  let outFile = DEFAULT_OUT;
-
-  for (let i = 0; i < argv.length; i++) {
-    if (argv[i] === '--root' && argv[i + 1]) root = resolve(argv[++i]);
-    if (argv[i] === '--out' && argv[i + 1]) outFile = resolve(argv[++i]);
-  }
+  const root = parseFlag(argv, '--root', REPO_ROOT);
+  const outFile = parseFlag(argv, '--out', DEFAULT_OUT);
 
   let packages;
   try {

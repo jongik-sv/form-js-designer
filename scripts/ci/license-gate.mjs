@@ -50,6 +50,22 @@ export const ALLOWED_PACKAGES = [
 ];
 
 /**
+ * "@scope/name@version" 또는 "name@version" 형태의 패키지 식별자에서 버전을 제거한다.
+ * 예: "@bpmn-io/form-js@1.2.3" → "@bpmn-io/form-js"
+ *     "lodash@4.17.21"          → "lodash"
+ * @param {string} pkgName - license-checker 형식의 "name@version" 식별자
+ * @returns {string} 버전을 제거한 패키지 이름
+ */
+export function extractPackageBaseName(pkgName) {
+  // "@" 기준으로 분리 후 마지막 토큰(버전)을 제거
+  // "@scope/name@version" → ["", "scope/name", "version"] → "@" + "scope/name" = "@scope/name"
+  // "name@version"        → ["name", "version"]            → "name"
+  const parts = pkgName.split('@');
+  const withoutVersion = parts.slice(0, -1).join('@');
+  return withoutVersion || pkgName;
+}
+
+/**
  * 패키지 맵에서 비-permissive 라이선스 위반 목록을 반환한다.
  * @param {Record<string, {licenses: string}>} packages - license-checker 형식
  * @returns {string[]} 위반 패키지 설명 문자열 배열
@@ -72,7 +88,7 @@ export function checkLicenses(packages) {
     const isInternal = pkgName.startsWith('@form-js-designer/');
 
     // 화이트리스트 패키지: 검증된 커스텀 라이선스(워터마크 조항 MIT 등)
-    const pkgBaseName = pkgName.split('@').slice(0, -1).join('@') || pkgName;
+    const pkgBaseName = extractPackageBaseName(pkgName);
     const isWhitelisted = ALLOWED_PACKAGES.some((allowed) => pkgBaseName === allowed || pkgName.startsWith(allowed + '@'));
 
     if (!hasAllowed && !isInternal && !isWhitelisted) {
@@ -115,13 +131,23 @@ export function scanTree(root) {
 }
 
 /**
+ * argv 배열에서 --root 옵션 값을 파싱한다.
+ * @param {string[]} argv
+ * @param {string} defaultRoot
+ * @returns {string}
+ */
+export function parseRoot(argv, defaultRoot) {
+  for (let i = 0; i < argv.length; i++) {
+    if (argv[i] === '--root' && argv[i + 1]) return resolve(argv[i + 1]);
+  }
+  return defaultRoot;
+}
+
+/**
  * main() — CLI 진입점
  */
 export async function main(argv = process.argv.slice(2)) {
-  let root = REPO_ROOT;
-  for (let i = 0; i < argv.length; i++) {
-    if (argv[i] === '--root' && argv[i + 1]) root = resolve(argv[++i]);
-  }
+  const root = parseRoot(argv, REPO_ROOT);
 
   let packages;
   try {
