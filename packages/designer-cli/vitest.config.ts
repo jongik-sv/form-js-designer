@@ -7,9 +7,15 @@ export default defineConfig({
     globals: false,
   },
   resolve: {
-    alias: {
-      '@form-js-designer/designer-core': resolve(__dirname, '../designer-core/src/index.ts'),
-      '@form-js-designer/designer-core/validate': resolve(__dirname, '../designer-core/src/validate/index.ts'),
-    },
+    alias: [
+      {
+        find: '@form-js-designer/designer-core/validate',
+        replacement: resolve(__dirname, '../designer-core/src/validate/index.ts'),
+      },
+      {
+        find: '@form-js-designer/designer-core',
+        replacement: resolve(__dirname, '../designer-core/src/index.ts'),
+      },
+    ],
   },
 });

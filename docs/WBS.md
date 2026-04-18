@@ -542,7 +542,7 @@ node, vitest, vite, playwright
 - category: development
 - domain: ai
 - model: sonnet
-- status: [dd]
+- status: [xx]
 - priority: high
 - assignee: -
 - schedule: 2026-05-25 ~ 2026-05-27

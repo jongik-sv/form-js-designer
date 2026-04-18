@@ -12,6 +12,16 @@
 import { validateFormSchema } from '@form-js-designer/designer-core/validate';
 import type { ValidationResult } from '@form-js-designer/designer-core/validate';
 
+/** 컴포넌트 레지스트리 항목 타입 */
+interface ComponentEntry {
+  propsSchema?: { properties: Record<string, { type: string }> };
+}
+
+/** 컴포넌트 레지스트리 인터페이스 */
+interface ComponentRegistry {
+  get(type: string): ComponentEntry | undefined;
+}
+
 /** 등록된 컴포넌트 type 목록 (designer-components + designer-table) */
 const KNOWN_COMPONENT_TYPES = new Set([
   'card',
@@ -25,8 +35,8 @@ const KNOWN_COMPONENT_TYPES = new Set([
 /**
  * 내부 컴포넌트 레지스트리 — validate.ts 독립 동작용 (CLI 컨텍스트)
  */
-const cliRegistry = {
-  get(type: string): { propsSchema?: { properties: Record<string, { type: string }> } } | undefined {
+const cliRegistry: ComponentRegistry = {
+  get(type: string): ComponentEntry | undefined {
     if (KNOWN_COMPONENT_TYPES.has(type)) {
       return { propsSchema: undefined };
     }
@@ -38,7 +48,7 @@ export interface ValidateOptions {
   /** 검증 대상 schema 객체 (이미 파싱된 JSON) */
   schema: Record<string, unknown>;
   /** 커스텀 레지스트리 (테스트용 override) */
-  registry?: typeof cliRegistry;
+  registry?: ComponentRegistry;
 }
 
 /**

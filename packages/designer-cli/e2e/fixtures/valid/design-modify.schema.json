@@ -14,8 +14,8 @@
       "type": "tabs",
       "id": "tabs-1716700021",
       "tabs": [
-        { "label": "Tab 1", "value": "tab1" },
-        { "label": "Tab 2", "value": "tab2" }
+        { "label": "designer.tabs.tab1", "value": "tab1" },
+        { "label": "designer.tabs.tab2", "value": "tab2" }
       ],
       "defaultValue": "tab1",
       "orientation": "horizontal"
