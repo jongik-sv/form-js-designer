@@ -578,7 +578,7 @@ node, vitest, vite, playwright
 - category: infrastructure
 - domain: infra
 - model: opus
-- status: [ ]
+- status: [dd]
 - priority: critical
 - assignee: -
 - schedule: 2026-05-29 ~ 2026-06-01
