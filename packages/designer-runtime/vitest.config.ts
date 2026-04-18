@@ -24,14 +24,14 @@ export default defineConfig({
       'react/jsx-runtime': path.join(PREACT, 'jsx-runtime'),
       'react-dom': path.join(PREACT, 'compat'),
       react: path.join(PREACT, 'compat'),
-      // designer-core: workspace 소스 직접 참조
-      '@form-js-designer/designer-core': path.resolve(
-        __dirname,
-        '../designer-core/src/index.ts',
-      ),
+      // designer-core: workspace 소스 직접 참조 (sub-path 먼저, 그 다음 root)
       '@form-js-designer/designer-core/validate': path.resolve(
         __dirname,
         '../designer-core/src/validate/index.ts',
+      ),
+      '@form-js-designer/designer-core': path.resolve(
+        __dirname,
+        '../designer-core/src/index.ts',
       ),
     },
   },

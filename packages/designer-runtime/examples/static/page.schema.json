@@ -1,0 +1,31 @@
+{
+  "type": "default",
+  "id": "roundtrip-demo",
+  "components": [
+    {
+      "id": "card1",
+      "type": "card",
+      "label": "Demo Card",
+      "components": [
+        {
+          "id": "name-field",
+          "type": "textfield",
+          "label": "Name",
+          "key": "name"
+        },
+        {
+          "id": "email-field",
+          "type": "textfield",
+          "label": "Email",
+          "key": "email"
+        }
+      ]
+    },
+    {
+      "id": "submit-btn",
+      "type": "button",
+      "label": "Submit",
+      "action": "submit"
+    }
+  ]
+}
