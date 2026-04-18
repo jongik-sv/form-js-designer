@@ -66,7 +66,15 @@ export async function publishStatic(opts: StaticPublishOptions): Promise<StaticP
   }
 
   // ID 결정: 제공된 id 사용, 없으면 파일명(확장자 제거)
-  const id = opts.id ?? deriveId(file);
+  const rawId = opts.id ?? deriveId(file);
+
+  // 경로 순회(path traversal) 방지: id는 단순 파일명 세그먼트여야 한다
+  const idError = validateId(rawId);
+  if (idError) {
+    process.stderr.write(`오류: 유효하지 않은 id: ${idError}\n`);
+    return { ok: false, errorMessage: `유효하지 않은 id: ${idError}` };
+  }
+  const id = rawId;
 
   // 4. outDir 생성 (mkdir -p)
   try {
@@ -126,4 +134,28 @@ function deriveId(filePath: string): string {
   const basename = path.basename(filePath);
   const dotIdx = basename.indexOf('.');
   return dotIdx === -1 ? basename : basename.slice(0, dotIdx);
+}
+
+/**
+ * ID가 안전한 파일명 세그먼트인지 검증한다.
+ * 경로 구분자(/, \) 또는 '..' 포함 시 에러 메시지를 반환하고,
+ * 유효하면 null을 반환한다.
+ */
+function validateId(id: string): string | null {
+  if (id.length === 0) {
+    return 'id는 빈 문자열일 수 없습니다';
+  }
+  // 경로 구분자 포함 여부 검사
+  if (id.includes('/') || id.includes('\\')) {
+    return `id에 경로 구분자가 포함될 수 없습니다: "${id}"`;
+  }
+  // path.basename을 통해 실제 파일명 세그먼트만 남아야 한다
+  if (path.basename(id) !== id) {
+    return `id는 단순 파일명 세그먼트여야 합니다 (경로 순회 금지): "${id}"`;
+  }
+  // '..' 세그먼트 명시적 차단
+  if (id === '..') {
+    return `id는 ".."일 수 없습니다`;
+  }
+  return null;
 }

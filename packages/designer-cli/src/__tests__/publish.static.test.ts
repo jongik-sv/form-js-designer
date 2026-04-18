@@ -126,6 +126,30 @@ describe('publishStatic', () => {
     expect(fs.existsSync(outSchemaPath)).toBe(false);
   });
 
+  it('보안: ../escaped 같은 path traversal id는 ok=false를 반환한다', async () => {
+    const result = await publishStatic({ file: schemaFile, outDir, id: '../escaped' });
+
+    expect(result.ok).toBe(false);
+    expect(result.errorMessage).toMatch(/유효하지 않은 id|id/);
+    // outDir 외부에 파일이 생성되지 않아야 한다
+    const escapedPath = path.join(outDir, '..', 'escaped.schema.json');
+    expect(fs.existsSync(escapedPath)).toBe(false);
+  });
+
+  it('보안: 경로 구분자(/) 포함 id는 ok=false를 반환한다', async () => {
+    const result = await publishStatic({ file: schemaFile, outDir, id: 'sub/dir' });
+
+    expect(result.ok).toBe(false);
+    expect(result.errorMessage).toMatch(/유효하지 않은 id|id/);
+  });
+
+  it('보안: ".." id는 ok=false를 반환한다', async () => {
+    const result = await publishStatic({ file: schemaFile, outDir, id: '..' });
+
+    expect(result.ok).toBe(false);
+    expect(result.errorMessage).toMatch(/유효하지 않은 id|id/);
+  });
+
   it('stdout 결과에 id, sha256, out 필드가 포함된다', async () => {
     const result = await publishStatic({ file: schemaFile, outDir, id: 'schema-out' });
 
