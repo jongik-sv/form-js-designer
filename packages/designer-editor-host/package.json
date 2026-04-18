@@ -14,7 +14,9 @@
   },
   "devDependencies": {
     "@bpmn-io/form-js-editor": "^1.21.2",
+    "@form-js-designer/designer-components": "*",
     "@form-js-designer/designer-core": "*",
+    "@form-js-designer/designer-table": "*",
     "@playwright/test": "^1.47.2",
     "@preact/preset-vite": "^2.9.1",
     "@testing-library/preact": "^3.2.4",

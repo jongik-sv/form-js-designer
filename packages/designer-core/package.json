@@ -14,7 +14,8 @@
     "./overlay/overlay.css": "./src/overlay/overlay.css",
     "./host": "./src/host/index.ts",
     "./host/shellStyles.css": "./src/host/shellStyles.css",
-    "./i18n": "./src/i18n/index.ts"
+    "./i18n": "./src/i18n/index.ts",
+    "./validate": "./src/validate/index.ts"
   },
   "scripts": {
     "dev:spike": "vite --config spike/wysiwyg/vite.config.ts",

@@ -43,3 +43,7 @@ export type {
 // i18n module — TSK-03-03 (PRD §4 AC #5)
 export { LocaleProvider, useT, useLocale, createFallbackT } from './i18n/LocaleProvider';
 export type { LocaleT, LocaleContextValue, LocaleKey } from './i18n/localeTypes';
+
+// Validate module — TSK-06-02 (PRD §4 AC #3, #4)
+export { validateFormSchema } from './validate/validateSchema';
+export type { ValidationResult, ValidationError, ValidationWarning } from './validate/types';

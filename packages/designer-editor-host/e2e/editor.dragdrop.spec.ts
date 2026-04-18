@@ -10,12 +10,12 @@ import { test, expect } from '@playwright/test';
 
 // 드래그·드롭 대상 컴포넌트 목록
 const COMPONENTS = [
-  { type: 'card', label: /card/i },
-  { type: 'stack', label: /stack/i },
-  { type: 'tabs', label: /tabs/i },
-  { type: 'modal', label: /modal/i },
-  { type: 'button', label: /button/i },
-  { type: 'table', label: /table/i },
+  { type: 'card', label: /card|카드/i },
+  { type: 'stack', label: /stack|스택/i },
+  { type: 'tabs', label: /tabs|탭/i },
+  { type: 'modal', label: /modal|모달/i },
+  { type: 'button', label: /button|버튼/i },
+  { type: 'table', label: /table|테이블/i },
 ] as const;
 
 test.describe('Editor Drag & Drop — 6 컴포넌트', () => {
@@ -38,8 +38,11 @@ test.describe('Editor Drag & Drop — 6 컴포넌트', () => {
 
       await expect(paletteItem).toBeVisible({ timeout: 10000 });
 
-      // 2. 캔버스(드롭 영역) 찾기
-      const canvas = page.locator('.fjs-drop-container-vertical, .fjs-editor-canvas, .drop-zone').first();
+      // 2. 캔버스(드롭 영역) 찾기 — 빈 폼일 때 fjs-drop-container-vertical 은 0-height 이므로
+      //    가시 영역은 '빈 폼' 카드(.fjs-empty-editor-card) 또는 외곽 편집기 컨테이너를 사용한다.
+      const canvas = page
+        .locator('.fjs-empty-editor-card, .fjs-editor-container, .fjs-drop-container-vertical')
+        .first();
       await expect(canvas).toBeVisible({ timeout: 10000 });
 
       // 3. 팔레트 항목 → 캔버스 드래그·드롭
@@ -88,8 +91,10 @@ test.describe('Editor Drag & Drop — 6 컴포넌트', () => {
 
   test('아웃라인 패널 ↔ 캔버스 양방향 선택 동기화', async ({ page }) => {
     // card 컴포넌트를 먼저 드롭
-    const cardPaletteItem = page.locator('.fjs-palette-field', { hasText: /card/i }).first();
-    const canvas = page.locator('.fjs-drop-container-vertical, .fjs-editor-canvas, .drop-zone').first();
+    const cardPaletteItem = page.locator('.fjs-palette-field', { hasText: /card|카드/i }).first();
+    const canvas = page
+      .locator('.fjs-empty-editor-card, .fjs-editor-container, .fjs-drop-container-vertical')
+      .first();
 
     const paletteBox = await cardPaletteItem.boundingBox();
     const canvasBox = await canvas.boundingBox();

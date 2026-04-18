@@ -1,0 +1,230 @@
+/**
+ * PropsPanelService 단위 테스트 — TSK-06-02
+ * 10 케이스: DI spy 기반 - registerProvider 호출 여부, getGroups(field) 반환,
+ *            propsSchemaToPanel 호출, 미등록 type 시 throw
+ */
+
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+
+// designer-core mock
+vi.mock('@form-js-designer/designer-core', () => ({
+  propsSchemaToPanel: vi.fn(),
+  createDefaultRegistry: vi.fn(() => ({
+    get: vi.fn(),
+    has: vi.fn(),
+    register: vi.fn(),
+    list: vi.fn().mockReturnValue([]),
+  })),
+  UnknownWidgetError: class UnknownWidgetError extends Error {
+    constructor(type: string) {
+      super(`Unknown widget type: "${type}"`);
+      this.name = 'UnknownWidgetError';
+    }
+  },
+}));
+
+import { propsSchemaToPanel, UnknownWidgetError } from '@form-js-designer/designer-core';
+import { PropsPanelService } from '../PropsPanelService';
+
+const mockPropsSchemaToPanel = vi.mocked(propsSchemaToPanel);
+
+function makeField(type = 'text', id = 'field1') {
+  return { id, type };
+}
+
+function makeDeps(overrides: Record<string, unknown> = {}) {
+  return {
+    eventBus: { on: vi.fn(), off: vi.fn() },
+    formFieldRegistry: {
+      get: vi.fn(),
+      getAll: vi.fn().mockReturnValue([]),
+    },
+    propertiesPanel: {
+      registerProvider: vi.fn(),
+    },
+    modeling: {
+      editFormField: vi.fn(),
+    },
+    ...overrides,
+  };
+}
+
+describe('PropsPanelService', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  // Case 1: 생성자에서 propertiesPanel.registerProvider 호출
+  it('1: 생성자에서 propertiesPanel.registerProvider 가 호출됨', () => {
+    const deps = makeDeps();
+    new PropsPanelService(
+      deps.eventBus,
+      deps.formFieldRegistry,
+      deps.propertiesPanel,
+      deps.modeling,
+    );
+    expect(deps.propertiesPanel.registerProvider).toHaveBeenCalledTimes(1);
+  });
+
+  // Case 2: registerProvider에 priority 500 이상으로 등록
+  it('2: registerProvider 호출 시 priority >= 500으로 등록됨', () => {
+    const deps = makeDeps();
+    new PropsPanelService(
+      deps.eventBus,
+      deps.formFieldRegistry,
+      deps.propertiesPanel,
+      deps.modeling,
+    );
+    const [priority] = deps.propertiesPanel.registerProvider.mock.calls[0] as unknown[];
+    expect(typeof priority).toBe('number');
+    expect(priority as number).toBeGreaterThanOrEqual(500);
+  });
+
+  // Case 3: getGroups(field) — formFieldRegistry.get 호출
+  it('3: getGroups(field) 시 formFieldRegistry.get(field.type) 호출', () => {
+    const deps = makeDeps();
+    deps.formFieldRegistry.get = vi.fn().mockReturnValue({
+      type: 'text',
+      propsSchema: { properties: {} },
+    });
+    mockPropsSchemaToPanel.mockReturnValue([]);
+    const service = new PropsPanelService(
+      deps.eventBus,
+      deps.formFieldRegistry,
+      deps.propertiesPanel,
+      deps.modeling,
+    );
+    service.getGroups(makeField());
+    expect(deps.formFieldRegistry.get).toHaveBeenCalledWith('text');
+  });
+
+  // Case 4: getGroups(field) — propsSchemaToPanel 호출
+  it('4: getGroups(field) 시 propsSchemaToPanel 호출됨', () => {
+    const deps = makeDeps();
+    const mockSchema = { properties: { label: { type: 'string', label: '레이블' } } };
+    deps.formFieldRegistry.get = vi.fn().mockReturnValue({
+      type: 'text',
+      propsSchema: mockSchema,
+    });
+    mockPropsSchemaToPanel.mockReturnValue([]);
+    const service = new PropsPanelService(
+      deps.eventBus,
+      deps.formFieldRegistry,
+      deps.propertiesPanel,
+      deps.modeling,
+    );
+    service.getGroups(makeField());
+    expect(mockPropsSchemaToPanel).toHaveBeenCalledWith(mockSchema, expect.anything());
+  });
+
+  // Case 5: getGroups 반환값 — groups 배열 (최소 1개)
+  it('5: getGroups(field) 가 groups 배열을 반환함', () => {
+    const deps = makeDeps();
+    deps.formFieldRegistry.get = vi.fn().mockReturnValue({
+      type: 'text',
+      propsSchema: { properties: {} },
+    });
+    mockPropsSchemaToPanel.mockReturnValue([
+      { key: 'label', widgetType: 'string', widget: { render: vi.fn(), edit: vi.fn(), validate: vi.fn() }, label: '레이블', meta: { type: 'string' } },
+    ]);
+    const service = new PropsPanelService(
+      deps.eventBus,
+      deps.formFieldRegistry,
+      deps.propertiesPanel,
+      deps.modeling,
+    );
+    const groups = service.getGroups(makeField());
+    expect(Array.isArray(groups)).toBe(true);
+    expect(groups.length).toBeGreaterThanOrEqual(1);
+  });
+
+  // Case 6: 미등록 컴포넌트 type → 빈 그룹 반환 (에러 없이 graceful)
+  it('6: 미등록 컴포넌트 type 시 빈 그룹 반환', () => {
+    const deps = makeDeps();
+    deps.formFieldRegistry.get = vi.fn().mockReturnValue(undefined);
+    const service = new PropsPanelService(
+      deps.eventBus,
+      deps.formFieldRegistry,
+      deps.propertiesPanel,
+      deps.modeling,
+    );
+    const groups = service.getGroups(makeField('unknown-type'));
+    expect(Array.isArray(groups)).toBe(true);
+    expect(groups).toHaveLength(0);
+  });
+
+  // Case 7: propsSchema가 비어있는 컴포넌트 → 빈 entries 그룹
+  it('7: propsSchema 빈 컴포넌트 → 빈 entries 그룹', () => {
+    const deps = makeDeps();
+    deps.formFieldRegistry.get = vi.fn().mockReturnValue({
+      type: 'card',
+      propsSchema: { properties: {} },
+    });
+    mockPropsSchemaToPanel.mockReturnValue([]);
+    const service = new PropsPanelService(
+      deps.eventBus,
+      deps.formFieldRegistry,
+      deps.propertiesPanel,
+      deps.modeling,
+    );
+    const groups = service.getGroups(makeField('card'));
+    expect(groups).toHaveLength(0);
+  });
+
+  // Case 8: propertiesPanel이 없어도 graceful 초기화 (fallback)
+  it('8: propertiesPanel이 null이어도 에러 없이 초기화됨', () => {
+    const deps = makeDeps({ propertiesPanel: null });
+    expect(() => {
+      new PropsPanelService(
+        deps.eventBus,
+        deps.formFieldRegistry,
+        null,
+        deps.modeling,
+      );
+    }).not.toThrow();
+  });
+
+  // Case 9: panelEntry의 id가 propsSchema key와 일치
+  it('9: getGroups 반환 group의 entries[0].id가 propsSchema key와 일치', () => {
+    const deps = makeDeps();
+    deps.formFieldRegistry.get = vi.fn().mockReturnValue({
+      type: 'text',
+      propsSchema: { properties: { label: { type: 'string' } } },
+    });
+    const mockEntry = {
+      key: 'label',
+      widgetType: 'string',
+      widget: { render: vi.fn(), edit: vi.fn(), validate: vi.fn() },
+      label: '레이블',
+      meta: { type: 'string' },
+    };
+    mockPropsSchemaToPanel.mockReturnValue([mockEntry]);
+    const service = new PropsPanelService(
+      deps.eventBus,
+      deps.formFieldRegistry,
+      deps.propertiesPanel,
+      deps.modeling,
+    );
+    const groups = service.getGroups(makeField());
+    // 그룹 안의 entries 확인
+    expect(groups.length).toBeGreaterThanOrEqual(1);
+    const firstGroup = groups[0] as { id?: string; entries?: unknown[] };
+    if (firstGroup.entries) {
+      const entry = firstGroup.entries[0] as { id?: string };
+      expect(entry.id).toBe('label');
+    }
+  });
+
+  // Case 10: getGroups — field 인자 없이(null) 호출 시 빈 배열 반환
+  it('10: field 인자가 null이면 빈 배열 반환', () => {
+    const deps = makeDeps();
+    const service = new PropsPanelService(
+      deps.eventBus,
+      deps.formFieldRegistry,
+      deps.propertiesPanel,
+      deps.modeling,
+    );
+    const groups = service.getGroups(null as unknown as { type: string; id: string });
+    expect(groups).toHaveLength(0);
+  });
+});

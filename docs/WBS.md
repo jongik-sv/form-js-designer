@@ -261,11 +261,11 @@ node, vitest, vite, playwright
   - Preact, happy-dom, Playwright 매트릭스
 - note: ADR-0001 D3 하드 게이트.
 
-### TSK-03-02: propsSchemaToPanel 변환기 + 위젯 레지스트리 (8종)
+### TSK-03-02: propsSchemaToPanel 변환기 + 위젯 레지스트리 (8종) ✅
 - category: development
 - domain: library
 - model: opus
-- status: [im]
+- status: [xx]
 - priority: critical
 - assignee: -
 - schedule: 2026-04-22 ~ 2026-04-25
@@ -407,11 +407,11 @@ node, vitest, vite, playwright
 - schedule: 2026-05-11 ~ 2026-05-25
 - description: phase-1-plan §3.4. form-js-editor 본체 0건 수정. 호스트 앱 모듈 5종.
 
-### TSK-06-01: 호스트 앱 골격 + Palette + Outline 모듈
+### TSK-06-01: 호스트 앱 골격 + Palette + Outline 모듈 ✅
 - category: development
 - domain: frontend
 - model: sonnet
-- status: [im]
+- status: [xx]
 - priority: critical
 - assignee: -
 - schedule: 2026-05-11 ~ 2026-05-15
@@ -430,7 +430,7 @@ node, vitest, vite, playwright
 - category: development
 - domain: frontend
 - model: opus
-- status: [dd]
+- status: [xx]
 - priority: critical
 - assignee: -
 - schedule: 2026-05-15 ~ 2026-05-22

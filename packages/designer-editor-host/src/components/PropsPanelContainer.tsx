@@ -1,0 +1,102 @@
+/**
+ * PropsPanelContainer — TSK-06-02
+ *
+ * 선택된 필드를 eventBus.on('selection.changed') 로 추적하고
+ * PropsPanelService.getGroups(field)를 호출하여 패널을 렌더한다.
+ */
+
+import { h } from 'preact';
+import { useState, useEffect } from 'preact/hooks';
+import type { PropsGroup } from '../modules/PropsPanelService';
+
+interface PropsPanelContainerProps {
+  propsPanelService: {
+    getGroups(field: { type: string; id?: string } | null): PropsGroup[];
+  } | null;
+  eventBus: {
+    on(event: string, handler: (...args: unknown[]) => void): void;
+    off(event: string, handler: (...args: unknown[]) => void): void;
+  } | null;
+}
+
+export function PropsPanelContainer({ propsPanelService, eventBus }: PropsPanelContainerProps): h.JSX.Element {
+  const [selectedField, setSelectedField] = useState<{ type: string; id?: string } | null>(null);
+  const [groups, setGroups] = useState<PropsGroup[]>([]);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!eventBus) return;
+
+    const onSelectionChanged = (e: unknown) => {
+      const event = e as { selection?: Array<{ type: string; id?: string }> };
+      const field = event?.selection?.[0] ?? null;
+      setSelectedField(field);
+      setError(null);
+
+      if (field && propsPanelService) {
+        try {
+          const newGroups = propsPanelService.getGroups(field);
+          setGroups(newGroups);
+        } catch (err) {
+          console.warn('[PropsPanelContainer] getGroups 실패:', err);
+          setError(String(err));
+          setGroups([]);
+        }
+      } else {
+        setGroups([]);
+      }
+    };
+
+    eventBus.on('selection.changed', onSelectionChanged);
+    return () => {
+      eventBus.off('selection.changed', onSelectionChanged);
+    };
+  }, [eventBus, propsPanelService]);
+
+  if (!selectedField) {
+    return (
+      <div class="props-panel props-panel--empty" data-testid="props-empty">
+        <p>필드를 선택하면 속성이 표시됩니다.</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div class="props-panel props-panel--error" data-testid="props-error">
+        <p>패널 로드 오류: {error}</p>
+      </div>
+    );
+  }
+
+  if (groups.length === 0) {
+    return (
+      <div class="props-panel props-panel--empty" data-testid="props-empty">
+        <p>편집 가능한 속성이 없습니다.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div class="props-panel" data-testid="props-panel">
+      {groups.map((group) => (
+        <div key={group.id} class="props-group" data-testid={`props-group-${group.id}`}>
+          {group.label && <h4 class="props-group__label">{group.label}</h4>}
+          <div class="props-group__entries">
+            {group.entries.map((entry) => (
+              <div key={entry.id} class="props-entry" data-testid={`props-entry-${entry.id}`}>
+                {typeof entry.component === 'function'
+                  ? (entry.component as (p: Record<string, unknown>) => h.JSX.Element)({
+                      value: (selectedField as Record<string, unknown>)[entry.id],
+                      editField: () => {},
+                      field: selectedField,
+                    })
+                  : null}
+              </div>
+            ))}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
