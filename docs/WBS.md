@@ -27,7 +27,7 @@
 | ai | Claude Code Skill/Slash Command | `npm --prefix packages/designer-cli run test:skill` | - | - | - |
 | infra | CI 스크립트, ADR, spike | `npm run lint` | - | - | - |
 | docs | PRD/TRD/Plan/ADR 문서 | - | - | - | - |
-| fullstack | Full stack | - | - | - | - |
+| fullstack | Full stack | `npm run test:unit` | `npm --prefix packages/designer-editor-host run test:a11y` | `npm --prefix packages/designer-editor-host run dev` | `http://localhost:5173` |
 
 ### Design Guidance
 | domain | architecture |
@@ -603,7 +603,7 @@ node, vitest, vite, playwright
 - category: development
 - domain: fullstack
 - model: opus
-- status: [dd]
+- status: [im]
 - priority: critical
 - assignee: -
 - schedule: 2026-06-01 ~ 2026-06-04
