@@ -11,6 +11,8 @@ export interface CardSchema {
   elevation?: CardElevation;
   header?: string;
   headerTag?: CardHeaderTag;
+  components?: Array<{ id: string } & Record<string, unknown>>;
+  verticalAlignment?: string;
   [key: string]: unknown;
 }
 

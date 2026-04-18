@@ -1,0 +1,10 @@
+/* TabPanel — tabs-tabpanel-refactor
+ * 대부분의 스타일은 container-base.css에서 상속.
+ * tabPanel은 Tabs 내부에서 직접 ChildrenSlot으로 렌더되므로
+ * 독립 wrapper 스타일은 최소화.
+ */
+@layer components {
+  .dc-tab-panel {
+    display: contents;
+  }
+}

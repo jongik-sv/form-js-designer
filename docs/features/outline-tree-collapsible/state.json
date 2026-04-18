@@ -1,0 +1,42 @@
+{
+  "name": "outline-tree-collapsible",
+  "status": "[xx]",
+  "last": {
+    "event": "refactor.ok",
+    "at": "2026-04-18T00:57:20Z"
+  },
+  "phase_history": [
+    {
+      "event": "design.ok",
+      "from": "[ ]",
+      "to": "[dd]",
+      "at": "2026-04-18T00:43:12Z",
+      "elapsed_seconds": 0
+    },
+    {
+      "event": "build.ok",
+      "from": "[dd]",
+      "to": "[im]",
+      "at": "2026-04-18T00:47:56Z",
+      "elapsed_seconds": 284
+    },
+    {
+      "event": "test.ok",
+      "from": "[im]",
+      "to": "[ts]",
+      "at": "2026-04-18T00:53:32Z",
+      "elapsed_seconds": 336
+    },
+    {
+      "event": "refactor.ok",
+      "from": "[ts]",
+      "to": "[xx]",
+      "at": "2026-04-18T00:57:20Z",
+      "elapsed_seconds": 228
+    }
+  ],
+  "updated": "2026-04-18T00:57:20Z",
+  "started_at": "2026-04-18T00:43:12Z",
+  "completed_at": "2026-04-18T00:57:20Z",
+  "elapsed_seconds": 848
+}

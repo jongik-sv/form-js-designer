@@ -842,3 +842,65 @@ form-js/                           # 기존 form-js 모노레포 그대로 사�
 ### 진행 타이밍
 - **Phase 1 본체 (1차 릴리스) 완료 이후**에 별도 작업으로 착수 (스코프 크리프 방지)
 - 단, `designer-cli preview` 골격은 AI 디자인 Phase 2 에 이미 들어있으므로 — 스킬 래핑 자체는 그 위에 ~0.5d 정도로 얹을 수 있음
+
+---
+
+## 차후 계획: 마크다운·에디터 인라인 프리뷰 어댑터 매트릭스 (2026-04-18 논의)
+
+> Mermaid 와 동일한 패턴으로, 임의의 마크다운·Notion-style 에디터에서 ```form-js 블록을 만나면 자동으로 화면이 렌더되도록 하는 **환경별 어댑터 묶음**. Core(designer-runtime `ViewerHost`) 는 하나이고, 각 환경은 얇은 래퍼(50~150 LOC 수준) 한 개만 작성하면 된다.
+
+### 설계 원칙
+- **Core 단일화**: 모든 어댑터는 `designer-runtime` 의 `ViewerHost` 를 호출 — schema 를 받아 DOM 에 마운트하는 책임만 진다. 어댑터는 "블록 감지 → 컨테이너 생성 → ViewerHost 호출 → 수명 주기 연결" 4단계만 담당.
+- **렌더 블록 표기 통일**:
+  ````
+  ```form-js
+  { "schemaVersion": 19, "components": [...] }
+  ```
+  ````
+  — 모든 어댑터가 동일 펜스 언어 태그(`form-js`) 사용. 사내 에디터처럼 블록 속성 구조가 다른 경우에도 **태그 이름은 공통**.
+- **편집 모드 vs 뷰 모드 분리**: 폼은 살아있는 DOM(이벤트·상태)이라 에디터 안에서 전체 마운트하면 블록 선택/드래그와 form 내부 클릭이 충돌한다. 어댑터마다 아래 3원칙을 **공통 책임**으로 가져간다.
+  1. 편집 모드: `readOnly` 로 프리뷰 또는 placeholder 이미지
+  2. 뷰 모드: 정식 `ViewerHost` 마운트
+  3. 블록 레이어와 폼 레이어의 `pointer-events` 분리
+- **워터마크 유지**: 어떤 환경이든 form-js PoweredBy 가시성 의무는 어댑터가 가린다고 해결되지 않는다 — 각 어댑터 E2E 테스트에 워터마크 visibility 회귀 케이스 포함.
+
+### 어댑터 매트릭스
+
+| # | 환경 | 베이스 기술 | 구현 방식 | 난이도 | 우선순위 |
+|---|---|---|---|---|---|
+| A1 | **범용 정적 마크다운** (Docusaurus / MkDocs / Astro / 블로그) | markdown-it · remark | `markdown-it-form-js` / `remark-form-js` 플러그인 — 펜스 블록 → `<div data-fjs-schema>` 치환 + 빌드 후 designer-runtime 스크립트 자동 삽입 | 저 | P0 |
+| A2 | **MDX 기반 문서 사이트** | MDX (Preact/React) | `<FormPreview schema={...}/>` 컴포넌트 import — 펜스 변환 없이 JSX 그대로 | 최저 | P0 |
+| A3 | **VSCode 마크다운 미리보기** | `contributes.markdown.markdownItPlugins` + Webview | A1 의 markdown-it 플러그인 그대로 재활용 + Webview CSP 열기 + message bridge 얇은 어댑터 | 중 | P1 |
+| A4 | **Obsidian** | Obsidian Plugin API | `registerMarkdownCodeBlockProcessor('form-js', ...)` — 1 file plugin | 저 | P2 |
+| A5 | **TipTap / ProseMirror** (Notion-style) | custom `Node` + `NodeView` | Node 정의 + NodeView 에서 ViewerHost 마운트, 속성에 schema JSON 보관 | 저 | P1 |
+| A6 | **Lexical** (Meta) | `DecoratorNode` | Decorator 로 Preact/React 래퍼 렌더 | 저 | P1 |
+| A7 | **Slate** | `renderElement` 분기 | element.type === 'form-js' 분기 한 덩어리 | 저 | P2 |
+| A8 | **BlockNote** | `createBlockSpec` | 커스텀 블록 타입 등록, render 에 ViewerHost | 저 | P2 |
+| A9 | **사내 Notion-style 에디터** (closed) | 내부 확장 API | 플러그인 슬롯 있으면 A5~A8 중 하나와 유사 구조로 이식, 없으면 본문 수정 필요 | 가변 | P1 (사내 요구에 따라) |
+| A10 | **GitHub README / Notion / Confluence 샌드박스 렌더러** | iframe·script 금지 | **인라인 렌더 불가** → 빌드 타임 스냅샷 파이프라인(`designer-cli snapshot`)으로 PNG/SVG 생성 + 링크 치환 | 중 | P2 |
+| A11 | **Claude Code 대화창** (챗 UI) | 없음 (텍스트 스트리밍) | `designer-cli preview` 로 대안 — 스킬이 로컬 브라우저를 열어 검증 | 저 | 이미 설계됨 (§차후 계획 §JSON 한 방 렌더 스킬) |
+
+### 공통 구성 (모노레포 추가)
+```
+packages/
+├── designer-runtime/          # (기존) 유일한 Core — ViewerHost, ApiSchemaLoader
+├── designer-md-it/            # ★ A1 — markdown-it plugin
+├── designer-remark/           # ★ A1 — remark/rehype plugin
+├── designer-mdx/              # ★ A2 — <FormPreview/> 컴포넌트 배럴
+├── designer-vscode/           # ★ A3 — VSCode 확장 (Webview + markdownItPlugins)
+├── designer-tiptap/           # ★ A5 — TipTap Node + NodeView
+├── designer-lexical/          # ★ A6 — LexicalDecoratorNode
+└── designer-cli/              # (기존) snapshot 하위 명령 (A10 용)
+```
+
+### 진행 순서 (권장)
+1. **WP-09-02 `designer-runtime` 완성 후** A1 (markdown-it / remark) 먼저 — 가장 적은 코드로 가장 많은 환경 커버
+2. 이어서 A2 (MDX) — A1 과 동일 Core 를 JSX 로 노출만 하는 얇은 패키지
+3. A3 (VSCode) — A1 재활용, CSP/Webview 어댑터만 추가
+4. A5·A6 (TipTap/Lexical) — 사내 Notion-style 에디터의 베이스에 따라 둘 중 하나 먼저
+5. A10 (스냅샷) — GitHub·Confluence 수요가 확인되면 `designer-cli snapshot` 으로 대응
+6. A9 (사내 에디터) — 베이스 식별 후 A5~A8 중 하나 이식
+
+### Phase 1 릴리스와의 관계
+- 본 섹션 전부는 **Phase 1 본체 릴리스 이후** 부가 채널로 진행 (스코프 크리프 방지).
+- 단, A2 (MDX) 는 `<FormPreview/>` 를 `designer-runtime` 배럴에 동시 추가하는 정도라 Phase 1 내에서도 **약 0.5d 이내**로 얹을 수 있음 — 추후 우선순위 결정.

@@ -9,9 +9,23 @@
 import { h, render } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
 import { ViewerHost } from '@form-js-designer/designer-core/host';
+import { DesignerContainerModule } from '@form-js-designer/designer-core';
+import { DesignerComponentsModule } from '@form-js-designer/designer-components';
+import { DesignerTableModule } from '@form-js-designer/designer-table';
 import { createApiLoader, bootWithSchema, MemoryStorage, SchemaBootError } from '../../src/index';
 import type { FormSchema } from '../../src/index';
 import type { BootResult } from '../../src/boot/bootTypes';
+
+// form-js base/viewer CSS (npm bundle — CDN ORB 회피)
+import '@bpmn-io/form-js-viewer/dist/assets/form-js-base.css';
+import '@bpmn-io/form-js-viewer/dist/assets/form-js.css';
+
+// ViewerHost에 주입할 additionalModules
+const VIEWER_MODULES: unknown[] = [
+  DesignerContainerModule,
+  DesignerComponentsModule,
+  DesignerTableModule,
+];
 
 // 간단한 테스트용 registry mock
 const mockRegistry = {
@@ -72,7 +86,7 @@ function App() {
 
   return (
     <div data-testid="viewer-container">
-      <ViewerHost schema={bootResult.schema} />
+      <ViewerHost schema={bootResult.schema} additionalModules={VIEWER_MODULES} />
     </div>
   );
 }

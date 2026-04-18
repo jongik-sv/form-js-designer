@@ -1,10 +1,11 @@
 import { h } from 'preact';
 import { useState } from 'preact/hooks';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
-import { defineComponent } from '@form-js-designer/designer-core';
-import type { PureRenderProps } from '@form-js-designer/designer-core';
+import { defineComponent, ChildrenSlot } from '@form-js-designer/designer-core';
+import type { PureRenderProps, ContainerField } from '@form-js-designer/designer-core';
 import type { ModalSchema } from './propsSchema';
 import { modalPropsSchema } from './propsSchema';
+import { ModalIcon } from '../icons';
 import './Modal.css';
 
 void h;
@@ -81,7 +82,7 @@ function ModalRender(props: PureRenderProps<ModalSchema>) {
     >
       <DialogPrimitive.Root
         open={effectiveOpen}
-        onOpenChange={(open) => { if (controlledOpen === undefined) setIsOpen(open); }}
+        onOpenChange={(open: boolean) => { if (controlledOpen === undefined) setIsOpen(open); }}
       >
         <DialogPrimitive.Trigger asChild>
           <button
@@ -126,8 +127,8 @@ function ModalRender(props: PureRenderProps<ModalSchema>) {
               </DialogPrimitive.Description>
             )}
 
-            <div class="dc-modal__body">
-              {/* form-js child content slot — delegated to host renderer */}
+            <div class="dc-modal__body dc-container-body">
+              <ChildrenSlot field={field as unknown as ContainerField} />
             </div>
           </DialogPrimitive.Content>
         </DialogPrimitive.Portal>
@@ -138,8 +139,9 @@ function ModalRender(props: PureRenderProps<ModalSchema>) {
 
 export const ModalComponent = defineComponent<ModalSchema>({
   type: 'modal',
-  name: 'designer.components.modal.name',
+  name: '모달',
   group: 'container',
+  icon: ModalIcon,
   keyed: false,
   pathed: false,
   escapeGridRender: false,
@@ -150,6 +152,7 @@ export const ModalComponent = defineComponent<ModalSchema>({
     description: '',
     triggerLabel: 'Open',
     size: 'md',
+    components: [],
     ...options,
   }),
   render: ModalRender,

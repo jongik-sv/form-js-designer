@@ -1,0 +1,42 @@
+{
+  "name": "container-layout-fixes",
+  "status": "[xx]",
+  "last": {
+    "event": "refactor.ok",
+    "at": "2026-04-18T00:08:43Z"
+  },
+  "phase_history": [
+    {
+      "event": "design.ok",
+      "from": "[ ]",
+      "to": "[dd]",
+      "at": "2026-04-17T23:45:31Z",
+      "elapsed_seconds": 0
+    },
+    {
+      "event": "build.ok",
+      "from": "[dd]",
+      "to": "[im]",
+      "at": "2026-04-17T23:51:45Z",
+      "elapsed_seconds": 374
+    },
+    {
+      "event": "test.ok",
+      "from": "[im]",
+      "to": "[ts]",
+      "at": "2026-04-18T00:02:44Z",
+      "elapsed_seconds": 659
+    },
+    {
+      "event": "refactor.ok",
+      "from": "[ts]",
+      "to": "[xx]",
+      "at": "2026-04-18T00:08:43Z",
+      "elapsed_seconds": 359
+    }
+  ],
+  "updated": "2026-04-18T00:08:43Z",
+  "started_at": "2026-04-17T23:45:31Z",
+  "completed_at": "2026-04-18T00:08:43Z",
+  "elapsed_seconds": 1392
+}

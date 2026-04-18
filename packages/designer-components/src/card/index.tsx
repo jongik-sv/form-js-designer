@@ -1,10 +1,11 @@
 import { h } from 'preact';
 import { cva } from 'class-variance-authority';
 import { twMerge } from 'tailwind-merge';
-import { defineComponent } from '@form-js-designer/designer-core';
-import type { PureRenderProps } from '@form-js-designer/designer-core';
+import { defineComponent, ChildrenSlot } from '@form-js-designer/designer-core';
+import type { PureRenderProps, ContainerField } from '@form-js-designer/designer-core';
 import type { CardSchema, CardElevation, CardHeaderTag } from './propsSchema';
 import { cardPropsSchema } from './propsSchema';
+import { CardIcon } from '../icons';
 import './Card.css';
 
 void h;
@@ -48,7 +49,9 @@ function CardRender(props: PureRenderProps<CardSchema>) {
       {header ? (
         <HeaderTag class="dc-card__header">{header}</HeaderTag>
       ) : null}
-      <div class="dc-card__body" />
+      <div class="dc-card__body dc-container-body">
+        <ChildrenSlot field={field as unknown as ContainerField} />
+      </div>
       {errors.length > 0 ? (
         <ul class="dc-card__errors" aria-label="errors">
           {errors.map((err, i) => (
@@ -62,16 +65,18 @@ function CardRender(props: PureRenderProps<CardSchema>) {
 
 export const CardComponent = defineComponent<CardSchema>({
   type: 'card',
-  name: 'designer.components.card.name',
+  name: '카드',
   group: 'container',
+  icon: CardIcon,
   keyed: false,
   pathed: false,
-  escapeGridRender: true,
+  escapeGridRender: false,
   propsSchema: cardPropsSchema,
   create: (options = {}) => ({
     type: 'card',
     padding: 'md',
     elevation: 1,
+    components: [],
     ...options,
   }),
   render: CardRender,

@@ -34,6 +34,33 @@ function createMockRegistry() {
   };
 }
 
+/**
+ * Proxy 테스트용 — form-js의 실제 FormFields 구조처럼 _formFields를 갖는 mock
+ */
+function createMockFormFieldsWithProxy() {
+  const _formFields: Record<string, unknown> = {};
+  const ff = {
+    _formFields,
+    register: vi.fn((type: string, componentDef: unknown) => {
+      _formFields[type] = componentDef;
+    }),
+    get: vi.fn((type: string) => _formFields[type]),
+  };
+  return ff;
+}
+
+function invokeRegistration(formFields: ReturnType<typeof createMockFormFieldsWithProxy>) {
+  const entry = (DesignerComponentsModule as Record<string, unknown>)['designerComponentsRegistration'];
+  let fn: ((ff: unknown) => void) | undefined;
+  if (Array.isArray(entry)) {
+    const last = entry[entry.length - 1];
+    if (typeof last === 'function') fn = last as (ff: unknown) => void;
+  } else if (typeof entry === 'function') {
+    fn = entry as (ff: unknown) => void;
+  }
+  if (fn) fn(formFields);
+}
+
 // ---------------------------------------------------------------------------
 // 1. DesignerComponentsModule 구조
 // ---------------------------------------------------------------------------
@@ -74,28 +101,58 @@ describe('DesignerComponentsModule registration', () => {
     }
   });
 
-  it('registers "card" component', () => {
-    expect(registry.register).toHaveBeenCalledWith('card', expect.any(Function));
+  it('registers "card" component (Preact component with static .config)', () => {
+    const call = registry.register.mock.calls.find((c) => c[0] === 'card');
+    expect(call).toBeDefined();
+    const registered = call![1] as { config?: { type?: string; name?: string; group?: string } };
+    expect(typeof registered).toBe('function');
+    expect(registered.config?.type).toBe('card');
+    expect(registered.config?.name).toBeDefined();
+    expect(registered.config?.group).toBeDefined();
   });
 
-  it('registers "stack" component', () => {
-    expect(registry.register).toHaveBeenCalledWith('stack', expect.any(Function));
+  it('registers "stack" component (Preact component with static .config)', () => {
+    const call = registry.register.mock.calls.find((c) => c[0] === 'stack');
+    expect(call).toBeDefined();
+    const registered = call![1] as { config?: { type?: string } };
+    expect(typeof registered).toBe('function');
+    expect(registered.config?.type).toBe('stack');
   });
 
-  it('registers "button" component', () => {
-    expect(registry.register).toHaveBeenCalledWith('button', expect.any(Function));
+  it('registers "button" component (Preact component with static .config)', () => {
+    const call = registry.register.mock.calls.find((c) => c[0] === 'button');
+    expect(call).toBeDefined();
+    const registered = call![1] as { config?: { type?: string } };
+    expect(typeof registered).toBe('function');
+    expect(registered.config?.type).toBe('button');
   });
 
-  it('registers "tabs" component', () => {
-    expect(registry.register).toHaveBeenCalledWith('tabs', expect.any(Function));
+  it('registers "tabs" component (Preact component with static .config)', () => {
+    const call = registry.register.mock.calls.find((c) => c[0] === 'tabs');
+    expect(call).toBeDefined();
+    const registered = call![1] as { config?: { type?: string } };
+    expect(typeof registered).toBe('function');
+    expect(registered.config?.type).toBe('tabs');
   });
 
-  it('registers "modal" component', () => {
-    expect(registry.register).toHaveBeenCalledWith('modal', expect.any(Function));
+  it('registers "modal" component (Preact component with static .config)', () => {
+    const call = registry.register.mock.calls.find((c) => c[0] === 'modal');
+    expect(call).toBeDefined();
+    const registered = call![1] as { config?: { type?: string } };
+    expect(typeof registered).toBe('function');
+    expect(registered.config?.type).toBe('modal');
   });
 
-  it('registers exactly 5 components (card, stack, button, tabs, modal)', () => {
-    expect(registry.register).toHaveBeenCalledTimes(5);
+  it('registers exactly 6 components (card, stack, button, tabs, modal, tabPanel)', () => {
+    expect(registry.register).toHaveBeenCalledTimes(6);
+  });
+
+  it('registers "tabPanel" component (Preact component with static .config)', () => {
+    const call = registry.register.mock.calls.find((c) => c[0] === 'tabPanel');
+    expect(call).toBeDefined();
+    const registered = call![1] as { config?: { type?: string } };
+    expect(typeof registered).toBe('function');
+    expect(registered.config?.type).toBe('tabPanel');
   });
 });
 
@@ -107,8 +164,9 @@ describe('CardComponent', () => {
     expect(CardComponent.type).toBe('card');
   });
 
-  it('has i18n-compatible name key (designer.components.card.*)', () => {
-    expect(CardComponent.name).toContain('card');
+  it('has a non-empty display name', () => {
+    expect(typeof CardComponent.name).toBe('string');
+    expect(CardComponent.name.length).toBeGreaterThan(0);
   });
 
   it('has component function', () => {
@@ -129,8 +187,9 @@ describe('StackComponent', () => {
     expect(StackComponent.type).toBe('stack');
   });
 
-  it('has i18n-compatible name key (designer.components.stack.*)', () => {
-    expect(StackComponent.name).toContain('stack');
+  it('has a non-empty display name', () => {
+    expect(typeof StackComponent.name).toBe('string');
+    expect(StackComponent.name.length).toBeGreaterThan(0);
   });
 
   it('has component function', () => {
@@ -147,8 +206,9 @@ describe('ButtonComponent', () => {
     expect(ButtonComponent.type).toBe('button');
   });
 
-  it('has i18n-compatible name key (designer.components.button.*)', () => {
-    expect(ButtonComponent.name).toContain('button');
+  it('has a non-empty display name', () => {
+    expect(typeof ButtonComponent.name).toBe('string');
+    expect(ButtonComponent.name.length).toBeGreaterThan(0);
   });
 
   it('has component function', () => {
@@ -233,5 +293,42 @@ describe('defineComponent pure render contract', () => {
       expect.stringContaining('[designer-core] assertPureRender'),
     );
     warnSpy.mockRestore();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// 7. Proxy 기반 팔레트 숨김 — tabs-tabpanel-refactor
+// ---------------------------------------------------------------------------
+describe('Proxy-based palette hiding (tabs-tabpanel-refactor)', () => {
+  let ff: ReturnType<typeof createMockFormFieldsWithProxy>;
+
+  beforeEach(() => {
+    ff = createMockFormFieldsWithProxy();
+    invokeRegistration(ff);
+  });
+
+  it('tabPanel is not enumerable via Object.entries(_formFields) after registration', () => {
+    const keys = Object.entries(ff._formFields).map(([k]) => k);
+    expect(keys).not.toContain('tabPanel');
+  });
+
+  it('formFields.get("tabPanel") returns the TabPanel component function', () => {
+    const result = ff.get('tabPanel');
+    expect(result).toBeDefined();
+    expect(typeof result).toBe('function');
+    const config = (result as { config?: { type?: string } })?.config;
+    expect(config?.type).toBe('tabPanel');
+  });
+
+  it('other components remain enumerable after Proxy', () => {
+    const keys = Object.entries(ff._formFields).map(([k]) => k);
+    expect(keys).toContain('card');
+    expect(keys).toContain('stack');
+    expect(keys).toContain('tabs');
+    expect(keys).toContain('modal');
+  });
+
+  it('Object.keys(_formFields) also excludes tabPanel', () => {
+    expect(Object.keys(ff._formFields)).not.toContain('tabPanel');
   });
 });

@@ -10,6 +10,13 @@ export interface FieldSchema {
   [key: string]: unknown;
 }
 
+/** ChildrenSlot에 전달하는 컨테이너 필드 최소 구조 */
+export interface ContainerField {
+  id: string;
+  components?: Array<{ id: string } & Record<string, unknown>>;
+  verticalAlignment?: string;
+}
+
 export interface PureRenderProps<F extends FieldSchema = FieldSchema> {
   field: ReadonlyDeep<F>;
   value: unknown;
@@ -65,6 +72,7 @@ export type FormJsFieldComponent = ComponentType<PureRenderProps & { [k: string]
     escapeGridRender?: boolean;
     name: string;
     group: string;
+    icon?: ComponentType;
     create: (options?: Record<string, unknown>) => Record<string, unknown>;
   };
 };

@@ -42,6 +42,10 @@ export { VirtualRows } from './virtualization/VirtualRows';
 /**
  * DesignerTableModule — form-js additionalModules 등록용 factory export
  *
+ * form-js 의 DI 컨테이너(`didi`)가 제공하는 `formFields` 서비스에 `table`
+ * 타입 컴포넌트를 등록한다. `formFields.register(type, componentDef)` 패턴은
+ * designer-components 모듈과 동일하다.
+ *
  * 사용 예:
  *   import { Form } from '@bpmn-io/form-js-viewer';
  *   import { DesignerTableModule } from '@form-js-designer/designer-table';
@@ -51,15 +55,18 @@ export { VirtualRows } from './virtualization/VirtualRows';
  *     additionalModules: [DesignerTableModule],
  *   });
  */
-/** form-js didi 컨테이너가 주입하는 FormFields 최소 인터페이스 */
-interface FormFieldsService {
+interface FormFields {
   register: (type: string, componentDef: unknown) => void;
 }
 
-function DesignerTableRegistration(formFields: FormFieldsService) {
-  formFields.register(TableComponent.component.config.type, TableComponent.component);
+function DesignerTableRegistration(formFields: FormFields) {
+  // form-js Palette 는 등록된 value 의 `.config` 를 직접 읽으므로
+  // `.component` (config 가 붙어있는 Preact component) 를 등록한다.
+  formFields.register(TableComponent.type, TableComponent.component);
 }
-(DesignerTableRegistration as unknown as { $inject: string[] }).$inject = ['formFields'];
+(DesignerTableRegistration as unknown as { $inject: string[] }).$inject = [
+  'formFields',
+];
 
 export const DesignerTableModule = {
   __init__: ['designerTableRegistration'],

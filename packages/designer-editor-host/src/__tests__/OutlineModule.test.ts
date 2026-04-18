@@ -1,9 +1,10 @@
 /**
  * OutlineModule 단위 테스트
- * TSK-06-01
+ * TSK-06-01 / outline-component-selection feature fix
+ * outline-dnd-copy-paste feature: DnD + Clipboard 단위 테스트 추가
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { OutlineModule } from '../modules/OutlineModule';
 
 // mock eventBus
@@ -35,8 +36,28 @@ function createMockFormEditor(schema: unknown = { type: 'default', components: [
 
 function createMockSelection() {
   return {
-    get: vi.fn().mockReturnValue([]),
-    select: vi.fn(),
+    get: vi.fn().mockReturnValue(null),
+    set: vi.fn(),
+    toggle: vi.fn(),
+  };
+}
+
+function createMockFormFieldRegistry(fieldMap: Record<string, unknown> = {}) {
+  return {
+    get: vi.fn((id: string) => fieldMap[id]),
+  };
+}
+
+function createMockModeling() {
+  return {
+    moveFormField: vi.fn(),
+    addFormField: vi.fn(),
+  };
+}
+
+function createMockFormLayouter() {
+  return {
+    getRowForField: vi.fn().mockReturnValue(null),
   };
 }
 
@@ -53,10 +74,17 @@ describe('OutlineModule', () => {
     expect(typeof Constructor).toBe('function');
   });
 
-  // ----- 2. DI inject 배열 -----
-  it('OutlinePanelService has inject: [eventBus, formEditor, selection]', () => {
+  // ----- 2. DI inject 배열 (modeling, formLayouter 포함) -----
+  it('OutlinePanelService has inject: [eventBus, formEditor, formFieldRegistry, selection, modeling, formLayouter]', () => {
     const [, Constructor] = OutlineModule.outlinePanel as [string, { inject?: string[] }];
-    expect((Constructor as { inject?: string[] }).inject).toEqual(['eventBus', 'formEditor', 'selection']);
+    expect((Constructor as { inject?: string[] }).inject).toEqual([
+      'eventBus',
+      'formEditor',
+      'formFieldRegistry',
+      'selection',
+      'modeling',
+      'formLayouter',
+    ]);
   });
 
   // ----- 3. 이벤트 구독 -----
@@ -64,31 +92,36 @@ describe('OutlineModule', () => {
     let mockEventBus: ReturnType<typeof createMockEventBus>;
     let mockFormEditor: ReturnType<typeof createMockFormEditor>;
     let mockSelection: ReturnType<typeof createMockSelection>;
+    let mockFormFieldRegistry: ReturnType<typeof createMockFormFieldRegistry>;
+    let mockModeling: ReturnType<typeof createMockModeling>;
+    let mockFormLayouter: ReturnType<typeof createMockFormLayouter>;
 
     beforeEach(() => {
       mockEventBus = createMockEventBus();
       mockFormEditor = createMockFormEditor();
       mockSelection = createMockSelection();
+      mockFormFieldRegistry = createMockFormFieldRegistry();
+      mockModeling = createMockModeling();
+      mockFormLayouter = createMockFormLayouter();
     });
 
-    it('subscribes to import.done on construction', () => {
+    function makeInstance() {
       const [, Constructor] = OutlineModule.outlinePanel as [string, new (...args: unknown[]) => unknown];
-      new Constructor(mockEventBus, mockFormEditor, mockSelection);
+      return new Constructor(mockEventBus, mockFormEditor, mockFormFieldRegistry, mockSelection, mockModeling, mockFormLayouter);
+    }
 
+    it('subscribes to import.done on construction', () => {
+      makeInstance();
       expect(mockEventBus.on).toHaveBeenCalledWith('import.done', expect.any(Function));
     });
 
     it('subscribes to commandStack.changed on construction', () => {
-      const [, Constructor] = OutlineModule.outlinePanel as [string, new (...args: unknown[]) => unknown];
-      new Constructor(mockEventBus, mockFormEditor, mockSelection);
-
+      makeInstance();
       expect(mockEventBus.on).toHaveBeenCalledWith('commandStack.changed', expect.any(Function));
     });
 
     it('subscribes to selection.changed on construction', () => {
-      const [, Constructor] = OutlineModule.outlinePanel as [string, new (...args: unknown[]) => unknown];
-      new Constructor(mockEventBus, mockFormEditor, mockSelection);
-
+      makeInstance();
       expect(mockEventBus.on).toHaveBeenCalledWith('selection.changed', expect.any(Function));
     });
 
@@ -102,17 +135,16 @@ describe('OutlineModule', () => {
       };
       mockFormEditor = createMockFormEditor(schema);
 
-      const [, Constructor] = OutlineModule.outlinePanel as [string, new (...args: unknown[]) => unknown & { _nodes: unknown[] }];
-      const instance = new Constructor(mockEventBus, mockFormEditor, mockSelection) as { _nodes: unknown[] };
+      const instance = makeInstance() as { _nodes: Array<{ id: string; type: string }> };
 
       // import.done 이벤트 발행
       mockEventBus.emit('import.done');
 
       // _nodes가 업데이트됨
       expect(mockFormEditor.getSchema).toHaveBeenCalled();
-      expect(Array.isArray((instance as { _nodes: unknown[] })._nodes)).toBe(true);
-      expect((instance as { _nodes: Array<{ id: string }> })._nodes).toHaveLength(1);
-      expect((instance as { _nodes: Array<{ id: string; type: string }> })._nodes[0]).toMatchObject({
+      expect(Array.isArray(instance._nodes)).toBe(true);
+      expect(instance._nodes).toHaveLength(1);
+      expect(instance._nodes[0]).toMatchObject({
         id: 'card-1',
         type: 'card',
       });
@@ -127,8 +159,7 @@ describe('OutlineModule', () => {
       };
       mockFormEditor = createMockFormEditor(schema);
 
-      const [, Constructor] = OutlineModule.outlinePanel as [string, new (...args: unknown[]) => unknown];
-      const instance = new Constructor(mockEventBus, mockFormEditor, mockSelection) as { _nodes: Array<{ id: string; type: string }> };
+      const instance = makeInstance() as { _nodes: Array<{ id: string; type: string }> };
 
       mockEventBus.emit('commandStack.changed');
 
@@ -136,46 +167,69 @@ describe('OutlineModule', () => {
       expect(instance._nodes[0]).toMatchObject({ id: 'btn-1', type: 'button' });
     });
 
-    // ----- 5. selection.changed → 선택 ID 갱신 -----
-    it('updates selectedIds on selection.changed event with selection payload', () => {
-      const [, Constructor] = OutlineModule.outlinePanel as [string, new (...args: unknown[]) => unknown];
-      const instance = new Constructor(mockEventBus, mockFormEditor, mockSelection) as {
-        _selectedIds: string[];
-      };
+    // ----- 5. selection.changed → 단일 객체 payload 처리 (fix) -----
+    it('sets _selectedIds from single-object selection payload (form-js contract)', () => {
+      // form-js fires { selection: formFieldObject } — NOT an array
+      const instance = makeInstance() as { _selectedIds: string[] };
 
-      mockEventBus.emit('selection.changed', {
-        selection: [{ id: 'card-1' }, { id: 'btn-1' }],
-      });
+      mockEventBus.emit('selection.changed', { selection: { id: 'card-1' } });
 
-      expect(instance._selectedIds).toEqual(['card-1', 'btn-1']);
+      expect(instance._selectedIds).toEqual(['card-1']);
     });
 
-    it('handles selection.changed with empty selection payload', () => {
-      const [, Constructor] = OutlineModule.outlinePanel as [string, new (...args: unknown[]) => unknown];
-      const instance = new Constructor(mockEventBus, mockFormEditor, mockSelection) as {
-        _selectedIds: string[];
-      };
+    it('clears _selectedIds when selection payload is null', () => {
+      const instance = makeInstance() as { _selectedIds: string[] };
 
-      mockEventBus.emit('selection.changed', { selection: [] });
+      // first set something
+      mockEventBus.emit('selection.changed', { selection: { id: 'card-1' } });
+      expect(instance._selectedIds).toEqual(['card-1']);
+
+      // then clear
+      mockEventBus.emit('selection.changed', { selection: null });
       expect(instance._selectedIds).toEqual([]);
     });
 
-    it('falls back to selection.get() when event has no selection payload', () => {
-      mockSelection.get.mockReturnValue([{ id: 'sel-1' }]);
-
-      const [, Constructor] = OutlineModule.outlinePanel as [string, new (...args: unknown[]) => unknown];
-      const instance = new Constructor(mockEventBus, mockFormEditor, mockSelection) as {
-        _selectedIds: string[];
-      };
+    it('clears _selectedIds when no selection property in event', () => {
+      const instance = makeInstance() as { _selectedIds: string[] };
 
       mockEventBus.emit('selection.changed', undefined);
-      expect(instance._selectedIds).toEqual(['sel-1']);
+      expect(instance._selectedIds).toEqual([]);
     });
 
-    // ----- 6. mount 메서드 -----
+    it('handles selection.changed with formField lacking id gracefully', () => {
+      const instance = makeInstance() as { _selectedIds: string[] };
+
+      // formField without id — should result in empty _selectedIds
+      mockEventBus.emit('selection.changed', { selection: {} });
+      expect(instance._selectedIds).toEqual([]);
+    });
+
+    // ----- 6. _handleSelect → formFieldRegistry.get(id) + selection.set(formField) -----
+    it('calls formFieldRegistry.get(id) and selection.set(formField) on _handleSelect', () => {
+      const formField = { id: 'card-1', type: 'card' };
+      mockFormFieldRegistry = createMockFormFieldRegistry({ 'card-1': formField });
+
+      const instance = makeInstance() as { _handleSelect: (id: string) => void };
+
+      instance._handleSelect('card-1');
+
+      expect(mockFormFieldRegistry.get).toHaveBeenCalledWith('card-1');
+      expect(mockSelection.set).toHaveBeenCalledWith(formField);
+    });
+
+    it('does not call selection.set when formFieldRegistry.get returns undefined (no-op)', () => {
+      // registry에 id가 없는 경우 — no-op, 에러 없음
+      mockFormFieldRegistry = createMockFormFieldRegistry({}); // empty registry
+
+      const instance = makeInstance() as { _handleSelect: (id: string) => void };
+
+      expect(() => instance._handleSelect('nonexistent-id')).not.toThrow();
+      expect(mockSelection.set).not.toHaveBeenCalled();
+    });
+
+    // ----- 7. mount 메서드 -----
     it('exposes mount(container) method', () => {
-      const [, Constructor] = OutlineModule.outlinePanel as [string, new (...args: unknown[]) => unknown];
-      const instance = new Constructor(mockEventBus, mockFormEditor, mockSelection) as {
+      const instance = makeInstance() as {
         mount: (c: HTMLElement) => void;
         _container: HTMLElement | null;
       };
@@ -184,8 +238,7 @@ describe('OutlineModule', () => {
     });
 
     it('sets _container on mount', () => {
-      const [, Constructor] = OutlineModule.outlinePanel as [string, new (...args: unknown[]) => unknown];
-      const instance = new Constructor(mockEventBus, mockFormEditor, mockSelection) as {
+      const instance = makeInstance() as {
         mount: (c: HTMLElement) => void;
         _container: HTMLElement | null;
       };
@@ -195,12 +248,9 @@ describe('OutlineModule', () => {
       expect(instance._container).toBe(container);
     });
 
-    // ----- 7. destroy 메서드 -----
+    // ----- 8. destroy 메서드 -----
     it('exposes destroy() method that unsubscribes events', () => {
-      const [, Constructor] = OutlineModule.outlinePanel as [string, new (...args: unknown[]) => unknown];
-      const instance = new Constructor(mockEventBus, mockFormEditor, mockSelection) as {
-        destroy: () => void;
-      };
+      const instance = makeInstance() as { destroy: () => void };
 
       instance.destroy();
 
@@ -209,17 +259,610 @@ describe('OutlineModule', () => {
       expect(mockEventBus.off).toHaveBeenCalledWith('selection.changed', expect.any(Function));
     });
 
-    // ----- 8. null schema 방어 -----
+    // ----- 9. null schema 방어 -----
     it('handles null schema from formEditor.getSchema gracefully', () => {
       mockFormEditor = createMockFormEditor(null);
 
-      const [, Constructor] = OutlineModule.outlinePanel as [string, new (...args: unknown[]) => unknown];
-      const instance = new Constructor(mockEventBus, mockFormEditor, mockSelection) as {
-        _nodes: unknown[];
-      };
+      const instance = makeInstance() as { _nodes: unknown[] };
 
       expect(() => mockEventBus.emit('import.done')).not.toThrow();
       expect(instance._nodes).toEqual([]);
+    });
+
+    // ----- 10. schemaVersion 카운터 (outline-tree-collapsible feature) -----
+    it('_schemaVersion starts at 0', () => {
+      const instance = makeInstance() as { _schemaVersion: number };
+      expect(instance._schemaVersion).toBe(0);
+    });
+
+    it('_schemaVersion increments on import.done', () => {
+      const instance = makeInstance() as { _schemaVersion: number };
+      expect(instance._schemaVersion).toBe(0);
+
+      mockEventBus.emit('import.done');
+      expect(instance._schemaVersion).toBe(1);
+
+      mockEventBus.emit('import.done');
+      expect(instance._schemaVersion).toBe(2);
+    });
+
+    it('_schemaVersion does NOT increment on commandStack.changed', () => {
+      const instance = makeInstance() as { _schemaVersion: number };
+      expect(instance._schemaVersion).toBe(0);
+
+      mockEventBus.emit('commandStack.changed');
+      expect(instance._schemaVersion).toBe(0);
+
+      mockEventBus.emit('commandStack.changed');
+      expect(instance._schemaVersion).toBe(0);
+    });
+
+    it('_schemaVersion does NOT increment on selection.changed', () => {
+      const instance = makeInstance() as { _schemaVersion: number };
+      expect(instance._schemaVersion).toBe(0);
+
+      mockEventBus.emit('selection.changed', { selection: { id: 'card-1' } });
+      expect(instance._schemaVersion).toBe(0);
+    });
+
+    // ----- 11. DnD: _handleDrop -----
+    describe('DnD _handleDrop', () => {
+      it('calls modeling.moveFormField with correct args on before drop', () => {
+        const dragField = { id: 'btn-1', type: 'button', parent: { id: 'root', components: [{ id: 'btn-1' }, { id: 'btn-2' }] } };
+        const targetField = { id: 'btn-2', type: 'button', parent: { id: 'root', components: [{ id: 'btn-1' }, { id: 'btn-2' }] } };
+        const parentField = { id: 'root', type: 'default', components: [dragField, targetField] };
+
+        // dragField.parent / targetField.parent 참조를 parentField로
+        (dragField as unknown as Record<string, unknown>).parent = parentField;
+        (targetField as unknown as Record<string, unknown>).parent = parentField;
+
+        mockFormFieldRegistry = createMockFormFieldRegistry({
+          'btn-1': dragField,
+          'btn-2': targetField,
+        });
+
+        const instance = makeInstance() as { _handleDrop: (dragId: string, targetId: string, position: string) => void };
+        instance._handleDrop('btn-1', 'btn-2', 'before');
+
+        expect(mockModeling.moveFormField).toHaveBeenCalled();
+        const [movedField, , targetParent, , targetIndex] = mockModeling.moveFormField.mock.calls[0]!;
+        expect(movedField).toBe(dragField);
+        expect(targetParent).toBe(parentField);
+        expect(typeof targetIndex).toBe('number');
+      });
+
+      it('calls modeling.moveFormField with inside position for container drop', () => {
+        const dragField = { id: 'btn-1', type: 'button', parent: { id: 'root', type: 'default', components: [] } };
+        const containerField = { id: 'card-1', type: 'card', parent: { id: 'root', type: 'default', components: [] }, components: [] };
+
+        (dragField as unknown as Record<string, unknown>).parent = { id: 'root', type: 'default', components: [dragField] };
+        (containerField as unknown as Record<string, unknown>).parent = { id: 'root', type: 'default', components: [dragField, containerField] };
+
+        mockFormFieldRegistry = createMockFormFieldRegistry({
+          'btn-1': dragField,
+          'card-1': containerField,
+        });
+
+        const instance = makeInstance() as { _handleDrop: (dragId: string, targetId: string, position: string) => void };
+        instance._handleDrop('btn-1', 'card-1', 'inside');
+
+        expect(mockModeling.moveFormField).toHaveBeenCalled();
+        // inside drop: targetFormField = containerField
+        const [movedField, , targetParent] = mockModeling.moveFormField.mock.calls[0]!;
+        expect(movedField).toBe(dragField);
+        expect(targetParent).toBe(containerField);
+      });
+
+      it('is no-op when dragId is not in registry', () => {
+        mockFormFieldRegistry = createMockFormFieldRegistry({});
+        const instance = makeInstance() as { _handleDrop: (dragId: string, targetId: string, position: string) => void };
+
+        expect(() => instance._handleDrop('nonexistent', 'btn-2', 'before')).not.toThrow();
+        expect(mockModeling.moveFormField).not.toHaveBeenCalled();
+      });
+
+      it('is no-op when targetId is not in registry', () => {
+        const dragField = { id: 'btn-1', type: 'button' };
+        mockFormFieldRegistry = createMockFormFieldRegistry({ 'btn-1': dragField });
+        const instance = makeInstance() as { _handleDrop: (dragId: string, targetId: string, position: string) => void };
+
+        expect(() => instance._handleDrop('btn-1', 'nonexistent', 'after')).not.toThrow();
+        expect(mockModeling.moveFormField).not.toHaveBeenCalled();
+      });
+
+      it('is no-op when dragId === targetId (self-drop)', () => {
+        const field = { id: 'btn-1', type: 'button' };
+        mockFormFieldRegistry = createMockFormFieldRegistry({ 'btn-1': field });
+        const instance = makeInstance() as { _handleDrop: (dragId: string, targetId: string, position: string) => void };
+
+        instance._handleDrop('btn-1', 'btn-1', 'after');
+        expect(mockModeling.moveFormField).not.toHaveBeenCalled();
+      });
+
+      it('does not drop inside tabs container (disabled per design)', () => {
+        const dragField = { id: 'btn-1', type: 'button', parent: { id: 'root', components: [] } };
+        const tabsField = { id: 'tabs-1', type: 'tabs', parent: { id: 'root', components: [] }, components: [] };
+
+        mockFormFieldRegistry = createMockFormFieldRegistry({
+          'btn-1': dragField,
+          'tabs-1': tabsField,
+        });
+
+        const instance = makeInstance() as { _handleDrop: (dragId: string, targetId: string, position: string) => void };
+        instance._handleDrop('btn-1', 'tabs-1', 'inside');
+
+        // tabs inside drop is disabled — moveFormField should NOT be called
+        expect(mockModeling.moveFormField).not.toHaveBeenCalled();
+      });
+    });
+
+    // ----- 12. Clipboard: _handleCopy / _handlePaste -----
+    describe('Clipboard _handleCopy/_handlePaste', () => {
+      it('_handleCopy stores a deep clone in _clipboard', () => {
+        const field = { id: 'btn-1', type: 'button', label: 'OK', components: [] };
+        mockFormFieldRegistry = createMockFormFieldRegistry({ 'btn-1': field });
+
+        const instance = makeInstance() as {
+          _handleCopy: (id: string) => void;
+          _clipboard: unknown;
+        };
+
+        instance._handleCopy('btn-1');
+
+        expect(instance._clipboard).toBeDefined();
+        expect((instance._clipboard as { type?: string }).type).toBe('button');
+        // clipboard is a clone, not same ref
+        expect(instance._clipboard).not.toBe(field);
+      });
+
+      it('_handleCopy assigns new id to clipboard item', () => {
+        const field = { id: 'btn-1', type: 'button', components: [] };
+        mockFormFieldRegistry = createMockFormFieldRegistry({ 'btn-1': field });
+
+        const instance = makeInstance() as {
+          _handleCopy: (id: string) => void;
+          _clipboard: unknown;
+        };
+
+        instance._handleCopy('btn-1');
+
+        const clipboard = instance._clipboard as { id?: string };
+        expect(clipboard.id).not.toBe('btn-1');
+        expect(clipboard.id?.startsWith('button-')).toBe(true);
+      });
+
+      it('_handleCopy is no-op when id not in registry', () => {
+        mockFormFieldRegistry = createMockFormFieldRegistry({});
+        const instance = makeInstance() as {
+          _handleCopy: (id: string) => void;
+          _clipboard: unknown;
+        };
+
+        expect(() => instance._handleCopy('nonexistent')).not.toThrow();
+        expect(instance._clipboard).toBeNull();
+      });
+
+      it('_handlePaste calls modeling.addFormField with clipboard content', () => {
+        const parentField = { id: 'root', type: 'default', components: [] };
+        const targetField = { id: 'btn-1', type: 'button', parent: parentField };
+
+        mockFormFieldRegistry = createMockFormFieldRegistry({
+          'btn-1': targetField,
+        });
+        mockSelection = createMockSelection();
+        mockSelection.get = vi.fn().mockReturnValue({ id: 'btn-1' });
+
+        const instance = makeInstance() as {
+          _handleCopy: (id: string) => void;
+          _handlePaste: () => void;
+          _clipboard: unknown;
+          _selectedIds: string[];
+        };
+
+        // Seed selection
+        mockEventBus.emit('selection.changed', { selection: { id: 'btn-1' } });
+
+        // Copy first
+        instance._handleCopy('btn-1');
+        expect(instance._clipboard).not.toBeNull();
+
+        // Paste
+        instance._handlePaste();
+
+        expect(mockModeling.addFormField).toHaveBeenCalled();
+        const [attrs] = mockModeling.addFormField.mock.calls[0]!;
+        expect((attrs as { type?: string }).type).toBe('button');
+        // id must differ from original
+        expect((attrs as { id?: string }).id).not.toBe('btn-1');
+      });
+
+      it('_handlePaste is no-op when clipboard is null', () => {
+        const instance = makeInstance() as { _handlePaste: () => void; _clipboard: unknown };
+        expect(instance._clipboard).toBeNull();
+
+        expect(() => instance._handlePaste()).not.toThrow();
+        expect(mockModeling.addFormField).not.toHaveBeenCalled();
+      });
+
+      it('_handlePaste generates fresh id each time (multiple pastes)', () => {
+        const parentField = { id: 'root', type: 'default', components: [] };
+        const targetField = { id: 'btn-1', type: 'button', parent: parentField };
+        mockFormFieldRegistry = createMockFormFieldRegistry({ 'btn-1': targetField });
+
+        const instance = makeInstance() as {
+          _handleCopy: (id: string) => void;
+          _handlePaste: () => void;
+        };
+
+        mockEventBus.emit('selection.changed', { selection: { id: 'btn-1' } });
+        instance._handleCopy('btn-1');
+
+        instance._handlePaste();
+        instance._handlePaste();
+
+        expect(mockModeling.addFormField).toHaveBeenCalledTimes(2);
+        const id1 = (mockModeling.addFormField.mock.calls[0]![0] as { id?: string }).id;
+        const id2 = (mockModeling.addFormField.mock.calls[1]![0] as { id?: string }).id;
+        expect(id1).not.toBe(id2);
+      });
+
+      it('_handleCopy with no selection id is no-op when id is empty string', () => {
+        mockFormFieldRegistry = createMockFormFieldRegistry({});
+        const instance = makeInstance() as {
+          _handleCopy: (id: string) => void;
+          _clipboard: unknown;
+        };
+
+        // empty string id
+        expect(() => instance._handleCopy('')).not.toThrow();
+        expect(instance._clipboard).toBeNull();
+      });
+
+      it('_handlePaste renames colliding key to avoid form-js binding path conflict', () => {
+        // 원본 textfield가 스키마에 남아 있는 채로 paste → key 'first' 중복 방지 필요
+        const rootField = { id: 'root', type: 'default', components: [] };
+        const tfField = { id: 'tf-1', type: 'textfield', key: 'first', parent: rootField };
+
+        mockFormEditor = createMockFormEditor({
+          type: 'default',
+          id: 'root',
+          components: [{ id: 'tf-1', type: 'textfield', key: 'first' }],
+        });
+        mockFormFieldRegistry = createMockFormFieldRegistry({
+          'tf-1': tfField,
+          root: rootField,
+        });
+
+        const instance = makeInstance() as {
+          _handleCopy: (id: string) => void;
+          _handlePaste: () => void;
+          _selectedIds: string[];
+        };
+
+        mockEventBus.emit('selection.changed', { selection: { id: 'tf-1' } });
+        instance._handleCopy('tf-1');
+        instance._handlePaste();
+
+        expect(mockModeling.addFormField).toHaveBeenCalled();
+        const [attrs] = mockModeling.addFormField.mock.calls[0]!;
+        expect((attrs as { key?: string }).key).toBe('first_copy');
+      });
+
+      it('_handlePaste renames to _copy_2 on second paste to the same schema', () => {
+        // 1차 paste 후 'first_copy'도 스키마에 존재한다고 가정
+        const rootField = { id: 'root', type: 'default', components: [] };
+        const tfField = { id: 'tf-1', type: 'textfield', key: 'first', parent: rootField };
+
+        mockFormEditor = createMockFormEditor({
+          type: 'default',
+          id: 'root',
+          components: [
+            { id: 'tf-1', type: 'textfield', key: 'first' },
+            { id: 'tf-2', type: 'textfield', key: 'first_copy' },
+          ],
+        });
+        mockFormFieldRegistry = createMockFormFieldRegistry({
+          'tf-1': tfField,
+          root: rootField,
+        });
+
+        const instance = makeInstance() as {
+          _handleCopy: (id: string) => void;
+          _handlePaste: () => void;
+        };
+
+        mockEventBus.emit('selection.changed', { selection: { id: 'tf-1' } });
+        instance._handleCopy('tf-1');
+        instance._handlePaste();
+
+        const [attrs] = mockModeling.addFormField.mock.calls[0]!;
+        expect((attrs as { key?: string }).key).toBe('first_copy_2');
+      });
+    });
+
+    // ----- 13. 방향 복제: _duplicateFieldVertical / _duplicateFieldHorizontal -----
+    describe('duplicate direction: _duplicateFieldVertical / _duplicateFieldHorizontal', () => {
+      it('_duplicateFieldVertical calls modeling.addFormField WITHOUT layout.row in attrs', () => {
+        const parentField = { id: 'root', type: 'default', components: [] };
+        const field = { id: 'btn-1', type: 'button', label: 'OK', parent: parentField };
+        (parentField as unknown as Record<string, unknown>).components = [field];
+
+        mockFormFieldRegistry = createMockFormFieldRegistry({
+          'btn-1': field,
+          root: parentField,
+        });
+
+        const instance = makeInstance() as {
+          _duplicateFieldVertical: (id: string) => void;
+        };
+
+        instance._duplicateFieldVertical('btn-1');
+
+        expect(mockModeling.addFormField).toHaveBeenCalledOnce();
+        const [attrs] = mockModeling.addFormField.mock.calls[0]!;
+        // 세로 복제: layout.row 없어야 함 (form-js가 새 row 배정)
+        const layout = (attrs as { layout?: { row?: string } }).layout;
+        expect(layout?.row).toBeUndefined();
+      });
+
+      it('_duplicateFieldVertical removes layout.row even when original field has layout.row set', () => {
+        // deepCloneWithNewIds가 layout.row를 그대로 복사하는 경우, _duplicateFieldVertical이 이를 제거해야 함
+        const parentField = { id: 'root', type: 'default', components: [] };
+        const field = {
+          id: 'tf-1',
+          type: 'textfield',
+          label: 'Text field',
+          layout: { row: 'Row_existing', columns: null },
+          parent: parentField,
+        };
+        (parentField as unknown as Record<string, unknown>).components = [field];
+
+        mockFormFieldRegistry = createMockFormFieldRegistry({
+          'tf-1': field,
+          root: parentField,
+        });
+
+        const instance = makeInstance() as {
+          _duplicateFieldVertical: (id: string) => void;
+        };
+
+        instance._duplicateFieldVertical('tf-1');
+
+        expect(mockModeling.addFormField).toHaveBeenCalledOnce();
+        const [attrs] = mockModeling.addFormField.mock.calls[0]!;
+        // 세로 복제: 원본에 layout.row가 있어도 제거되어야 함
+        const layout = (attrs as { layout?: { row?: string } }).layout;
+        expect(layout?.row).toBeUndefined();
+      });
+
+      it('_duplicateFieldVertical inserts at idx+1 position (same as old _duplicateField)', () => {
+        const parentField = { id: 'root', type: 'default', components: [] };
+        const field1 = { id: 'btn-1', type: 'button', parent: parentField };
+        const field2 = { id: 'btn-2', type: 'button', parent: parentField };
+        (parentField as unknown as Record<string, unknown>).components = [field1, field2];
+
+        mockFormFieldRegistry = createMockFormFieldRegistry({
+          'btn-1': field1,
+          'btn-2': field2,
+          root: parentField,
+        });
+
+        const instance = makeInstance() as {
+          _duplicateFieldVertical: (id: string) => void;
+        };
+
+        instance._duplicateFieldVertical('btn-1');
+
+        expect(mockModeling.addFormField).toHaveBeenCalledOnce();
+        const [, targetFormField, targetIndex] = mockModeling.addFormField.mock.calls[0]!;
+        expect(targetFormField).toBe(parentField);
+        // btn-1 is at index 0, so insertIdx = 1
+        expect(targetIndex).toBe(1);
+      });
+
+      it('_duplicateFieldVertical is no-op when field not in registry', () => {
+        mockFormFieldRegistry = createMockFormFieldRegistry({});
+
+        const instance = makeInstance() as {
+          _duplicateFieldVertical: (id: string) => void;
+        };
+
+        expect(() => instance._duplicateFieldVertical('nonexistent')).not.toThrow();
+        expect(mockModeling.addFormField).not.toHaveBeenCalled();
+      });
+
+      it('_duplicateFieldHorizontal calls formLayouter.getRowForField', () => {
+        const parentField = { id: 'root', type: 'default', components: [] };
+        const field = { id: 'btn-1', type: 'button', label: 'OK', parent: parentField };
+        (parentField as unknown as Record<string, unknown>).components = [field];
+
+        mockFormFieldRegistry = createMockFormFieldRegistry({
+          'btn-1': field,
+          root: parentField,
+        });
+        mockFormLayouter = {
+          getRowForField: vi.fn().mockReturnValue({ id: 'row-1' }),
+        };
+
+        const instance = makeInstance() as {
+          _duplicateFieldHorizontal: (id: string) => void;
+        };
+
+        instance._duplicateFieldHorizontal('btn-1');
+
+        expect(mockFormLayouter.getRowForField).toHaveBeenCalledWith(field);
+      });
+
+      it('_duplicateFieldHorizontal injects layout.row into attrs when row found', () => {
+        const parentField = { id: 'root', type: 'default', components: [] };
+        const field = { id: 'btn-1', type: 'button', label: 'OK', parent: parentField };
+        (parentField as unknown as Record<string, unknown>).components = [field];
+
+        mockFormFieldRegistry = createMockFormFieldRegistry({
+          'btn-1': field,
+          root: parentField,
+        });
+        mockFormLayouter = {
+          getRowForField: vi.fn().mockReturnValue({ id: 'row-1' }),
+        };
+
+        const instance = makeInstance() as {
+          _duplicateFieldHorizontal: (id: string) => void;
+        };
+
+        instance._duplicateFieldHorizontal('btn-1');
+
+        expect(mockModeling.addFormField).toHaveBeenCalledOnce();
+        const [attrs] = mockModeling.addFormField.mock.calls[0]!;
+        // 가로 복제: layout.row = 'row-1' 이어야 함
+        const layout = (attrs as { layout?: { row?: string } }).layout;
+        expect(layout?.row).toBe('row-1');
+      });
+
+      it('_duplicateFieldHorizontal falls back to vertical when getRowForField returns null', () => {
+        const parentField = { id: 'root', type: 'default', components: [] };
+        const field = { id: 'btn-1', type: 'button', label: 'OK', parent: parentField };
+        (parentField as unknown as Record<string, unknown>).components = [field];
+
+        mockFormFieldRegistry = createMockFormFieldRegistry({
+          'btn-1': field,
+          root: parentField,
+        });
+        mockFormLayouter = {
+          getRowForField: vi.fn().mockReturnValue(null),
+        };
+
+        const instance = makeInstance() as {
+          _duplicateFieldHorizontal: (id: string) => void;
+        };
+
+        // null row → fallback: no error, addFormField still called (vertical behavior)
+        expect(() => instance._duplicateFieldHorizontal('btn-1')).not.toThrow();
+        expect(mockModeling.addFormField).toHaveBeenCalledOnce();
+        // fallback 시 layout.row 없어야 함
+        const [attrs] = mockModeling.addFormField.mock.calls[0]!;
+        const layout = (attrs as { layout?: { row?: string } }).layout;
+        expect(layout?.row).toBeUndefined();
+      });
+
+      it('_duplicateFieldHorizontal is no-op when field not in registry', () => {
+        mockFormFieldRegistry = createMockFormFieldRegistry({});
+
+        const instance = makeInstance() as {
+          _duplicateFieldHorizontal: (id: string) => void;
+        };
+
+        expect(() => instance._duplicateFieldHorizontal('nonexistent')).not.toThrow();
+        expect(mockModeling.addFormField).not.toHaveBeenCalled();
+      });
+    });
+
+    // ----- 14. DOM 주입: _injectDuplicateButtons -----
+    describe('DOM injection: _injectDuplicateButtons', () => {
+      // 공통 DOM: context-pad를 data-id 부모 아래에 마운트하고 각 테스트 후 정리
+      let fieldEl: HTMLDivElement;
+      let pad: HTMLDivElement;
+
+      beforeEach(() => {
+        const field = { id: 'btn-1', type: 'button' };
+        mockFormFieldRegistry = createMockFormFieldRegistry({ 'btn-1': field });
+
+        fieldEl = document.createElement('div');
+        fieldEl.setAttribute('data-id', 'btn-1');
+        pad = document.createElement('div');
+        pad.className = 'fjs-context-pad';
+        fieldEl.appendChild(pad);
+        document.body.appendChild(fieldEl);
+      });
+
+      afterEach(() => {
+        if (fieldEl.parentNode) document.body.removeChild(fieldEl);
+      });
+
+      it('injects two buttons [data-outline-duplicate-h] and [data-outline-duplicate-v] into pad', () => {
+        const instance = makeInstance() as {
+          _injectDuplicateButtons: (pad: HTMLElement) => void;
+        };
+
+        instance._injectDuplicateButtons(pad);
+
+        expect(pad.querySelector('[data-outline-duplicate-h]')).not.toBeNull();
+        expect(pad.querySelector('[data-outline-duplicate-v]')).not.toBeNull();
+      });
+
+      it('does NOT inject duplicate buttons twice (guard check)', () => {
+        const instance = makeInstance() as {
+          _injectDuplicateButtons: (pad: HTMLElement) => void;
+        };
+
+        instance._injectDuplicateButtons(pad);
+        instance._injectDuplicateButtons(pad); // second call
+
+        const hBtns = pad.querySelectorAll('[data-outline-duplicate-h]');
+        const vBtns = pad.querySelectorAll('[data-outline-duplicate-v]');
+        expect(hBtns).toHaveLength(1);
+        expect(vBtns).toHaveLength(1);
+      });
+
+      it('does not inject when pad has no ancestor with data-id', () => {
+        const instance = makeInstance() as {
+          _injectDuplicateButtons: (pad: HTMLElement) => void;
+        };
+
+        // padOrphan은 document.body에 붙지 않은 독립 요소 — data-id 부모 없음
+        const padOrphan = document.createElement('div');
+        padOrphan.className = 'fjs-context-pad';
+
+        instance._injectDuplicateButtons(padOrphan);
+
+        expect(padOrphan.querySelector('[data-outline-duplicate-h]')).toBeNull();
+        expect(padOrphan.querySelector('[data-outline-duplicate-v]')).toBeNull();
+      });
+
+      it('horizontal button has title "행으로 복사" and vertical button has title "세로로 복사"', () => {
+        const instance = makeInstance() as {
+          _injectDuplicateButtons: (pad: HTMLElement) => void;
+        };
+
+        instance._injectDuplicateButtons(pad);
+
+        const hBtn = pad.querySelector('[data-outline-duplicate-h]') as HTMLButtonElement | null;
+        const vBtn = pad.querySelector('[data-outline-duplicate-v]') as HTMLButtonElement | null;
+        expect(hBtn?.title).toBe('행으로 복사');
+        expect(vBtn?.title).toBe('세로로 복사');
+      });
+
+      it('horizontal button has aria-label "행으로 복사" and vertical button has aria-label "세로로 복사"', () => {
+        const instance = makeInstance() as {
+          _injectDuplicateButtons: (pad: HTMLElement) => void;
+        };
+
+        instance._injectDuplicateButtons(pad);
+
+        const hBtn = pad.querySelector('[data-outline-duplicate-h]') as HTMLButtonElement | null;
+        const vBtn = pad.querySelector('[data-outline-duplicate-v]') as HTMLButtonElement | null;
+        expect(hBtn?.getAttribute('aria-label')).toBe('행으로 복사');
+        expect(vBtn?.getAttribute('aria-label')).toBe('세로로 복사');
+      });
+
+      it('buttons are ordered [horizontal][vertical] before existing children', () => {
+        // 기존 삭제 버튼 시뮬레이션
+        const deleteBtn = document.createElement('button');
+        deleteBtn.setAttribute('data-action', 'delete');
+        pad.appendChild(deleteBtn);
+
+        const instance = makeInstance() as {
+          _injectDuplicateButtons: (pad: HTMLElement) => void;
+        };
+
+        instance._injectDuplicateButtons(pad);
+
+        const children = Array.from(pad.children) as HTMLElement[];
+        expect(children[0]?.getAttribute('data-outline-duplicate-h')).toBe('true');
+        expect(children[1]?.getAttribute('data-outline-duplicate-v')).toBe('true');
+        // 삭제 버튼은 마지막
+        expect(children[2]?.getAttribute('data-action')).toBe('delete');
+      });
     });
   });
 });

@@ -10,8 +10,8 @@ describe('defineComponent contract (Table)', () => {
     expect(TableComponent.component.config.type).toBe('table');
   });
 
-  it("group이 'data'이다", () => {
-    expect(TableComponent.component.config.group).toBe('data');
+  it("group이 'presentation'이다", () => {
+    expect(TableComponent.component.config.group).toBe('presentation');
   });
 
   it('component.config.create()가 type:table을 포함한 객체를 반환한다', () => {

@@ -2,9 +2,12 @@ import { defineConfig } from 'vitest/config';
 import preact from '@preact/preset-vite';
 import path from 'path';
 
-// Preact 단일 인스턴스: designer-table/node_modules/preact (10.29.1) 사용
+// Preact 단일 인스턴스: 루트 node_modules/preact 사용 (로컬 호이스팅 없음)
 // 절대 경로 alias로 모든 preact 경로를 하나로 강제한다.
-const PREACT = path.resolve(__dirname, 'node_modules/preact');
+import fs from 'fs';
+const localPreact = path.resolve(__dirname, 'node_modules/preact');
+const rootPreact = path.resolve(__dirname, '../../node_modules/preact');
+const PREACT = fs.existsSync(localPreact) ? localPreact : rootPreact;
 
 export default defineConfig({
   plugins: [preact()],

@@ -5,6 +5,7 @@ import { defineComponent } from '@form-js-designer/designer-core';
 import type { PureRenderProps } from '@form-js-designer/designer-core';
 import type { ButtonSchema } from './propsSchema';
 import { buttonPropsSchema } from './propsSchema';
+import { ButtonIcon } from '../icons';
 import './Button.css';
 
 void h;
@@ -59,8 +60,9 @@ function ButtonRender(props: PureRenderProps<ButtonSchema>) {
 
 export const ButtonComponent = defineComponent<ButtonSchema>({
   type: 'button',
-  name: 'designer.components.button.name',
+  name: '버튼',
   group: 'action',
+  icon: ButtonIcon,
   keyed: false,
   pathed: false,
   escapeGridRender: false,

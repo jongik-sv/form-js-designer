@@ -16,9 +16,10 @@ import { h } from 'preact';
 import { useLayoutEffect, useRef, useState } from 'preact/hooks';
 // @ts-ignore — form-js-editor has no bundled type declarations; skip lib check
 import { FormEditor } from '@bpmn-io/form-js-editor';
-import { DesignerComponentsModule } from '@form-js-designer/designer-components';
-import { DesignerTableModule } from '@form-js-designer/designer-table';
+import { DesignerContainerModule } from '@form-js-designer/designer-core';
 import type { ValidationResult } from '@form-js-designer/designer-core';
+import { DesignerComponentsModule, migrateLegacyTabsSchema } from '@form-js-designer/designer-components';
+import { DesignerTableModule } from '@form-js-designer/designer-table';
 import { PaletteModule } from './modules/PaletteModule';
 import { OutlineModule } from './modules/OutlineModule';
 import { PropsPanelModule } from './modules/PropsPanelModule';
@@ -35,6 +36,11 @@ import { LivePreviewPanel } from './components/LivePreviewPanel';
 import { ToolbarButtons } from './components/ToolbarButtons';
 import { ValidationBadge } from './components/ValidationBadge';
 import { useSidePanelTab } from './router';
+// form-js.css is the full viewer stylesheet (superset of form-js-base.css).
+// Required for the Carbon grid column distribution rules (.cds--col-lg-*,
+// @media min-width: 66rem). Without it .cds--col falls back to 100% width
+// so multi-column rows stack vertically — horizontal layout is broken.
+import '@bpmn-io/form-js-viewer/dist/assets/form-js.css';
 import '@bpmn-io/form-js-editor/dist/assets/form-js-editor-base.css';
 import '@bpmn-io/form-js-editor/dist/assets/form-js-editor.css';
 import '@bpmn-io/form-js-editor/dist/assets/properties-panel.css';
@@ -77,6 +83,9 @@ export function App(): h.JSX.Element {
 
     try {
       const additionalModules: unknown[] = [
+        // DesignerContainerModule은 formLayouter 서비스를 override 하므로
+        // 다른 모듈이 formLayouter를 주입받기 전에 로드되어야 함.
+        DesignerContainerModule,
         DesignerComponentsModule,
         DesignerTableModule,
         PaletteModule,
@@ -93,9 +102,12 @@ export function App(): h.JSX.Element {
       });
 
       editorInstanceRef.current = editor;
+      // expose editor for e2e debugging
+      (window as unknown as { __editor?: unknown }).__editor = editor;
 
-      editor.importSchema(DEFAULT_SCHEMA).then(() => {
-        // OutlineModule 마운트
+      // 기본 스키마 임포트 — legacy tabs[] 구조가 있으면 tabPanel 구조로 마이그레이션
+      editor.importSchema(migrateLegacyTabsSchema(DEFAULT_SCHEMA)).then(() => {
+        // OutlineModule의 outlinePanel 서비스에 컨테이너 마운트
         const outlineContainer = outlineRef.current;
         if (outlineContainer && editor) {
           try {

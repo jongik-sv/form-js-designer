@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Vanilla form-js editor</title>
+    <style>
+      html,
+      body {
+        height: 100%;
+        margin: 0;
+      }
+      #editor {
+        height: 100vh;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="editor"></div>
+    <script type="module">
+      import '@bpmn-io/form-js-viewer/dist/assets/form-js-base.css';
+      import '@bpmn-io/form-js-editor/dist/assets/form-js-editor-base.css';
+      import '@bpmn-io/form-js-editor/dist/assets/form-js-editor.css';
+      import '@bpmn-io/form-js-editor/dist/assets/properties-panel.css';
+      import '@bpmn-io/form-js-editor/dist/assets/dragula.css';
+      import { FormEditor } from '@bpmn-io/form-js-editor';
+
+      const editor = new FormEditor({
+        container: document.getElementById('editor'),
+      });
+      await editor.importSchema({ type: 'default', components: [] });
+      window.__editor = editor;
+    </script>
+  </body>
+</html>

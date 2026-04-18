@@ -1,8 +1,43 @@
 import { h } from 'preact';
+import type { ComponentType } from 'preact';
 import type { ComponentDefinition, FieldSchema, FormJsFieldComponent, PureRenderProps } from './types';
 import { assertPureRender } from './assertPureRender';
 import { isProductionEnv } from './envUtils';
 import { validatePropsSchema } from './panel/validatePropsSchema';
+
+/**
+ * Default palette icon — form-js Palette/FieldDragPreview call
+ * `h(Icon, { class, width, height, viewBox })` and crash when Icon is
+ * undefined. We always attach one so custom components get a visible,
+ * draggable tile without requiring each component to ship an SVG.
+ */
+const DefaultPaletteIcon: ComponentType<{
+  class?: string;
+  width?: string | number;
+  height?: string | number;
+  viewBox?: string;
+}> = (props) =>
+  h(
+    'svg',
+    {
+      class: props.class,
+      width: props.width,
+      height: props.height,
+      viewBox: props.viewBox ?? '0 0 54 54',
+      xmlns: 'http://www.w3.org/2000/svg',
+    },
+    h('rect', {
+      x: 8,
+      y: 8,
+      width: 38,
+      height: 38,
+      rx: 4,
+      ry: 4,
+      fill: 'none',
+      stroke: 'currentColor',
+      'stroke-width': 2,
+    }),
+  );
 
 /**
  * The exact set of keys that constitute PureRenderProps.
@@ -61,7 +96,10 @@ export function defineComponent<F extends FieldSchema = FieldSchema>(
     return def.render(pureProps as unknown as PureRenderProps<F>);
   }
 
-  // Attach static .config so form-js can discover component metadata
+  // Attach static .config so form-js can discover component metadata.
+  // `icon` must be a Preact ComponentType — form-js's FieldDragPreview
+  // unconditionally renders it, so we fall back to DefaultPaletteIcon
+  // when def.icon is omitted.
   (DesignerComponent as unknown as FormJsFieldComponent).config = {
     type: def.type,
     keyed: def.keyed,
@@ -69,6 +107,7 @@ export function defineComponent<F extends FieldSchema = FieldSchema>(
     escapeGridRender: def.escapeGridRender,
     name: def.name,
     group: def.group,
+    icon: def.icon ?? DefaultPaletteIcon,
     create: def.create as (options?: Record<string, unknown>) => Record<string, unknown>,
   };
 

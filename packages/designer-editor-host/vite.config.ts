@@ -3,8 +3,12 @@ import preact from '@preact/preset-vite';
 
 export default defineConfig({
   plugins: [preact()],
+  // form-js-editor uses @bpmn-io/draggle, which references bare `global`
+  // at runtime for pageXOffset/pageYOffset lookups. Without this define,
+  // drag/drop throws `global is not defined` in bundled ESM and silently fails.
+  // (Matches upstream form-js vite config.)
   define: {
-    global: 'globalThis',
+    global: 'window',
   },
   resolve: {
     dedupe: ['preact'],

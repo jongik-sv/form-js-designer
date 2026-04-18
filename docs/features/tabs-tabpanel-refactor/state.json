@@ -1,0 +1,55 @@
+{
+  "name": "tabs-tabpanel-refactor",
+  "status": "[ts]",
+  "last": {
+    "event": "test.ok",
+    "at": "2026-04-18T10:38:00Z"
+  },
+  "phase_history": [
+    {
+      "event": "design.ok",
+      "from": "[ ]",
+      "to": "[dd]",
+      "at": "2026-04-18T00:37:32Z",
+      "elapsed_seconds": 0
+    },
+    {
+      "event": "build.ok",
+      "from": "[dd]",
+      "to": "[im]",
+      "at": "2026-04-18T00:45:47Z",
+      "elapsed_seconds": 495
+    },
+    {
+      "event": "test.ok",
+      "from": "[im]",
+      "to": "[ts]",
+      "at": "2026-04-18T00:54:07Z",
+      "elapsed_seconds": 500
+    },
+    {
+      "event": "build.redo",
+      "from": "[ts]",
+      "to": "[dd]",
+      "at": "2026-04-18T10:20:00Z",
+      "reason": "test phase false-positive — tabPanel drop routing 미검증 (ChildrenSlot 직접 호출로 .fjs-element 래퍼 누락, 중첩 자식 formFieldRegistry 미등록, DesignerFormLayouter 이중 재귀로 row 중복 축적)",
+      "elapsed_seconds": 0
+    },
+    {
+      "event": "build.ok",
+      "from": "[dd]",
+      "to": "[im]",
+      "at": "2026-04-18T10:34:00Z",
+      "elapsed_seconds": 840
+    },
+    {
+      "event": "test.ok",
+      "from": "[im]",
+      "to": "[ts]",
+      "at": "2026-04-18T10:38:00Z",
+      "elapsed_seconds": 240
+    }
+  ],
+  "updated": "2026-04-18T10:38:00Z",
+  "started_at": "2026-04-18T00:37:32Z"
+}

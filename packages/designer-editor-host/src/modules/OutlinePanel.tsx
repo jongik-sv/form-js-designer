@@ -1,49 +1,162 @@
-/**
- * OutlinePanel — form-js 스키마 트리 시각화 Preact 컴포넌트
- * TSK-06-01
- */
-
 import { h } from 'preact';
-import type { OutlineNode } from './outlineTypes';
+import { useState, useCallback, useRef } from 'preact/hooks';
+import type { OutlineNode, DropPosition } from './outlineTypes';
+import { getDropPosition } from './outlineUtils';
 
 export interface OutlinePanelProps {
   nodes: OutlineNode[];
   selectedIds: string[];
   onSelect: (id: string) => void;
+  onDrop: (dragId: string, targetId: string, position: DropPosition) => void;
+  onCopy: (id: string) => void;
+  onPaste: () => void;
+}
+
+const VIRTUAL_ROOT_ID = '__outline_root__';
+
+/** 컨테이너 타입 목록: inside 드롭 가능 여부 판단에 사용 */
+const CONTAINER_TYPES = new Set(['card', 'stack', 'modal', 'tabPanel', 'tabs']);
+
+function wrapWithVirtualRoot(nodes: OutlineNode[]): OutlineNode {
+  return {
+    id: VIRTUAL_ROOT_ID,
+    type: '',
+    label: 'Outline',
+    children: nodes,
+  };
+}
+
+interface OutlineNodeItemProps {
+  node: OutlineNode;
+  depth: number;
+  selectedIds: string[];
+  onSelect: (id: string) => void;
+  collapsedIds: Set<string>;
+  onToggle: (id: string) => void;
+  isVirtualRoot?: boolean;
+  dragOverId: string | null;
+  dragOverPosition: DropPosition | null;
+  onDragStart: (e: DragEvent, id: string) => void;
+  onDragOver: (e: DragEvent, id: string, type: string) => void;
+  onDragLeave: (e: DragEvent) => void;
+  onDrop: (e: DragEvent, id: string) => void;
 }
 
 function OutlineNodeItem({
   node,
+  depth,
   selectedIds,
   onSelect,
-}: {
-  node: OutlineNode;
-  selectedIds: string[];
-  onSelect: (id: string) => void;
-}): h.JSX.Element {
-  const isSelected = selectedIds.includes(node.id);
+  collapsedIds,
+  onToggle,
+  isVirtualRoot = false,
+  dragOverId,
+  dragOverPosition,
+  onDragStart,
+  onDragOver,
+  onDragLeave,
+  onDrop,
+}: OutlineNodeItemProps): h.JSX.Element {
+  const isSelected = !isVirtualRoot && selectedIds.includes(node.id);
+  const hasChildren = node.children.length > 0;
+  const isCollapsed = collapsedIds.has(node.id);
+
+  const isDragOver = dragOverId === node.id;
+  const dropPos = isDragOver ? dragOverPosition : null;
+
+  const handleToggle = useCallback(
+    (e: Event) => {
+      e.stopPropagation();
+      onToggle(node.id);
+    },
+    [node.id, onToggle],
+  );
+
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      if (e.code === 'Space' || e.code === 'Enter') {
+        e.preventDefault();
+        e.stopPropagation();
+        onToggle(node.id);
+      }
+    },
+    [node.id, onToggle],
+  );
+
+  // DnD CSS 클래스 조합
+  const nodeRowClass = [
+    'outline-node-row',
+    isDragOver && dropPos === 'before' ? 'outline-drop-indicator--before' : '',
+    isDragOver && dropPos === 'after' ? 'outline-drop-indicator--after' : '',
+    isDragOver && dropPos === 'inside' ? 'outline-drop-indicator--inside' : '',
+  ]
+    .filter(Boolean)
+    .join(' ');
 
   return (
-    <li>
-      <button
-        class={`outline-node${isSelected ? ' outline-node--selected' : ''}`}
-        data-outline-id={node.id}
-        data-testid={`outline-node-${node.id}`}
-        onClick={() => onSelect(node.id)}
-        type="button"
-        aria-selected={isSelected}
+    <li role="treeitem">
+      <div
+        class={nodeRowClass}
+        style={{ '--depth': depth } as h.JSX.CSSProperties}
+        onDragOver={!isVirtualRoot ? (e) => onDragOver(e, node.id, node.type) : undefined}
+        onDragLeave={!isVirtualRoot ? onDragLeave : undefined}
+        onDrop={!isVirtualRoot ? (e) => onDrop(e, node.id) : undefined}
       >
-        <span class="outline-node__type">{node.type}</span>
-        {node.label && <span class="outline-node__label">{node.label}</span>}
-      </button>
-      {node.children.length > 0 && (
+        {hasChildren ? (
+          <button
+            class="outline-toggle"
+            type="button"
+            aria-expanded={isCollapsed ? 'false' : 'true'}
+            aria-label={isCollapsed ? '펼치기' : '접기'}
+            onClick={handleToggle}
+            onKeyDown={handleKeyDown}
+          >
+            {isCollapsed ? '▸' : '▾'}
+          </button>
+        ) : (
+          <span class="outline-toggle-spacer" aria-hidden="true" />
+        )}
+        {isVirtualRoot ? (
+          <span
+            class="outline-node outline-node--virtual-root"
+            data-outline-id={node.id}
+            data-testid="outline-virtual-root"
+          >
+            <span class="outline-node__label">{node.label}</span>
+          </span>
+        ) : (
+          <button
+            class={`outline-node${isSelected ? ' outline-node--selected' : ''}`}
+            data-outline-id={node.id}
+            data-testid={`outline-node-${node.id}`}
+            onClick={() => onSelect(node.id)}
+            type="button"
+            aria-selected={isSelected ? 'true' : 'false'}
+            draggable={true}
+            onDragStart={(e) => onDragStart(e, node.id)}
+          >
+            <span class="outline-node__type">{node.type}</span>
+            {node.label && <span class="outline-node__label">{node.label}</span>}
+          </button>
+        )}
+      </div>
+      {hasChildren && !isCollapsed && (
         <ul class="outline-node__children">
           {node.children.map((child) => (
             <OutlineNodeItem
               key={child.id}
               node={child}
+              depth={depth + 1}
               selectedIds={selectedIds}
               onSelect={onSelect}
+              collapsedIds={collapsedIds}
+              onToggle={onToggle}
+              dragOverId={dragOverId}
+              dragOverPosition={dragOverPosition}
+              onDragStart={onDragStart}
+              onDragOver={onDragOver}
+              onDragLeave={onDragLeave}
+              onDrop={onDrop}
             />
           ))}
         </ul>
@@ -52,26 +165,127 @@ function OutlineNodeItem({
   );
 }
 
-export function OutlinePanel({ nodes, selectedIds, onSelect }: OutlinePanelProps): h.JSX.Element {
-  if (nodes.length === 0) {
-    return (
-      <div class="outline-panel outline-panel--empty" data-testid="outline-panel-empty">
-        <p>컴포넌트 없음</p>
-      </div>
-    );
-  }
+export function OutlinePanel({
+  nodes,
+  selectedIds,
+  onSelect,
+  onDrop,
+  onCopy,
+  onPaste,
+}: OutlinePanelProps): h.JSX.Element {
+  const [collapsedIds, setCollapsedIds] = useState<Set<string>>(new Set());
+  const [dragOverId, setDragOverId] = useState<string | null>(null);
+  const [dragOverPosition, setDragOverPosition] = useState<DropPosition | null>(null);
+  const dragIdRef = useRef<string | null>(null);
+
+  const handleToggle = useCallback((id: string) => {
+    setCollapsedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  }, []);
+
+  const handleDragStart = useCallback((e: DragEvent, id: string) => {
+    dragIdRef.current = id;
+    if (e.dataTransfer) {
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', id);
+    }
+    // 드래그 중 노드에 CSS 마킹
+    const target = e.currentTarget as HTMLElement;
+    target.classList.add('outline-node--dragging');
+  }, []);
+
+  const handleDragOver = useCallback(
+    (e: DragEvent, id: string, type: string) => {
+      e.preventDefault();
+      if (e.dataTransfer) {
+        e.dataTransfer.dropEffect = 'move';
+      }
+      const target = e.currentTarget as HTMLElement;
+      const rect = target.getBoundingClientRect();
+      const isContainer = CONTAINER_TYPES.has(type);
+      const position = getDropPosition(rect, e.clientY, isContainer);
+
+      setDragOverId(id);
+      setDragOverPosition(position);
+    },
+    [],
+  );
+
+  const handleDragLeave = useCallback((_e: DragEvent) => {
+    setDragOverId(null);
+    setDragOverPosition(null);
+  }, []);
+
+  const handleDrop = useCallback(
+    (e: DragEvent, targetId: string) => {
+      e.preventDefault();
+      const dragId = dragIdRef.current;
+      const position = dragOverPosition;
+
+      // 인디케이터 초기화
+      setDragOverId(null);
+      setDragOverPosition(null);
+      dragIdRef.current = null;
+
+      if (dragId && position) {
+        onDrop(dragId, targetId, position);
+      }
+    },
+    [dragOverPosition, onDrop],
+  );
+
+  /** Cmd/Ctrl+C/V 키보드 이벤트 처리 */
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent) => {
+      const isMeta = e.metaKey || e.ctrlKey;
+      if (!isMeta) return;
+
+      if (e.key === 'c' || e.key === 'C') {
+        e.stopPropagation();
+        if (selectedIds.length > 0) {
+          onCopy(selectedIds[0]!);
+        }
+      } else if (e.key === 'v' || e.key === 'V') {
+        e.stopPropagation();
+        onPaste();
+      }
+    },
+    [selectedIds, onCopy, onPaste],
+  );
+
+  const virtualRoot = wrapWithVirtualRoot(nodes);
 
   return (
-    <div class="outline-panel" data-testid="outline-panel">
-      <ul class="outline-panel__tree">
-        {nodes.map((node) => (
-          <OutlineNodeItem
-            key={node.id}
-            node={node}
-            selectedIds={selectedIds}
-            onSelect={onSelect}
-          />
-        ))}
+    <div
+      class="outline-panel"
+      data-testid="outline-panel"
+      tabIndex={0}
+      onKeyDown={handleKeyDown}
+    >
+      <ul class="outline-panel__tree" role="tree">
+        <OutlineNodeItem
+          key={VIRTUAL_ROOT_ID}
+          node={virtualRoot}
+          depth={0}
+          selectedIds={selectedIds}
+          onSelect={onSelect}
+          collapsedIds={collapsedIds}
+          onToggle={handleToggle}
+          isVirtualRoot={true}
+          dragOverId={dragOverId}
+          dragOverPosition={dragOverPosition}
+          onDragStart={handleDragStart}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+        />
       </ul>
     </div>
   );

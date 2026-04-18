@@ -1,0 +1,42 @@
+{
+  "name": "outline-component-selection",
+  "status": "[xx]",
+  "last": {
+    "event": "refactor.ok",
+    "at": "2026-04-18T00:37:16Z"
+  },
+  "phase_history": [
+    {
+      "event": "design.ok",
+      "from": "[ ]",
+      "to": "[dd]",
+      "at": "2026-04-18T00:27:23Z",
+      "elapsed_seconds": 0
+    },
+    {
+      "event": "build.ok",
+      "from": "[dd]",
+      "to": "[im]",
+      "at": "2026-04-18T00:31:04Z",
+      "elapsed_seconds": 221
+    },
+    {
+      "event": "test.ok",
+      "from": "[im]",
+      "to": "[ts]",
+      "at": "2026-04-18T00:34:25Z",
+      "elapsed_seconds": 201
+    },
+    {
+      "event": "refactor.ok",
+      "from": "[ts]",
+      "to": "[xx]",
+      "at": "2026-04-18T00:37:16Z",
+      "elapsed_seconds": 171
+    }
+  ],
+  "updated": "2026-04-18T00:37:16Z",
+  "started_at": "2026-04-18T00:27:23Z",
+  "completed_at": "2026-04-18T00:37:16Z",
+  "elapsed_seconds": 593
+}

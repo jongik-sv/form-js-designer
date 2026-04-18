@@ -8,6 +8,7 @@ export interface ModalSchema {
   triggerLabel?: string;
   size?: 'sm' | 'md' | 'lg';
   portalContainerRef?: string;
+  components?: Array<{ id: string } & Record<string, unknown>>;
   [key: string]: unknown;
 }
 

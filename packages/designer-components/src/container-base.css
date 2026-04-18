@@ -1,0 +1,21 @@
+/**
+ * container-base.css — designer-components 공용 컨테이너 기본 스타일
+ *
+ * .dc-container-body 를 사용하는 컨테이너의 body 요소(Card__body, Modal__body,
+ * Tabs__content 등)에 공통으로 적용되는 Carbon cds--grid 음수마진 중화 규칙.
+ *
+ * 이 규칙이 없으면 ChildrenSlot이 렌더하는 .cds--grid 의 기본 -16px 좌우
+ * 마진이 컨테이너 padding 경계를 벗어나 overflow를 일으킨다.
+ * 컨테이너 body 요소 범위만 타겟팅하여 글로벌 Carbon 그리드에 영향 없음.
+ */
+@layer components {
+  .dc-container-body .cds--grid {
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  .dc-container-body .cds--row {
+    margin-left: 0;
+    margin-right: 0;
+  }
+}

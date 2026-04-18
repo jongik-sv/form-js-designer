@@ -1,13 +1,20 @@
 import type { PropsSchema } from '@form-js-designer/designer-core';
+import type { TabPanelField } from '../tabPanel/propsSchema';
 
+// Legacy TabItem — kept for migration compatibility only
 export interface TabItem {
   label: string;
   value: string;
+  /** per-tab drop zone components (legacy Option B) */
+  components?: Array<{ id: string } & Record<string, unknown>>;
 }
 
 export interface TabsSchema {
   id: string;
   type: 'tabs';
+  /** New structure: child tabPanel fields */
+  components?: TabPanelField[];
+  /** Legacy field — present only in old schemas, removed after migration */
   tabs?: TabItem[];
   defaultValue?: string;
   orientation?: 'horizontal' | 'vertical';
@@ -16,15 +23,9 @@ export interface TabsSchema {
 
 export const tabsPropsSchema: PropsSchema = {
   properties: {
-    tabs: {
-      type: 'array',
-      label: 'designer.components.tabs.tabs',
-      default: [{ label: 'Tab 1', value: 'tab1' }],
-    },
     defaultValue: {
       type: 'string',
       label: 'designer.components.tabs.defaultValue',
-      default: 'tab1',
     },
     orientation: {
       type: 'enum',

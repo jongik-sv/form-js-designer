@@ -8,13 +8,27 @@
 import { h, render } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
 import { ViewerHost } from '@form-js-designer/designer-core/host';
+import { DesignerContainerModule } from '@form-js-designer/designer-core';
+import { DesignerComponentsModule } from '@form-js-designer/designer-components';
+import { DesignerTableModule } from '@form-js-designer/designer-table';
 import { createStaticSource, bootWithSchema, MemoryStorage } from '../../src/index';
 import type { FormSchema } from '../../src/index';
 import type { BootResult } from '../../src/boot/bootTypes';
 
+// form-js base/viewer CSS는 npm에서 번들하여 CDN ORB 회피
+import '@bpmn-io/form-js-viewer/dist/assets/form-js-base.css';
+import '@bpmn-io/form-js-viewer/dist/assets/form-js.css';
+
 // 정적 import — 빌드 타임 번들 포함
 import schemaJson from './page.schema.json';
 import manifestJson from './manifest.json';
+
+// ViewerHost에 주입할 additionalModules — card/stack/tabs/modal/table 등 커스텀 타입 지원
+const VIEWER_MODULES: unknown[] = [
+  DesignerContainerModule,
+  DesignerComponentsModule,
+  DesignerTableModule,
+];
 
 // 간단한 테스트용 registry mock (card/textfield/button 등록)
 const mockRegistry = {
@@ -63,7 +77,7 @@ function App() {
 
   return (
     <div data-testid="viewer-container">
-      <ViewerHost schema={bootResult.schema} />
+      <ViewerHost schema={bootResult.schema} additionalModules={VIEWER_MODULES} />
     </div>
   );
 }

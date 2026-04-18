@@ -42,6 +42,7 @@
     position: relative;
   }
 
+  .editor-container .fjs-container,
   .editor-container .fjs-editor-container {
     height: 100%;
   }
@@ -80,7 +81,7 @@
 
   .side-panel--empty {
     padding: 16px 12px;
-    color: #595959;
+    color: #999;
     font-size: 13px;
   }
 
@@ -181,7 +182,7 @@
   }
 
   .validation-badge--idle {
-    color: #595959;
+    color: #999;
   }
 
   /* PropsPanel */
@@ -191,7 +192,7 @@
 
   .props-panel--empty {
     padding: 16px 12px;
-    color: #595959;
+    color: #999;
     font-size: 13px;
   }
 
@@ -244,12 +245,6 @@
     padding: 4px 0;
   }
 
-  .outline-panel--empty {
-    padding: 16px 12px;
-    color: #595959;
-    font-size: 13px;
-  }
-
   .outline-panel__tree {
     list-style: none;
     margin: 0;
@@ -298,5 +293,107 @@
     list-style: none;
     margin: 0;
     padding: 0 0 0 16px;
+  }
+
+  /* Outline tree lines */
+
+  :root {
+    --tree-line-color: #d0d0d0;
+    --tree-line-x: 8px;
+  }
+
+  .outline-node-row {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    min-height: 24px;
+  }
+
+  .outline-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    color: #555;
+    font-size: 11px;
+    border-radius: 3px;
+    transition: background 0.1s;
+  }
+
+  .outline-toggle:hover {
+    background: #e0e0e0;
+  }
+
+  .outline-toggle:focus-visible {
+    outline: 2px solid #3b82f6;
+    outline-offset: 1px;
+  }
+
+  .outline-toggle-spacer {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+  }
+
+  .outline-node__children > li {
+    position: relative;
+  }
+
+  .outline-node__children > li::before {
+    content: '';
+    position: absolute;
+    left: var(--tree-line-x);
+    top: 0;
+    height: 12px;
+    width: var(--tree-line-x);
+    border-left: 1px solid var(--tree-line-color);
+    border-bottom: 1px solid var(--tree-line-color);
+  }
+
+  .outline-node__children > li:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    left: var(--tree-line-x);
+    top: 12px;
+    bottom: 0;
+    border-left: 1px solid var(--tree-line-color);
+  }
+
+  /* ── Outline DnD 드래그 인디케이터 ─────────────────────────────────── */
+
+  /* 드래그 중인 노드 */
+  .outline-node--dragging {
+    opacity: 0.5;
+    cursor: grabbing;
+  }
+
+  /* 드롭 대상: 위에 삽입 (before) */
+  .outline-drop-indicator--before {
+    border-top: 2px solid #3b82f6;
+  }
+
+  /* 드롭 대상: 아래에 삽입 (after) */
+  .outline-drop-indicator--after {
+    border-bottom: 2px solid #3b82f6;
+  }
+
+  /* 드롭 대상: 컨테이너 내부 삽입 (inside) */
+  .outline-drop-indicator--inside {
+    outline: 2px solid #3b82f6;
+    outline-offset: -2px;
+    border-radius: 3px;
+    background: rgba(59, 130, 246, 0.08);
+  }
+
+  /* 드래그 오버 중 노드 */
+  .outline-node--drag-over {
+    background: rgba(59, 130, 246, 0.06);
   }
 }

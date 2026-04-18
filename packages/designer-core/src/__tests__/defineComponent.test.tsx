@@ -236,4 +236,25 @@ describe('defineComponent', () => {
       warnSpy.mockRestore();
     }
   });
+
+  // -------------------------------------------------------------------------
+  // TSK-03-02 QA #15: defineComponent emits console.warn (dev only) when
+  // propsSchema fails Ajv meta-schema validation. Never throws.
+  // -------------------------------------------------------------------------
+  it('emits console.warn on invalid propsSchema in non-production env (no throw)', () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    const badDef: ComponentDefinition<CardField> = {
+      ...makeMinimalDef(),
+      // `bogus` is not in the meta-schema type enum → Ajv should fail
+      propsSchema: { properties: { a: { type: 'bogus' as never } } },
+    };
+
+    expect(() => defineComponent(badDef)).not.toThrow();
+
+    const propsSchemaWarn = warnSpy.mock.calls.find((call) =>
+      typeof call[0] === 'string' && call[0].includes('propsSchema is invalid'),
+    );
+    expect(propsSchemaWarn).toBeDefined();
+  });
 });

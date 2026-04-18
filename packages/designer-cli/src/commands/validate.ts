@@ -53,6 +53,61 @@ interface ValidationResult {
   errors: string[];
 }
 
+/** 코드 기반 에러 — AI Skill fixture 테스트 계약 (TSK-09-01 AC #2). */
+export interface ValidateError {
+  code: 'INVALID_SCHEMA_VERSION' | 'MISSING_COMPONENTS' | 'UNKNOWN_COMPONENT_TYPE' | 'STRUCTURE_ERROR';
+  message: string;
+  path?: string;
+}
+
+export interface ValidatePureResult {
+  ok: boolean;
+  errors: ValidateError[];
+}
+
+/**
+ * 순수함수 validate — 파싱된 schema 객체를 받아 structured error 목록을 반환한다.
+ * CLI subprocess 없이 AI 산출 JSON의 계약 검증에 사용 (TSK-09-01).
+ */
+export function validate({ schema }: { schema: unknown }): ValidatePureResult {
+  const errors: ValidateError[] = [];
+  const s = schema as Record<string, unknown>;
+
+  if (s['schemaVersion'] !== 19) {
+    errors.push({
+      code: 'INVALID_SCHEMA_VERSION',
+      message: `schemaVersion must be 19 (got ${JSON.stringify(s['schemaVersion'])})`,
+    });
+  }
+
+  if (!Array.isArray(s['components'])) {
+    errors.push({ code: 'MISSING_COMPONENTS', message: 'components array is required' });
+    return { ok: false, errors };
+  }
+
+  const registry = getCLIRegistry();
+  const walk = (comps: unknown[], pathPrefix: string): void => {
+    comps.forEach((c, i) => {
+      const comp = c as Record<string, unknown>;
+      const t = comp['type'];
+      const p = `${pathPrefix}[${i}]`;
+      if (typeof t === 'string' && !registry.has(t)) {
+        errors.push({
+          code: 'UNKNOWN_COMPONENT_TYPE',
+          message: `unknown component type "${t}"`,
+          path: p,
+        });
+      }
+      if (Array.isArray(comp['components'])) {
+        walk(comp['components'] as unknown[], `${p}.components`);
+      }
+    });
+  };
+  walk(s['components'] as unknown[], 'components');
+
+  return { ok: errors.length === 0, errors };
+}
+
 /**
  * Ajv 에러 목록을 사람이 읽기 쉬운 문자열 배열로 변환한다.
  */

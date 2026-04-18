@@ -43,9 +43,11 @@ import { defineComponent, useT } from '@form-js-designer/designer-core';
 import type { PureRenderProps } from '@form-js-designer/designer-core';
 
 import type { TableSchema, ColumnDef as TRDColumnDef, TableFeatures } from './types';
+import { DEFAULT_COLUMNS, DEMO_ROWS, shouldUseDemoData } from './demoData';
 import { columnDefToTanstack } from './columnDefToTanstack';
 import { useStableTableState } from './useStableTableState';
 import { tablePropsSchema } from './propsSchema';
+import { TableIcon } from './TableIcon';
 
 import { useCellEdit } from './cells/useCellEdit';
 import type { CellEditAPI } from './cells/useCellEdit';
@@ -112,8 +114,6 @@ function findColumnDef(cols: TRDColumnDef[], id: string): TRDColumnDef | undefin
   }
   return undefined;
 }
-
-// filterFns은 columnDefToTanstack에서 컬럼별로 직접 함수 주입 (string key 불필요)
 
 // ===== VirtualizedBody — useRowVirtualizer를 격리하는 서브 컴포넌트 =====
 // hooks 조건부 호출 금지 규칙 준수: features.virtualization=true일 때만 마운트
@@ -367,7 +367,8 @@ function TableRender(allProps: PureRenderProps<TableField> & { onChange?: unknow
   const field = allProps.field;
   const value = allProps.value;
   const onChange = allProps.onChange as TableOnChange;
-  const data = Array.isArray(value) ? value : [];
+  const rawData = Array.isArray(value) ? value : [];
+  const data = rawData.length === 0 && shouldUseDemoData(field.columns ?? []) ? DEMO_ROWS : rawData;
   const features = field.features ?? {};
 
   // features.editing → editEnabled rename (assertPureRender \bediting\b 경고 회피)
@@ -408,12 +409,15 @@ function TableRender(allProps: PureRenderProps<TableField> & { onChange?: unknow
 
 export const TableComponent = defineComponent<TableField>({
   type: 'table',
-  name: 'Table',
+  name: '테이블',
+  // form-js Palette 에는 고정 5그룹(basic-input, selection, presentation, container, action)만
+  // 존재한다. Table 은 데이터 프레젠테이션 성격이 강하므로 'presentation' 그룹에 배치한다.
   group: 'presentation',
+  icon: TableIcon,
   propsSchema: tablePropsSchema,
   create: (options?: Record<string, unknown>) => ({
     type: 'table' as const,
-    columns: [],
+    columns: [...DEFAULT_COLUMNS],
     data: '',
     features: {},
     ...options,

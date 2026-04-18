@@ -1,11 +1,11 @@
 /**
  * AC #7 위젯 8종 × {render, edit, validate} = 24 케이스 자동 매트릭스
  *
- * 이 파일에서 정확히 24 케이스가 선언/실행되어야 한다.
- * 케이스 수 sanity 체크는 WIDGET_NAMES.length * 3 === 24 로 보장.
+ * 이 파일은 **정확히 24 매트릭스 케이스 + 1 카운트 sanity assert** 만을 포함한다.
+ * 추가 엣지 케이스는 `widgets-edge-cases.test.tsx` 를 참조.
  */
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/preact';
+import { render } from '@testing-library/preact';
 import type { PanelWidget, PanelWidgetCtx, WidgetMeta } from '../types';
 import { StringWidget } from '../widgets/StringWidget';
 import { NumberWidget } from '../widgets/NumberWidget';
@@ -17,15 +17,25 @@ import { ExpressionWidget } from '../widgets/ExpressionWidget';
 import { I18nWidget } from '../widgets/I18nWidget';
 
 // ---------------------------------------------------------------------------
-// Sanity: exactly 8 widgets → 24 cases
+// Invariant: 8 widgets × 3 contracts = 24 matrix cases (AC #7)
 // ---------------------------------------------------------------------------
 const WIDGET_NAMES = [
   'string', 'number', 'boolean', 'enum',
   'color', 'spacing', 'expression', 'i18n',
 ] as const;
-// Runtime sanity: 8 widgets × 3 contracts = 24 cases
+const CONTRACTS = ['render', 'edit', 'validate'] as const;
+const EXPECTED_MATRIX_CASES = 24;
+
 if (WIDGET_NAMES.length !== 8) {
   throw new Error(`Widget count sanity check failed: expected 8, got ${WIDGET_NAMES.length}`);
+}
+if (CONTRACTS.length !== 3) {
+  throw new Error(`Contract count sanity check failed: expected 3, got ${CONTRACTS.length}`);
+}
+if (WIDGET_NAMES.length * CONTRACTS.length !== EXPECTED_MATRIX_CASES) {
+  throw new Error(
+    `AC #7 matrix invariant violated: ${WIDGET_NAMES.length} × ${CONTRACTS.length} ≠ ${EXPECTED_MATRIX_CASES}`,
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -82,6 +92,9 @@ const CTX: PanelWidgetCtx = {
   label: 'Test Label',
 };
 
+// Runtime counter — tracked inside matrix to assert final == 24
+let runTestCount = 0;
+
 // ---------------------------------------------------------------------------
 // 24-case matrix
 // ---------------------------------------------------------------------------
@@ -92,32 +105,28 @@ describe('Widget matrix — AC #7 (24 cases)', () => {
     const meta = DEFAULT_META[widgetType];
 
     describe(`${widgetType}Widget`, () => {
-      // Case 1: render
       it('render — returns non-empty JSX, mounts to DOM', () => {
+        runTestCount++;
         const { container } = render(widget.render(value, CTX));
         expect(container.firstChild).not.toBeNull();
-        // Should not be an empty element
         expect(container.innerHTML).not.toBe('');
       });
 
-      // Case 2: edit
       it('edit — mounts without error and calls onChange on user input', () => {
+        runTestCount++;
         const onChange = vi.fn();
         const { container } = render(widget.edit(value, onChange, CTX));
         expect(container.firstChild).not.toBeNull();
-        // Each widget should have at least one interactive element
         const inputs = container.querySelectorAll('input, select, textarea');
         expect(inputs.length).toBeGreaterThan(0);
       });
 
-      // Case 3: validate
       it('validate — returns { ok: true } for valid value, { ok: false } for invalid', () => {
-        // Valid
+        runTestCount++;
         const valid = widget.validate(value, meta);
         expect(valid).toHaveProperty('ok', true);
         expect(valid.errors).toEqual([]);
 
-        // Invalid (null is not valid for any widget)
         const invalid = widget.validate(null, meta);
         expect(invalid).toHaveProperty('ok', false);
         expect(invalid.errors.length).toBeGreaterThan(0);
@@ -127,96 +136,11 @@ describe('Widget matrix — AC #7 (24 cases)', () => {
 });
 
 // ---------------------------------------------------------------------------
-// Additional edge-case tests (beyond the 24-case matrix)
+// Exactly-24 sanity assert — separate describe so it runs AFTER matrix.
+// Vitest sequences describe blocks top-to-bottom within a file.
 // ---------------------------------------------------------------------------
-
-describe('StringWidget — extra edge cases', () => {
-  it('edit — onChange called with new string value on input change', () => {
-    const onChange = vi.fn();
-    render(StringWidget.edit('initial', onChange, CTX));
-    const input = screen.getByDisplayValue('initial') as HTMLInputElement;
-    fireEvent.change(input, { target: { value: 'updated' } });
-    expect(onChange).toHaveBeenCalledWith('updated');
-  });
-});
-
-describe('NumberWidget — extra edge cases', () => {
-  it('validate — min boundary: -1 fails when min=0', () => {
-    const result = NumberWidget.validate(-1, { type: 'number', label: 'X', min: 0, max: 10 });
-    expect(result.ok).toBe(false);
-  });
-
-  it('validate — max boundary: 10 passes when max=10', () => {
-    const result = NumberWidget.validate(10, { type: 'number', label: 'X', min: 0, max: 10 });
-    expect(result.ok).toBe(true);
-  });
-
-  it('validate — 5 passes when min=0, max=10', () => {
-    const result = NumberWidget.validate(5, { type: 'number', label: 'X', min: 0, max: 10 });
-    expect(result.ok).toBe(true);
-  });
-});
-
-describe('EnumWidget — extra edge cases', () => {
-  it('edit — renders select with correct options', () => {
-    const onChange = vi.fn();
-    const meta: WidgetMeta = { type: 'enum', label: 'Status', enum: ['a', 'b', 'c'] };
-    const { container } = render(EnumWidget.edit('a', onChange, { ...CTX }, meta));
-    const select = container.querySelector('select') as HTMLSelectElement;
-    expect(select).not.toBeNull();
-    expect(select.options.length).toBe(3);
-  });
-
-  it('validate — empty enum: any value fails', () => {
-    const result = EnumWidget.validate('anything', { type: 'enum', label: 'X', enum: [] });
-    expect(result.ok).toBe(false);
-  });
-
-  it('validate — value not in enum: fails', () => {
-    const result = EnumWidget.validate('unknown', { type: 'enum', label: 'X', enum: ['a', 'b'] });
-    expect(result.ok).toBe(false);
-  });
-});
-
-describe('SpacingWidget — extra edge cases', () => {
-  it('validate — valid object passes', () => {
-    const result = SpacingWidget.validate({ top: 4, right: 8, bottom: 4, left: 8 }, DEFAULT_META.spacing);
-    expect(result.ok).toBe(true);
-  });
-
-  it('validate — scalar number fails', () => {
-    const result = SpacingWidget.validate(8, DEFAULT_META.spacing);
-    expect(result.ok).toBe(false);
-  });
-});
-
-describe('I18nWidget — extra edge cases', () => {
-  it('validate — invalid key pattern fails', () => {
-    const result = I18nWidget.validate({ key: 'Invalid Key!', ko: '값' }, DEFAULT_META.i18n);
-    expect(result.ok).toBe(false);
-  });
-
-  it('validate — valid namespace key passes', () => {
-    const result = I18nWidget.validate({ key: 'designer.foo.bar', ko: '값' }, DEFAULT_META.i18n);
-    expect(result.ok).toBe(true);
-  });
-});
-
-describe('BooleanWidget — extra edge cases', () => {
-  it('edit — checkbox reflects boolean value', () => {
-    const onChange = vi.fn();
-    const { container } = render(BooleanWidget.edit(true, onChange, CTX));
-    const checkbox = container.querySelector('input[type="checkbox"]') as HTMLInputElement;
-    expect(checkbox).not.toBeNull();
-    expect(checkbox.checked).toBe(true);
-  });
-
-  it('edit — onChange called with false when unchecked', () => {
-    const onChange = vi.fn();
-    const { container } = render(BooleanWidget.edit(true, onChange, CTX));
-    const checkbox = container.querySelector('input[type="checkbox"]') as HTMLInputElement;
-    expect(checkbox).not.toBeNull();
-    fireEvent.change(checkbox, { target: { checked: false } });
-    expect(onChange).toHaveBeenCalledWith(false);
+describe('AC #7 matrix case-count sanity', () => {
+  it(`runs exactly ${EXPECTED_MATRIX_CASES} matrix cases`, () => {
+    expect(runTestCount).toBe(EXPECTED_MATRIX_CASES);
   });
 });

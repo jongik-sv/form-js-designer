@@ -1,0 +1,42 @@
+{
+  "name": "table-form-js-defaults",
+  "status": "[xx]",
+  "last": {
+    "event": "refactor.ok",
+    "at": "2026-04-18T07:24:02Z"
+  },
+  "phase_history": [
+    {
+      "event": "design.ok",
+      "from": "[ ]",
+      "to": "[dd]",
+      "at": "2026-04-18T07:12:55Z",
+      "elapsed_seconds": 0
+    },
+    {
+      "event": "build.ok",
+      "from": "[dd]",
+      "to": "[im]",
+      "at": "2026-04-18T07:18:23Z",
+      "elapsed_seconds": 328
+    },
+    {
+      "event": "test.ok",
+      "from": "[im]",
+      "to": "[ts]",
+      "at": "2026-04-18T07:21:34Z",
+      "elapsed_seconds": 191
+    },
+    {
+      "event": "refactor.ok",
+      "from": "[ts]",
+      "to": "[xx]",
+      "at": "2026-04-18T07:24:02Z",
+      "elapsed_seconds": 148
+    }
+  ],
+  "updated": "2026-04-18T07:24:02Z",
+  "started_at": "2026-04-18T07:12:55Z",
+  "completed_at": "2026-04-18T07:24:02Z",
+  "elapsed_seconds": 667
+}

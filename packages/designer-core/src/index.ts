@@ -2,6 +2,7 @@ export { defineComponent } from './defineComponent';
 export type {
   ReadonlyDeep,
   FieldSchema,
+  ContainerField,
   PureRenderProps,
   PropsSchema,
   RenderFn,
@@ -47,3 +48,6 @@ export type { LocaleT, LocaleContextValue, LocaleKey } from './i18n/localeTypes'
 // Validate module — TSK-06-02 (PRD §4 AC #3, #4)
 export { validateFormSchema } from './validate/validateSchema';
 export type { ValidationResult, ValidationError, ValidationWarning } from './validate/types';
+
+// container module — custom container 필드용 children drop-zone 슬롯 + FormLayouter override + 중첩 자식 자동 등록
+export { ChildrenSlot, DesignerFormLayouter, DesignerContainerModule, NestedFieldRegistrar } from './container/index';

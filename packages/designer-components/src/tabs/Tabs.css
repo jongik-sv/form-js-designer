@@ -82,11 +82,12 @@
     border-right-color: #3b82f6;
   }
 
-  /* Tab Content */
+  /* Tab Content — dc-container-body 공용 클래스와 조합하여 cds--grid 음수마진 중화 (container-base.css) */
   .dc-tabs__content {
     padding: 16px;
     flex: 1;
     outline: none;
+    overflow: hidden;
   }
 
   .dc-tabs__content:focus-visible {

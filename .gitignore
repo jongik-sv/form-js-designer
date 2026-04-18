@@ -24,3 +24,7 @@ packages/*/spike/*/tests/artifacts/
 .idea/
 .vscode/*
 !.vscode/settings.json.example
+
+# Claude Code runtime artifacts
+.claude/scheduled_tasks.lock
+.claude/worktrees/

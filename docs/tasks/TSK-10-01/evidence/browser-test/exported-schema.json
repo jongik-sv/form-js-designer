@@ -1,0 +1,39 @@
+{
+  "components": [
+    {
+      "type": "table",
+      "columns": [
+        {
+          "id": "id",
+          "header": "ID",
+          "accessor": "id",
+          "type": "text"
+        },
+        {
+          "id": "name",
+          "header": "Name",
+          "accessor": "name",
+          "type": "text"
+        },
+        {
+          "id": "date",
+          "header": "Date",
+          "accessor": "date",
+          "type": "text"
+        }
+      ],
+      "data": "",
+      "features": {},
+      "layout": {
+        "row": "Row_1mxk1aa",
+        "columns": null
+      },
+      "id": "Field_0ajo3at",
+      "dataSource": "=Field_0ajo3at",
+      "label": "AC매트릭스 검증 테이블"
+    }
+  ],
+  "type": "default",
+  "id": "Form_0iah2ug",
+  "schemaVersion": 19
+}

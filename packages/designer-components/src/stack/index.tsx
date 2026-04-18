@@ -1,10 +1,11 @@
 import { h } from 'preact';
 import { cva } from 'class-variance-authority';
 import { twMerge } from 'tailwind-merge';
-import { defineComponent } from '@form-js-designer/designer-core';
-import type { PureRenderProps } from '@form-js-designer/designer-core';
+import { defineComponent, ChildrenSlot } from '@form-js-designer/designer-core';
+import type { PureRenderProps, ContainerField } from '@form-js-designer/designer-core';
 import type { StackSchema, StackGap } from './propsSchema';
 import { stackPropsSchema } from './propsSchema';
+import { StackIcon } from '../icons';
 import './Stack.css';
 
 void h;
@@ -62,29 +63,33 @@ function StackRender(props: PureRenderProps<StackSchema>) {
 
   return (
     <div
-      class={className}
+      class={`${className} dc-container-body`}
       data-component="stack"
       id={props.domId}
       data-direction={direction}
       data-gap={gap}
       data-align={align}
       data-justify={justify}
-    />
+    >
+      <ChildrenSlot field={field as unknown as ContainerField} />
+    </div>
   );
 }
 
 export const StackComponent = defineComponent<StackSchema>({
   type: 'stack',
-  name: 'designer.components.stack.name',
+  name: '스택',
   group: 'container',
+  icon: StackIcon,
   keyed: false,
   pathed: false,
-  escapeGridRender: true,
+  escapeGridRender: false,
   propsSchema: stackPropsSchema,
   create: (options = {}) => ({
     type: 'stack',
     direction: 'vertical',
     gap: 0,
+    components: [],
     ...options,
   }),
   render: StackRender,

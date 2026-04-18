@@ -10,9 +10,10 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { validate } from '../src/commands/validate';
+import { validate } from '../validate';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
+const FIXTURES_ROOT = resolve(__dirname, '..', '..', '..', 'e2e', 'fixtures');
 
 /** i18n 체크 대상 prop 이름 목록 (SKILL.md §4) */
 const I18N_PROPS = ['header', 'title', 'description', 'triggerLabel', 'label'] as const;
@@ -20,7 +21,7 @@ const I18N_PROPS = ['header', 'title', 'description', 'triggerLabel', 'label'] a
 const I18N_PATTERN = /^(designer\.[a-z.]+|)$/;
 
 function loadFixture(dir: 'valid' | 'invalid', name: string): Record<string, unknown> {
-  const filePath = resolve(__dirname, 'fixtures', dir, `${name}.schema.json`);
+  const filePath = resolve(FIXTURES_ROOT, dir, `${name}.schema.json`);
   return JSON.parse(readFileSync(filePath, 'utf-8')) as Record<string, unknown>;
 }
 
