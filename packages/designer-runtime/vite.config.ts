@@ -17,13 +17,17 @@ export default defineConfig({
       preact: PREACT,
       'react-dom': path.join(PREACT, 'compat'),
       react: path.join(PREACT, 'compat'),
-      '@form-js-designer/designer-core': path.resolve(
+      '@form-js-designer/designer-core/host': path.resolve(
         __dirname,
-        '../designer-core/src/index.ts',
+        '../designer-core/src/host/index.ts',
       ),
       '@form-js-designer/designer-core/validate': path.resolve(
         __dirname,
         '../designer-core/src/validate/index.ts',
+      ),
+      '@form-js-designer/designer-core': path.resolve(
+        __dirname,
+        '../designer-core/src/index.ts',
       ),
     },
   },

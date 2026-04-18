@@ -38,7 +38,6 @@ describe('createStaticSource', () => {
     const manifest: StaticManifest = { schemaHash: hash, version: 1 };
     const source = createStaticSource(sampleSchema, manifest);
     const result = await source.load();
-    expect(result.ok ?? true).toBeTruthy(); // no ok field on LoadResult
     expect(result.schema).toBe(sampleSchema);
     expect(result.etag).toBe(hash);
     expect(result.source).toBe('static');

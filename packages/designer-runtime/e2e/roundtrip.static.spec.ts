@@ -10,7 +10,9 @@
 import { test, expect } from '@playwright/test';
 import path from 'path';
 import fs from 'fs';
+import { fileURLToPath } from 'url';
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const BASELINE_PATH = path.join(__dirname, 'fixtures', 'baseline-static.png');
 
 test.describe('roundtrip.static — 정적 채널 ViewerHost 렌더', () => {

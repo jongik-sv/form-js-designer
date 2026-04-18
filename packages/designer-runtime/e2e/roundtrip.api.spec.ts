@@ -13,8 +13,10 @@ import path from 'path';
 import fs from 'fs';
 import { PNG } from 'pngjs';
 import pixelmatch from 'pixelmatch';
+import { fileURLToPath } from 'url';
 import { demoSchema } from './fixtures/schema';
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const BASELINE_PATH = path.join(__dirname, 'fixtures', 'baseline-static.png');
 const API_SCREENSHOT_PATH = path.join(__dirname, 'fixtures', 'baseline-api.png');
 

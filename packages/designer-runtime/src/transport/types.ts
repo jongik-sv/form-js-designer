@@ -62,7 +62,7 @@ export type ChannelErrorCode =
 
 export class ChannelError extends Error {
   readonly code: ChannelErrorCode;
-  readonly cause?: unknown;
+  override readonly cause?: unknown;
 
   constructor(code: ChannelErrorCode, message?: string, cause?: unknown) {
     super(message ?? code);

@@ -229,11 +229,7 @@ describe('createApiLoader', () => {
     expect(url).toContain('?env=prod');
   });
 
-  it('(엣지) storage 주입을 MemoryStorage로 교체하면 localStorage를 전혀 접근하지 않는다', async () => {
-    const localStorageSpy = vi.spyOn(
-      { getItem: vi.fn(), setItem: vi.fn(), removeItem: vi.fn() },
-      'getItem',
-    );
+  it('(엣지) storage 주입 시 MemoryStorage를 사용하고 호출이 정상 작동한다', async () => {
     const fetchMock = vi.fn().mockResolvedValue(makeResponse(200, sampleSchema, { ETag: 'v1' }));
 
     const loader = createApiLoader({
@@ -243,9 +239,12 @@ describe('createApiLoader', () => {
       storage, // MemoryStorage 주입
     });
 
-    await loader.load();
-    // localStorageSpy가 호출되지 않았음 (주입된 MemoryStorage 사용)
-    expect(localStorageSpy).not.toHaveBeenCalled();
+    const result = await loader.load();
+    // MemoryStorage가 올바르게 동작하고 schema가 저장됨을 확인
+    expect(result.schema).toEqual(sampleSchema);
+    expect(result.source).toBe('network');
+    const stored = storage.getItem(`designer.api.schema.${SCHEMA_ID}`);
+    expect(stored).toBeTruthy();
   });
 
   it('(엣지) 잘못된 JSON 응답 시 parse_error → fallback 경로 (캐시 있을 때)', async () => {
