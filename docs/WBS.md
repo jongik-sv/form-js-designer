@@ -499,7 +499,7 @@ node, vitest, vite, playwright
 - category: development
 - domain: cli
 - model: sonnet
-- status: [ ]
+- status: [xx]
 - priority: critical
 - assignee: -
 - schedule: 2026-05-18 ~ 2026-05-22
@@ -518,7 +518,7 @@ node, vitest, vite, playwright
 - category: development
 - domain: cli
 - model: opus
-- status: [ ]
+- status: [xx]
 - priority: critical
 - assignee: -
 - schedule: 2026-05-22 ~ 2026-05-29

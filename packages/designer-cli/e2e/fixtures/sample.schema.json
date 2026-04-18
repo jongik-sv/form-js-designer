@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 19,
+  "components": [
+    {
+      "type": "textfield",
+      "key": "name",
+      "label": "이름"
+    },
+    {
+      "type": "textfield",
+      "key": "email",
+      "label": "이메일"
+    },
+    {
+      "type": "checkbox",
+      "key": "agree",
+      "label": "동의합니다"
+    },
+    {
+      "type": "button",
+      "key": "submit",
+      "label": "제출"
+    }
+  ],
+  "id": "roundtrip-sample"
+}
