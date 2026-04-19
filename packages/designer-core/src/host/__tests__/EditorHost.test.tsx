@@ -195,7 +195,7 @@ describe('EditorHost', () => {
       field.click();
     });
 
-    expect(onSelect).toHaveBeenCalledWith('field-abc');
+    expect(onSelect).toHaveBeenCalledWith('field-abc', undefined);
   });
 
   // 7. unmount 시 overlay-root cleanup

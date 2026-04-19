@@ -1,14 +1,17 @@
 /**
- * PropsPanelService — TSK-06-02
+ * PropsPanelService — TSK-06-02, TSK-12-02
  *
  * DI 주입: eventBus, formFieldRegistry, propertiesPanel, modeling
  * propertiesPanel.registerProvider(500, this) 로 자신을 등록하고
  * getGroups(field) 에서 propsSchemaToPanel + panelEntryAdapter 를 통해
  * form-js 패널 entry 배열을 반환한다.
+ *
+ * TSK-12-02: 대상 컴포넌트에 "Layout" 가상 그룹(layout.height 숫자 입력) 추가.
  */
 
 import { propsSchemaToPanel, createDefaultRegistry } from '@form-js-designer/designer-core';
 import type { PanelWidgetRegistry } from '@form-js-designer/designer-core';
+import { LAYOUT_HEIGHT_TARGET_TYPES } from '@form-js-designer/designer-runtime';
 import { panelEntryAdapter } from './panelEntryAdapter';
 import type { FormJsPanelEntry } from './panelEntryAdapter';
 
@@ -32,6 +35,8 @@ interface PropertiesPanelLike {
 
 interface ModelingLike {
   editFormField(field: unknown, props: Record<string, unknown>): void;
+  editFormField(field: unknown, key: string, value: unknown): void;
+  editFormField(field: unknown, propsOrKey: Record<string, unknown> | string, value?: unknown): void;
 }
 
 export interface PropsGroup {
@@ -82,41 +87,88 @@ export class PropsPanelService {
   getGroups(field: { type: string; id?: string } | null): PropsGroup[] {
     if (!field) return [];
 
+    const groups: PropsGroup[] = [];
+
     // 타입 레지스트리에서 컴포넌트 조회 (defineComponent → formFields.register)
     const definition = this.formFields.get(field.type);
-    if (!definition) return [];
 
-    const propsSchema = (definition.config?.propsSchema ?? definition.propsSchema) as
-      | Parameters<typeof propsSchemaToPanel>[0]
-      | undefined;
-    if (!propsSchema) return [];
+    if (definition) {
+      const propsSchema = (definition.config?.propsSchema ?? definition.propsSchema) as
+        | Parameters<typeof propsSchemaToPanel>[0]
+        | undefined;
 
-    let entries: ReturnType<typeof propsSchemaToPanel> = [];
-    try {
-      entries = propsSchemaToPanel(propsSchema, this.widgetRegistry);
-    } catch (err) {
-      console.warn('[PropsPanelService] propsSchemaToPanel 실패:', err);
-      return [];
+      if (propsSchema) {
+        let entries: ReturnType<typeof propsSchemaToPanel> = [];
+        try {
+          entries = propsSchemaToPanel(propsSchema, this.widgetRegistry);
+        } catch (err) {
+          console.warn('[PropsPanelService] propsSchemaToPanel 실패:', err);
+        }
+
+        if (entries.length > 0) {
+          // Fallback 번역 함수 — WP-07 LocaleProvider 통합 전까지 key를 그대로 반환
+          const identityT = (key: string) => key;
+          const ctx = {
+            field: field as unknown as Record<string, unknown>,
+            modeling: this.modeling,
+            t: identityT,
+          };
+
+          const panelEntries = entries.map((entry) => panelEntryAdapter(entry, ctx));
+          groups.push({
+            id: 'designer-props',
+            label: 'Properties',
+            entries: panelEntries,
+          });
+        }
+      }
     }
 
-    if (entries.length === 0) return [];
+    // TSK-12-02: 대상 타입에 Layout 그룹 추가 (propsSchema/entries 여부와 무관)
+    if ((LAYOUT_HEIGHT_TARGET_TYPES as readonly string[]).includes(field.type)) {
+      groups.push(this._buildLayoutGroup(field as Record<string, unknown>));
+    }
 
-    // Fallback 번역 함수 — WP-07 LocaleProvider 통합 전까지 key를 그대로 반환
-    const identityT = (key: string) => key;
-    const ctx = {
-      field: field as unknown as Record<string, unknown>,
-      modeling: this.modeling,
-      t: identityT,
+    return groups;
+  }
+
+  /**
+   * 대상 컴포넌트용 Layout 가상 그룹을 생성한다.
+   * layout.height 숫자 입력 엔트리 1개를 포함한다.
+   */
+  private _buildLayoutGroup(field: Record<string, unknown>): PropsGroup {
+    const { modeling } = this;
+    const heightEntry: FormJsPanelEntry = {
+      id: 'props-entry-layout.height',
+      key: 'layout.height',
+      label: '높이(px)',
+      component: (props: Record<string, unknown>) => {
+        const layout = (field['layout'] ?? {}) as Record<string, unknown>;
+        const currentValue = props['value'] !== undefined ? props['value'] : (layout['height'] ?? undefined);
+        const onChange = (v: unknown) => {
+          const numVal = v === '' || v === null || v === undefined ? undefined : Number(v);
+          modeling.editFormField(field, 'layout', { ...layout, height: numVal });
+        };
+        // 숫자 입력 DOM 요소 반환 (preact h)
+        // PropsPanelContainer는 entries를 직접 렌더하므로 컴포넌트 팩토리 구조를 유지
+        return { type: 'number-input', value: currentValue, onChange, min: 36, max: 2000 };
+      },
+      isEdited: (_node: unknown) => {
+        const layout = (field['layout'] ?? {}) as Record<string, unknown>;
+        return layout['height'] != null;
+      },
+      set: (value: unknown) => {
+        const layout = (field['layout'] ?? {}) as Record<string, unknown>;
+        const numVal = value === '' || value === null || value === undefined ? undefined : Number(value);
+        modeling.editFormField(field, 'layout', { ...layout, height: numVal });
+      },
+      element: field,
     };
 
-    const panelEntries = entries.map((entry) => panelEntryAdapter(entry, ctx));
-
-    return [
-      {
-        id: 'designer-props',
-        label: 'Properties',
-        entries: panelEntries,
-      },
-    ];
+    return {
+      id: 'designer-layout',
+      label: 'Layout',
+      entries: [heightEntry],
+    };
   }
 }

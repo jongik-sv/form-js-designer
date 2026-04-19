@@ -10,6 +10,17 @@ export interface FieldSchema {
   [key: string]: unknown;
 }
 
+/**
+ * form-js layout 객체 (existing keys: row, columns + TSK-12-02: height)
+ * form-js viewer는 unknown layout 키를 무시하므로 하위 호환.
+ */
+export interface FormFieldLayout {
+  row?: number;
+  columns?: number;
+  /** 컴포넌트 높이 (px). 대상 타입에만 적용 — TSK-12-02 */
+  height?: number;
+}
+
 /** ChildrenSlot에 전달하는 컨테이너 필드 최소 구조 */
 export interface ContainerField {
   id: string;

@@ -134,7 +134,7 @@
 
   .side-panel--empty {
     padding: 16px 12px;
-    color: #999;
+    color: #666;
     font-size: 13px;
   }
 
@@ -465,7 +465,7 @@
   }
 
   .validation-badge--idle {
-    color: #999;
+    color: #666;
   }
 
   /* PropsPanel */
@@ -475,7 +475,7 @@
 
   .props-panel--empty {
     padding: 16px 12px;
-    color: #999;
+    color: #666;
     font-size: 13px;
   }
 
@@ -739,5 +739,41 @@
     outline: 2px dashed #3b82f6;
     outline-offset: -2px;
     background: rgba(59, 130, 246, 0.08);
+  }
+
+  /**
+   * TSK-12-02: ComponentResizeOverlay — 컴포넌트 높이 리사이즈 핸들
+   *
+   * 선택된 대상 컴포넌트의 하단에 절대 위치로 렌더되는 리사이즈 바.
+   * editor-area(position:relative) 내부에서 field DOM 하단에 배치된다.
+   */
+  .fjs-designer-component-resize {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    pointer-events: none;
+    z-index: 10;
+  }
+
+  .fjs-designer-component-resize__handle {
+    position: absolute;
+    bottom: -3px;
+    left: 0;
+    right: 0;
+    height: 6px;
+    background: #3b82f6;
+    opacity: 0.7;
+    cursor: row-resize;
+    pointer-events: all;
+    border-radius: 3px;
+    transition: opacity 0.15s;
+  }
+
+  .fjs-designer-component-resize__handle:hover,
+  .fjs-designer-component-resize__handle:focus {
+    opacity: 1;
+    outline: 2px solid #2563eb;
+    outline-offset: 1px;
   }
 }

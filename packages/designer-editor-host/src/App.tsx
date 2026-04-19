@@ -19,6 +19,7 @@ import { FormEditor } from '@bpmn-io/form-js-editor';
 import { DesignerContainerModule } from '@form-js-designer/designer-core';
 import type { ValidationResult } from '@form-js-designer/designer-core';
 import { DesignerComponentsModule, migrateLegacyTabsSchema } from '@form-js-designer/designer-components';
+import { LayoutHeightModule } from '@form-js-designer/designer-runtime';
 import { PaletteModule } from './modules/PaletteModule';
 import { OutlineModule } from './modules/OutlineModule';
 import { ShortcutModule } from './modules/ShortcutModule';
@@ -37,6 +38,7 @@ import { ToolbarButtons } from './components/ToolbarButtons';
 import { ValidationBadge } from './components/ValidationBadge';
 import { PanelSplitter } from './components/PanelSplitter';
 import { SidePanelToggle } from './components/SidePanelToggle';
+import { ComponentResizeOverlay } from './components/ComponentResizeOverlay';
 import { usePanelResize } from './hooks/usePanelResize';
 import { installPropsPanelFocusGuard } from './hooks/usePropsPanelFocusGuard';
 import { useSidePanelTab } from './router';
@@ -127,6 +129,8 @@ export function App(): h.JSX.Element {
         LivePreviewModule,
         ValidateModule,
         ExportModule,
+        // TSK-12-02: layout.height DOM inline style 주입
+        LayoutHeightModule,
       ];
 
       // propertiesPanel.parent 를 제공하면 form-js 내장 "fjs-editor-properties-container"
@@ -259,6 +263,10 @@ export function App(): h.JSX.Element {
             />
           </div>
           <div class="editor-container" ref={editorRef} data-testid="editor-root" />
+          {/* TSK-12-02: 컴포넌트 높이 리사이즈 핸들 — editor 기준 absolute 포지셔닝 */}
+          {editorInstanceRef.current && (
+            <ComponentResizeOverlay editor={editorInstanceRef.current} />
+          )}
         </div>
       </div>
 
