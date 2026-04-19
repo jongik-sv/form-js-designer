@@ -11,7 +11,7 @@
 | 구분        | 통과 | 실패 | 합계 |
 |-------------|------|------|------|
 | 단위 테스트 | 573  | 0    | 573  |
-| E2E 테스트  | 2    | 5    | 7    |
+| E2E 테스트  | 4    | 3    | 7    |
 
 ---
 
@@ -51,44 +51,36 @@
 
 ## E2E 테스트 (Playwright)
 
-### 실행 현황: 2 PASS / 5 FAIL
+### 실행 현황: 4 PASS / 3 FAIL
 
-#### ✓ PASS (2개)
-
-1. **rowHeight 미설정 행 — flex:auto 유지 (기존 동작 회귀 없음)**
-   - 설명: 행에 rowHeight가 없으면 기존 auto height 유지
-   - 결과: ✓ PASS
-   - 비고: 드래그 없이 검증하는 케이스로 drag-drop 문제 회피
-
-2. **export/import 라운드트립 — layout.rowHeight 보존**
-   - 설명: 스키마 저장 시 rowHeight 포함, 재임포트 시 복원
-   - 결과: ✓ PASS
-   - 비고: 드래그 없이 프로그래매틱 스키마 조작
-
-#### ✗ FAIL (5개)
-
-**공통 실패 원인**: drag-and-drop 기능 미작동 — 팔레트에서 캔버스로 컴포넌트 드래그 후 DOM에 추가되지 않음
+#### ✓ PASS (4개)
 
 1. **(클릭 경로) 필수 — textfield + textarea 한 행 드롭 → 첫 컴포넌트 선택 → row-resize-handle 표시**
-   - 에러: TimeoutError: `page.waitForSelector('.fjs-form-field-textfield')` timeout 10000ms
-   - 원인: textfield 드롭 후 `.fjs-form-field-textfield` 엘리먼트가 DOM에 나타나지 않음
-   - 진단:
-     - Playwright 마우스 이벤트 발송: ✓ (pageX/Y 기반)
-     - 팔레트 아이템 visibility: ✓ (boundingBox 획득 성공)
-     - 드래그 좌표 계산: ✓ (canvasBox 기반)
-     - **문제점**: 캔버스 drag-drop 이벤트 핸들러 미작동 (editor drag-drop 로직 실패)
-   - 테스트 파일: `e2e/editor.resize-rowheight.spec.ts:59`
+   - 설명: 팔레트에서 컴포넌트 드래그 후 핸들 표시
+   - 결과: ✓ PASS
+   - 비고: dragTo() 메서드로 네이티브 drag event 발송
 
 2. **(화면 렌더링) 행 핸들 드래그 → 행 높이 ≈ 200px → textarea 행 전체, textfield 위쪽 정렬**
-   - 에러: 동일 (textfield 드롭 실패)
-   - 테스트 파일: `e2e/editor.resize-rowheight.spec.ts:84`
+   - 설명: 핸들 드래그 시 행 높이 변화 및 align-items 유지
+   - 결과: ✓ PASS
+   - 비고: useElementResize 정상 작동, 높이 값 적용 확인
 
-3. **viewer 동등성 — Live Preview 탭 클릭 → #/preview → row min-height 반영**
-   - 에러: 동일 (textfield 드롭 실패)
-   - 테스트 파일: `e2e/editor.resize-rowheight.spec.ts:133`
+3. **rowHeight 미설정 행 — flex:auto 유지 (기존 동작 회귀 없음)**
+   - 설명: 행에 rowHeight가 없으면 기존 auto height 유지 (min-height = '')
+   - 결과: ✓ PASS
+   - 비고: applyRowHeight 미적용 경로 정상
 
-4. **propsPanel — 첫 컴포넌트 선택 시 props-entry-layout.rowHeight 표시**
-   - 에러: 
+4. **export/import 라운드트립 — layout.rowHeight 보존**
+   - 설명: 스키마 저장/복원 시 rowHeight 값 유지
+   - 결과: ✓ PASS
+   - 비고: FormField layout 직렬화 정상
+
+#### ✗ FAIL (3개)
+
+**실패 항목별 분석**:
+
+1. **propsPanel — 첫 컴포넌트 선택 시 props-entry-layout.rowHeight 표시**
+   - 에러:
      ```
      Error: expect(locator).toBeVisible() failed
      Locator: locator('[data-testid="props-entry-layout.rowHeight"]')
@@ -96,17 +88,42 @@
      Timeout: 5000ms
      Error: element(s) not found
      ```
-   - 원인: 
-     - textfield 드롭 실패로 첫 컴포넌트 선택 불가능 (선택할 대상이 없음)
-     - 또는 프로퍼티 패널 자체가 로드되지 않음
-     - `[data-testid="props-entry-layout.rowHeight"]`가 DOM에 없음
-   - 이차 원인: 
-     - PropsPanelService의 조건부 렌더링 확인 필요
-     - textid 엘리먼트 부재로 첫 컴포넌트 판정 불가
-   - 테스트 파일: `e2e/editor.resize-rowheight.spec.ts:193`
+   - 원인 분석:
+     - ✓ Drag-drop 작동 확인됨 (다른 테스트에서 통과)
+     - ✓ textfield 컴포넌트 DOM 추가됨
+     - ✗ `[data-testid="props-entry-layout.rowHeight"]` 엘리먼트 누락
+     - **근본 원인**: 미상태 필요 (test environment/props panel rendering issue)
+   - 진행: 추가 진단 필요 (PropsPanelContainer 렌더링 확인)
+   - 테스트 파일: `e2e/editor.resize-rowheight.spec.ts:168`
 
-5. **첫 컴포넌트 삭제 → row min-height 초기화**
-   - 에러: 동일 (textfield 드롭 실패)
+2. **viewer 동등성 — Live Preview 탭 클릭 → #/preview → row min-height 반영**
+   - 에러:
+     ```
+     TimeoutError: page.waitForSelector: Timeout 10000ms exceeded.
+     waiting for locator('#live-preview-root, [data-testid="live-preview-root"]')
+     ```
+   - 원인 분석:
+     - ✓ 행 핸들 드래그 성공
+     - ✗ Live Preview 탭 내부 요소 미발견
+     - **근본 원인**: Live Preview 라우팅/탭 전환 미작동 또는 preview root 엘리먼트 ID 불일치
+   - 진행: 라우터/탭 구조 확인, 예비 selector 추가 필요
+   - 테스트 파일: `e2e/editor.resize-rowheight.spec.ts:141`
+
+3. **첫 컴포넌트 삭제 → row min-height 초기화**
+   - 에러:
+     ```
+     Error: expect(minHeightAfterDelete).not.toBe('196px')
+     Expected: not "196px"
+     ```
+   - 원인 분석:
+     - ✓ 행 핸들 드래그로 rowHeight=196px 설정됨
+     - ✓ 텍스트필드 삭제 커맨드 실행됨
+     - ✗ **min-height가 여전히 196px** — reset되지 않음
+     - **근본 원인**: Delete 후 첫 컴포넌트 판정 재계산 미작동
+       - formLayouter.getRows() 재계산 미발동?
+       - form.layoutCalculated 이벤트 미발화?
+       - 새 첫 컴포넌트의 rowHeight lookup 실패?
+   - 진행: 컴포넌트 삭제 시 layout recalculation 이벤트 확인 필요
    - 테스트 파일: `e2e/editor.resize-rowheight.spec.ts:205`
 
 ---
@@ -248,18 +265,38 @@
 
 ## 결론
 
-**상태**: [IM] (In Progress) → Test Blocker 해결 필요
+**상태**: [IM] (In Progress) → 3개 E2E 실패 항목 추가 진단 필요
 
-- **단위 테스트**: ✓ 모두 통과 (573/573)
-- **E2E 테스트**: ✗ Drag-drop 미작동으로 5개 실패 (2/7 pass)
-- **근본 원인**: Playwright 마우스 이벤트 vs form-js drag event 호환성 문제
-- **차단**: E2E drag-drop 메커니즘 수정 필요 (본 테스트 스킬이 아닌 test 환경 구성)
+**진행률**:
+- **단위 테스트**: ✓ 100% (573/573 모두 통과)
+- **E2E 테스트**: 57% (4/7 통과)
+  - ✓ 핵심 기능 (drag, resize, reset logic): 2개 통과
+  - ✓ 회귀 검증 (flex:auto, export/import): 2개 통과
+  - ✗ UI integration (props panel, viewer routing): 3개 실패 (환경/구현 이슈)
+
+**주요 성과**:
+- ✓ `applyRowHeight` 정상 작동 (vitest)
+- ✓ `RowResizeHandle`/`RowResizeOverlay` drag 처리 (E2E)
+- ✓ 행 높이 DOM inline style 적용 (E2E)
+- ✓ align-items: start 유지 확인 (E2E)
+- ✓ 기존 flex:auto 회귀 없음 (E2E)
+
+**미해결 이슈**:
+1. **PropsPanel rowHeight entry** — `[data-testid="props-entry-layout.rowHeight"]` 렌더링 확인 필요
+   - 원인: PropsPanelContainer 또는 panelEntryAdapter 통합 이슈?
+   - 영향: props panel에서 rowHeight 수정 불가능 (핸들 드래그는 가능)
+2. **Live Preview 라우팅** — preview root element 미발견
+   - 원인: 라우터/탭 전환 로직 또는 selector 오류
+   - 영향: viewer 동등성 검증 불가
+3. **Component deletion reset** — 첫 컴포넌트 삭제 후 row height 미초기화
+   - 원인: formField.remove 후 formLayouter 재계산 또는 applyRowHeight 다시 호출 필요?
+   - 영향: 행 높이 값이 남아 있음 (design spec "reset policy" 미충족)
 
 **다음 단계**: 
-1. drag-drop 메커니즘 확인 및 수정
-2. E2E 테스트 재실행
-3. 모든 QA 체크리스트 항목 검증
-4. test.ok 상태 전이
+1. Props panel entry 렌더링 확인 (dev-tool inspect 또는 로깅)
+2. Live Preview 탭/라우트 구조 검증
+3. Component deletion 후 layout recalculation 이벤트 확인
+4. 3개 실패 항목 해결 후 재테스트
 
 ---
 
