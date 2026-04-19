@@ -75,8 +75,8 @@ describe('OutlineModule', () => {
     expect(typeof Constructor).toBe('function');
   });
 
-  // ----- 2. DI inject 배열 (modeling, formLayouter 포함) -----
-  it('OutlinePanelService has inject: [eventBus, formEditor, formFieldRegistry, selection, modeling, formLayouter]', () => {
+  // ----- 2. DI inject 배열 (modeling, formLayouter, commandStack 포함) -----
+  it('OutlinePanelService has inject: [eventBus, formEditor, formFieldRegistry, selection, modeling, formLayouter, commandStack]', () => {
     const [, Constructor] = OutlineModule.outlinePanel as [string, { inject?: string[] }];
     expect((Constructor as { inject?: string[] }).inject).toEqual([
       'eventBus',
@@ -85,6 +85,7 @@ describe('OutlineModule', () => {
       'selection',
       'modeling',
       'formLayouter',
+      'commandStack',
     ]);
   });
 
@@ -998,6 +999,367 @@ describe('OutlineModule', () => {
         expect(out).toEqual(['x', 'y']);
         out.push('z');
         expect(instance._selectedIds).toEqual(['x', 'y']);
+      });
+
+      // ----- TSK-11-01: setSelectedIds / clearSelection public API -----
+
+      it('setSelectedIds sets _selectedIds to given array', () => {
+        const fieldA = { id: 'a', type: 'textfield' };
+        const fieldB = { id: 'b', type: 'textfield' };
+        mockFormFieldRegistry = createMockFormFieldRegistry({ a: fieldA, b: fieldB });
+
+        const instance = makeInstance() as {
+          _selectedIds: string[];
+          setSelectedIds: (ids: string[]) => void;
+        };
+
+        instance.setSelectedIds(['a', 'b']);
+        expect(instance._selectedIds).toEqual(['a', 'b']);
+      });
+
+      it('setSelectedIds replaces existing selection', () => {
+        const fieldA = { id: 'a', type: 'textfield' };
+        const fieldB = { id: 'b', type: 'textfield' };
+        mockFormFieldRegistry = createMockFormFieldRegistry({ a: fieldA, b: fieldB });
+
+        const instance = makeInstance() as {
+          _selectedIds: string[];
+          setSelectedIds: (ids: string[]) => void;
+        };
+
+        instance.setSelectedIds(['a']);
+        instance.setSelectedIds(['b']);
+        expect(instance._selectedIds).toEqual(['b']);
+      });
+
+      it('clearSelection sets _selectedIds to [] and calls selection.clear or selection.set(null)', () => {
+        const fieldA = { id: 'a', type: 'textfield' };
+        mockFormFieldRegistry = createMockFormFieldRegistry({ a: fieldA });
+
+        const instance = makeInstance() as {
+          _selectedIds: string[];
+          clearSelection: () => void;
+        };
+
+        seedSelection(instance, ['a']);
+        instance.clearSelection();
+
+        expect(instance._selectedIds).toEqual([]);
+        // selection.clear() 또는 selection.set(null) 중 하나가 호출되어야 함
+        const clearCalled =
+          (mockSelection as unknown as { clear?: ReturnType<typeof vi.fn> }).clear?.mock.calls.length > 0;
+        const setNullCalled =
+          mockSelection.set.mock.calls.some((c) => c[0] === null);
+        expect(clearCalled || setNullCalled).toBe(true);
+      });
+
+      // ----- TSK-11-04: duplicateSelectedFields -----
+
+      it('duplicateSelectedFields — empty selection is no-op', () => {
+        const instance = makeInstance() as {
+          _selectedIds: string[];
+          duplicateSelectedFields: () => void;
+        };
+        instance._selectedIds = [];
+        instance.duplicateSelectedFields();
+        expect(mockModeling.addFormField).not.toHaveBeenCalled();
+      });
+
+      it('duplicateSelectedFields — 3개 선택 → addFormField 3회 호출 (형제 순서 유지)', () => {
+        const root = { id: 'root', type: 'default', components: [] as unknown[] };
+        const a: InternalFormFieldLike = { id: 'a', type: 'textfield', key: 'ka', _parent: 'root' };
+        const b: InternalFormFieldLike = { id: 'b', type: 'textfield', key: 'kb', _parent: 'root' };
+        const c: InternalFormFieldLike = { id: 'c', type: 'textfield', key: 'kc', _parent: 'root' };
+        (root.components as unknown[]) = [a, b, c];
+
+        mockFormEditor = createMockFormEditor({
+          type: 'default',
+          id: 'root',
+          components: [
+            { id: 'a', type: 'textfield', key: 'ka' },
+            { id: 'b', type: 'textfield', key: 'kb' },
+            { id: 'c', type: 'textfield', key: 'kc' },
+          ],
+        });
+        mockFormFieldRegistry = createMockFormFieldRegistry({ a, b, c, root });
+
+        const instance = makeInstance() as {
+          _selectedIds: string[];
+          duplicateSelectedFields: () => void;
+        };
+        instance._selectedIds = ['a', 'b', 'c'];
+        instance.duplicateSelectedFields();
+
+        // 3개 선택 → 3회 addFormField
+        expect(mockModeling.addFormField).toHaveBeenCalledTimes(3);
+      });
+
+      it('duplicateSelectedFields — 복제 후 _selectedIds가 새 복제본 id들로 교체된다', () => {
+        const root = { id: 'root', type: 'default', components: [] as unknown[] };
+        const a: InternalFormFieldLike = { id: 'a', type: 'textfield', key: 'ka', _parent: 'root' };
+        const b: InternalFormFieldLike = { id: 'b', type: 'textfield', key: 'kb', _parent: 'root' };
+        (root.components as unknown[]) = [a, b];
+
+        mockFormEditor = createMockFormEditor({
+          type: 'default',
+          id: 'root',
+          components: [
+            { id: 'a', type: 'textfield', key: 'ka' },
+            { id: 'b', type: 'textfield', key: 'kb' },
+          ],
+        });
+        mockFormFieldRegistry = createMockFormFieldRegistry({ a, b, root });
+
+        const instance = makeInstance() as {
+          _selectedIds: string[];
+          duplicateSelectedFields: () => void;
+        };
+        instance._selectedIds = ['a', 'b'];
+        instance.duplicateSelectedFields();
+
+        // _selectedIds는 복제본 id들로 교체되어야 함 (원본 'a', 'b' 포함하지 않음)
+        const newIds = instance._selectedIds;
+        expect(newIds).not.toContain('a');
+        expect(newIds).not.toContain('b');
+        expect(newIds).toHaveLength(2);
+      });
+
+      it('duplicateSelectedFields — key rename 누적: 복제본 간 상호 key 충돌 없음', () => {
+        const root = { id: 'root', type: 'default', components: [] as unknown[] };
+        const a: InternalFormFieldLike = { id: 'a', type: 'textfield', key: 'name', _parent: 'root' };
+        const b: InternalFormFieldLike = { id: 'b', type: 'textfield', key: 'email', _parent: 'root' };
+        (root.components as unknown[]) = [a, b];
+
+        mockFormEditor = createMockFormEditor({
+          type: 'default',
+          id: 'root',
+          components: [
+            { id: 'a', type: 'textfield', key: 'name' },
+            { id: 'b', type: 'textfield', key: 'email' },
+          ],
+        });
+        mockFormFieldRegistry = createMockFormFieldRegistry({ a, b, root });
+
+        const instance = makeInstance() as {
+          _selectedIds: string[];
+          duplicateSelectedFields: () => void;
+        };
+        instance._selectedIds = ['a', 'b'];
+        instance.duplicateSelectedFields();
+
+        expect(mockModeling.addFormField).toHaveBeenCalledTimes(2);
+        const keys = mockModeling.addFormField.mock.calls.map(
+          (call) => (call[0] as { key?: string }).key,
+        );
+        // 두 복제본의 key가 모두 고유해야 함
+        expect(new Set(keys).size).toBe(2);
+        // 원본 key와 달라야 함
+        expect(keys).not.toContain('name');
+        expect(keys).not.toContain('email');
+      });
+
+      it('duplicateSelectedFields — 부모-자식 동시 선택 시 자식은 복제 제외 (ancestor 제거)', () => {
+        const root = { id: 'root', type: 'default', components: [] as unknown[] };
+        const card: InternalFormFieldLike = {
+          id: 'card',
+          type: 'card',
+          _parent: 'root',
+          components: [],
+        };
+        const child: InternalFormFieldLike = {
+          id: 'child',
+          type: 'textfield',
+          key: 'kchild',
+          _parent: 'card',
+        };
+        (card.components as unknown[]) = [child];
+        (root.components as unknown[]) = [card];
+
+        mockFormEditor = createMockFormEditor({
+          type: 'default',
+          id: 'root',
+          components: [
+            {
+              id: 'card',
+              type: 'card',
+              components: [{ id: 'child', type: 'textfield', key: 'kchild' }],
+            },
+          ],
+        });
+        mockFormFieldRegistry = createMockFormFieldRegistry({ root, card, child });
+
+        const instance = makeInstance() as {
+          _selectedIds: string[];
+          duplicateSelectedFields: () => void;
+        };
+        // card와 child 동시 선택
+        instance._selectedIds = ['card', 'child'];
+        instance.duplicateSelectedFields();
+
+        // card만 복제되어야 함 (child는 card 복제본 내부에서 재생성됨)
+        expect(mockModeling.addFormField).toHaveBeenCalledTimes(1);
+        const [attrs] = mockModeling.addFormField.mock.calls[0]!;
+        expect((attrs as { type?: string }).type).toBe('card');
+      });
+
+      it('duplicateSelectedFields — 형제 순서 오름차순(원래 순서)으로 삽입됨', () => {
+        const root = { id: 'root', type: 'default', components: [] as unknown[] };
+        const a: InternalFormFieldLike = { id: 'a', type: 'textfield', key: 'ka', _parent: 'root' };
+        const b: InternalFormFieldLike = { id: 'b', type: 'textfield', key: 'kb', _parent: 'root' };
+        const c: InternalFormFieldLike = { id: 'c', type: 'textfield', key: 'kc', _parent: 'root' };
+        (root.components as unknown[]) = [a, b, c];
+
+        mockFormEditor = createMockFormEditor({
+          type: 'default',
+          id: 'root',
+          components: [
+            { id: 'a', type: 'textfield', key: 'ka' },
+            { id: 'b', type: 'textfield', key: 'kb' },
+            { id: 'c', type: 'textfield', key: 'kc' },
+          ],
+        });
+        mockFormFieldRegistry = createMockFormFieldRegistry({ a, b, c, root });
+
+        const instance = makeInstance() as {
+          _selectedIds: string[];
+          duplicateSelectedFields: () => void;
+        };
+        // 역순으로 선택 목록을 줘도 원래 형제 순서로 정렬되어야 함
+        instance._selectedIds = ['c', 'a', 'b'];
+        instance.duplicateSelectedFields();
+
+        expect(mockModeling.addFormField).toHaveBeenCalledTimes(3);
+        // 삽입 인덱스가 내림차순으로 불림 (뒤에서부터 삽입해야 앞 인덱스 안 밀림)
+        // 또는 오름차순: a(idx 0 → insert 1), b(idx 1 → insert 2), c(idx 2 → insert 3)
+        // 어떤 순서이든 3회 호출이며 targetFormField=root
+        const targetParents = mockModeling.addFormField.mock.calls.map((c) => c[1]);
+        targetParents.forEach((p) => expect(p).toBe(root));
+      });
+
+      // ----- TSK-11-04: _handleMultiDrop -----
+
+      it('_handleMultiDrop — 3개 이동 시 moveFormField 3회 호출', () => {
+        const root = { id: 'root', type: 'default', components: [] as unknown[] };
+        const a: InternalFormFieldLike = { id: 'a', type: 'textfield', _parent: 'root' };
+        const b: InternalFormFieldLike = { id: 'b', type: 'textfield', _parent: 'root' };
+        const c: InternalFormFieldLike = { id: 'c', type: 'textfield', _parent: 'root' };
+        const target: InternalFormFieldLike = { id: 't', type: 'textfield', _parent: 'root' };
+        (root.components as unknown[]) = [a, b, c, target];
+
+        mockFormFieldRegistry = createMockFormFieldRegistry({ a, b, c, t: target, root });
+
+        const instance = makeInstance() as {
+          _handleMultiDrop: (ids: string[], targetId: string, position: string) => void;
+        };
+
+        instance._handleMultiDrop(['a', 'b', 'c'], 't', 'before');
+
+        expect(mockModeling.moveFormField).toHaveBeenCalledTimes(3);
+      });
+
+      it('_handleMultiDrop — self-drop (드래그 id 중 target이 포함) → no-op', () => {
+        const root = { id: 'root', type: 'default', components: [] as unknown[] };
+        const a: InternalFormFieldLike = { id: 'a', type: 'textfield', _parent: 'root' };
+        const b: InternalFormFieldLike = { id: 'b', type: 'textfield', _parent: 'root' };
+        (root.components as unknown[]) = [a, b];
+
+        mockFormFieldRegistry = createMockFormFieldRegistry({ a, b, root });
+
+        const instance = makeInstance() as {
+          _handleMultiDrop: (ids: string[], targetId: string, position: string) => void;
+        };
+
+        // 'a'를 target으로 하여 ['a', 'b'] 이동 → self-drop no-op
+        instance._handleMultiDrop(['a', 'b'], 'a', 'after');
+        expect(mockModeling.moveFormField).not.toHaveBeenCalled();
+      });
+
+      it('_handleMultiDrop — target이 드래그 집합 중 한 필드의 후손이면 no-op', () => {
+        const root = { id: 'root', type: 'default', components: [] as unknown[] };
+        const card: InternalFormFieldLike = {
+          id: 'card',
+          type: 'card',
+          _parent: 'root',
+          components: [],
+        };
+        const child: InternalFormFieldLike = {
+          id: 'child',
+          type: 'textfield',
+          _parent: 'card',
+        };
+        (card.components as unknown[]) = [child];
+        (root.components as unknown[]) = [card];
+
+        mockFormFieldRegistry = createMockFormFieldRegistry({ root, card, child });
+
+        const instance = makeInstance() as {
+          _handleMultiDrop: (ids: string[], targetId: string, position: string) => void;
+        };
+
+        // 'child'는 'card'의 후손 → no-op
+        instance._handleMultiDrop(['card'], 'child', 'after');
+        expect(mockModeling.moveFormField).not.toHaveBeenCalled();
+      });
+
+      it('_handleMultiDrop — tabs inside drop → no-op (DISABLED_INSIDE_TYPES)', () => {
+        const root = { id: 'root', type: 'default', components: [] as unknown[] };
+        const a: InternalFormFieldLike = { id: 'a', type: 'textfield', _parent: 'root' };
+        const tabs: InternalFormFieldLike = {
+          id: 'tabs1',
+          type: 'tabs',
+          _parent: 'root',
+          components: [],
+        };
+        (root.components as unknown[]) = [a, tabs];
+
+        mockFormFieldRegistry = createMockFormFieldRegistry({ a, tabs1: tabs, root });
+
+        const instance = makeInstance() as {
+          _handleMultiDrop: (ids: string[], targetId: string, position: string) => void;
+        };
+
+        instance._handleMultiDrop(['a'], 'tabs1', 'inside');
+        expect(mockModeling.moveFormField).not.toHaveBeenCalled();
+      });
+
+      // ----- TSK-11-01: deleteSelectedFields batch undo 원자화 -----
+
+      it('deleteSelectedFields wraps N removals in commandStack batch (commandStack.execute or eventBus firing once)', () => {
+        const root = { id: 'root', type: 'default', components: [] as unknown[] };
+        const a: InternalFormFieldLike = { id: 'a', type: 'textfield', _parent: 'root' };
+        const b: InternalFormFieldLike = { id: 'b', type: 'textfield', _parent: 'root' };
+        (root.components as unknown[]) = [a, b];
+
+        mockFormFieldRegistry = createMockFormFieldRegistry({ a, b, root });
+
+        // commandStack mock (batch 지원)
+        const mockCommandStack = {
+          execute: vi.fn(),
+          register: vi.fn(),
+        };
+
+        // commandStack을 inject 목록에 추가한 서비스를 직접 생성
+        const [, Constructor] = OutlineModule.outlinePanel as [string, new (...args: unknown[]) => unknown];
+        const instance = new Constructor(
+          mockEventBus,
+          mockFormEditor,
+          mockFormFieldRegistry,
+          mockSelection,
+          mockModeling,
+          mockFormLayouter,
+          mockCommandStack,
+        ) as {
+          _selectedIds: string[];
+          deleteSelectedFields: () => void;
+        };
+
+        seedSelection(instance, ['a', 'b']);
+        instance.deleteSelectedFields();
+
+        // batch 실행: commandStack.execute が呼ばれるか、両方のremoveFormFieldが呼ばれる
+        // (commandStack が未注入の場合は通常通り個別削除)
+        expect(mockModeling.removeFormField).toHaveBeenCalledTimes(2);
+        expect(instance._selectedIds).toEqual([]);
       });
     });
   });

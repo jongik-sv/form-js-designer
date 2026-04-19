@@ -688,4 +688,25 @@
     outline-offset: -2px;
     background: rgba(59, 130, 246, 0.08);
   }
+
+  /* ── 마퀴(rubber-band) 선택 오버레이 (TSK-11-03) ── */
+  .fjs-editor-container {
+    position: relative;
+  }
+
+  .marquee-layer {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 50;
+    overflow: hidden;
+  }
+
+  .marquee-box {
+    display: none;
+    position: absolute;
+    border: 1px solid #3b82f6;
+    background: rgba(59, 130, 246, 0.08);
+    pointer-events: none;
+  }
 }

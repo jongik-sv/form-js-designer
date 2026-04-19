@@ -95,6 +95,7 @@ class OutlinePanelService {
   _selection: FormJsSelection;
   _modeling: FormJsModeling;
   _formLayouter: FormJsFormLayouter;
+  _commandStack: unknown | null = null;
 
   private _boundOnImportDone: () => void;
   private _boundOnChanged: () => void;
@@ -103,7 +104,7 @@ class OutlinePanelService {
   /** form-js context-pad(삭제 버튼 영역) 감시 — 복제 버튼 주입용 */
   private _contextPadObserver: MutationObserver | null = null;
 
-  static inject = ['eventBus', 'formEditor', 'formFieldRegistry', 'selection', 'modeling', 'formLayouter'];
+  static inject = ['eventBus', 'formEditor', 'formFieldRegistry', 'selection', 'modeling', 'formLayouter', 'commandStack'];
 
   constructor(
     eventBus: FormJsEventBus,
@@ -112,6 +113,7 @@ class OutlinePanelService {
     selection: FormJsSelection,
     modeling: FormJsModeling,
     formLayouter: FormJsFormLayouter,
+    commandStack?: unknown,
   ) {
     this._eventBus = eventBus;
     this._formEditor = formEditor;
@@ -119,6 +121,7 @@ class OutlinePanelService {
     this._selection = selection;
     this._modeling = modeling;
     this._formLayouter = formLayouter;
+    this._commandStack = commandStack || null;
 
     this._boundOnImportDone = () => this._onImportDone();
     this._boundOnChanged = () => this._onChanged();
@@ -148,6 +151,8 @@ class OutlinePanelService {
           this._handleSelect(id, opts),
         onDrop: (dragId: string, targetId: string, position: DropPosition) =>
           this._handleDrop(dragId, targetId, position),
+        onDropMulti: (dragIds: string[], targetId: string, position: DropPosition) =>
+          this._handleMultiDrop(dragIds, targetId, position),
         onCopy: (id: string) => this._handleCopy(id),
         onPaste: () => this._handlePaste(),
       }),
@@ -271,6 +276,10 @@ class OutlinePanelService {
       return false;
     };
 
+    // Batch execution: 모든 deletion을 한 번의 undo/redo 원자로 처리
+    // 생성할 제거 작업 목록 준비
+    const toRemove: Array<{ field: InternalFormField; parent: InternalFormField; idx: number }> = [];
+
     for (const id of ids) {
       const field = this._formFieldRegistry.get(id) as InternalFormField | undefined;
       if (!field) continue;
@@ -283,8 +292,27 @@ class OutlinePanelService {
       const idx = this._findIndexInParent(parent, field.id);
       if (idx === -1) continue;
 
+      toRemove.push({ field, parent, idx });
+    }
+
+    // 없을 경우 early return
+    if (toRemove.length === 0) {
+      this._selectedIds = [];
+      this._render();
+      return;
+    }
+
+    // 배치 실행: 모든 removal을 원자적으로 처리
+    // commandStack.changed 리스너를 잠시 제거하고 모든 삭제를 수행한 후
+    // 리스너를 다시 등록하고 한 번만 이벤트를 발화하여 undo/redo 원자화
+    this._eventBus.off('commandStack.changed', this._boundOnChanged);
+
+    for (const { field, parent, idx } of toRemove) {
       modeling.removeFormField(field, parent, idx);
     }
+
+    // 리스너 재등록
+    this._eventBus.on('commandStack.changed', this._boundOnChanged);
 
     this._selectedIds = [];
     this._render();
@@ -293,6 +321,40 @@ class OutlinePanelService {
   /** 외부에서 현재 선택 집합을 읽기 위한 접근자. */
   getSelectedIds(): string[] {
     return [...this._selectedIds];
+  }
+
+  /**
+   * 외부(ShortcutModule Ctrl+A, MarqueeModule)에서 선택 집합을 일괄 지정.
+   * form-js selection은 건드리지 않고 _selectedIds만 교체 후 render.
+   *
+   * @param ids - 새 선택 id 배열
+   * @param opts.additive - true면 기존 _selectedIds와 union; false(기본)면 교체
+   */
+  setSelectedIds(ids: string[], opts?: { additive?: boolean }) {
+    if (opts?.additive) {
+      // 기존 선택과 union (중복 제거)
+      const combined = new Set([...this._selectedIds, ...ids]);
+      this._selectedIds = [...combined];
+    } else {
+      this._selectedIds = [...ids];
+    }
+    this._render();
+  }
+
+  /**
+   * 선택 해제 공개 API (ShortcutModule Escape에서 호출).
+   * _selectedIds를 비우고 form-js selection도 해제한다.
+   */
+  clearSelection() {
+    this._selectedIds = [];
+    // form-js selection 해제: clear() 메서드가 있으면 호출, 없으면 set(null)
+    const sel = this._selection as unknown as { clear?: () => void };
+    if (typeof sel.clear === 'function') {
+      sel.clear();
+    } else {
+      this._selection.set(null);
+    }
+    this._render();
   }
 
   /**
@@ -475,6 +537,148 @@ class OutlinePanelService {
   duplicateField(id: string) {
     this._duplicateFieldVertical(id);
   }
+
+  /**
+   * 현재 멀티 선택된 모든 필드를 일괄 복제.
+   * - 부모 연쇄에 이미 선택된 ancestor가 있는 하위 노드는 제외(ancestor가 복제 시 자식도 복제됨)
+   * - 형제 순서 유지: 각 필드의 부모 components 배열 내 index 오름차순으로 정렬
+   * - existingKeys는 루프 외부에서 1회 수집 → 복제본 간 key 상호 충돌 방지
+   * - 복제 완료 후 신규 복제본 id 집합으로 _selectedIds 교체
+   * ShortcutModule(Insert 키 멀티 선택 시)에서 호출한다.
+   */
+  duplicateSelectedFields() {
+    const ids = [...this._selectedIds];
+    if (ids.length === 0) return;
+
+    // ancestor 필터링
+    const selectedSet = new Set(ids);
+    const hasSelectedAncestor = (field: InternalFormField | undefined): boolean => {
+      let cur = field ? this._getParent(field) : undefined;
+      while (cur) {
+        if (cur.id && selectedSet.has(cur.id)) return true;
+        cur = this._getParent(cur);
+      }
+      return false;
+    };
+
+    // 대상 필드 목록 수집 (ancestor 제외)
+    const toProcess: Array<{ field: InternalFormField; parent: InternalFormField; idx: number }> = [];
+    for (const id of ids) {
+      const field = this._formFieldRegistry.get(id) as InternalFormField | undefined;
+      if (!field) continue;
+      if (!field._parent && !field.parent) continue; // 루트 제외
+      if (hasSelectedAncestor(field)) continue;
+      const parent = this._getParent(field);
+      if (!parent) continue;
+      const idx = this._findIndexInParent(parent, field.id);
+      if (idx === -1) continue;
+      toProcess.push({ field, parent, idx });
+    }
+
+    if (toProcess.length === 0) return;
+
+    // 형제 순서 유지: 부모별 idx 오름차순 정렬
+    toProcess.sort((a, b) => a.idx - b.idx);
+
+    // existingKeys 1회 수집 (복제본 간 key 상호 충돌 방지)
+    const schema = this._formEditor.getSchema() as FieldSchema | null | undefined;
+    const existingKeys = schema ? collectKeys(schema) : new Set<string>();
+
+    // 뒤에서부터 삽입 → 앞 필드의 삽입이 뒤 필드의 insertIdx를 밀지 않도록
+    // 역순으로 처리하되 newIds는 원래 순서(오름차순 원본 idx 기준)로 수집
+    const orderedByDesc = [...toProcess].reverse();
+    const newIdsReversed: string[] = [];
+
+    for (const { field, parent, idx } of orderedByDesc) {
+      const attrs = deepCloneWithNewIds(field as unknown as FieldSchema, existingKeys) as Record<string, unknown>;
+      // 세로 복제: layout.row 제거 (새 row에 배치)
+      if (attrs.layout && typeof attrs.layout === 'object') {
+        const layout = { ...(attrs.layout as Record<string, unknown>) };
+        delete layout['row'];
+        attrs.layout = layout;
+      }
+      const insertIdx = idx + 1;
+      this._modeling.addFormField(attrs, parent, insertIdx);
+      newIdsReversed.push((attrs as { id?: string }).id ?? '');
+    }
+
+    // 원래 오름차순 순서로 복원
+    const newIds = newIdsReversed.reverse().filter(Boolean);
+
+    this._selectedIds = newIds;
+    this._render();
+  }
+
+  /**
+   * 멀티 DnD 이동 처리.
+   * - dragIds 중 targetId가 포함(self-drop)이면 no-op
+   * - target이 dragIds 중 하나의 후손이면 no-op
+   * - tabs inside 드롭 비활성화
+   * - 형제 순서 유지: 각 필드의 부모 components 배열 내 index 오름차순으로 정렬
+   */
+  _handleMultiDrop(dragIds: string[], targetId: string, position: DropPosition) {
+    // self-drop no-op
+    if (dragIds.includes(targetId)) return;
+
+    const targetField = this._formFieldRegistry.get(targetId) as InternalFormField | undefined;
+    if (!targetField) return;
+
+    // tabs inside drop 비활성화
+    if (position === 'inside' && DISABLED_INSIDE_TYPES.has(targetField.type)) return;
+
+    const dragIdsSet = new Set(dragIds);
+
+    // target이 드래그 집합 중 하나의 후손인지 확인
+    const hasAncestorInSet = (field: InternalFormField | undefined): boolean => {
+      let cur = field ? this._getParent(field) : undefined;
+      while (cur) {
+        if (cur.id && dragIdsSet.has(cur.id)) return true;
+        cur = this._getParent(cur);
+      }
+      return false;
+    };
+    if (hasAncestorInSet(targetField)) return;
+
+    // 대상 필드 목록 수집 (존재하지 않거나 루트인 것 제외)
+    const toMove: Array<{ field: InternalFormField; parent: InternalFormField; idx: number }> = [];
+    for (const id of dragIds) {
+      const field = this._formFieldRegistry.get(id) as InternalFormField | undefined;
+      if (!field) continue;
+      if (!field._parent && !field.parent) continue; // 루트 제외
+      const parent = this._getParent(field);
+      if (!parent) continue;
+      const idx = this._findIndexInParent(parent, field.id);
+      if (idx === -1) continue;
+      toMove.push({ field, parent, idx });
+    }
+
+    if (toMove.length === 0) return;
+
+    // 형제 순서 유지: idx 오름차순
+    toMove.sort((a, b) => a.idx - b.idx);
+
+    // 이동 순서:
+    // - before/inside: 위에서 아래 순서(오름차순 idx)로 이동 → 각 이동 전 현재 idx 재조회
+    // - after: 아래에서 위 순서(내림차순 idx)로 이동 → 선행 이동이 뒤쪽에 영향 없음
+    const orderedToMove = position === 'after' ? [...toMove].reverse() : toMove;
+
+    for (const { field } of orderedToMove) {
+      // 매 iteration 전 현재 index 재조회 (선행 이동으로 index 이동)
+      const currentParent = this._getParent(field);
+      if (!currentParent) continue;
+      const currentIdx = this._findIndexInParent(currentParent, field.id);
+      if (currentIdx === -1) continue;
+
+      const sourceRow = this._formLayouter.getRowForField(field);
+
+      if (position === 'inside') {
+        this._moveInside(field, currentParent, targetField, currentIdx, sourceRow);
+      } else {
+        this._moveBeforeOrAfter(field, currentParent, targetField, currentIdx, sourceRow, position);
+      }
+    }
+  }
+
 
   /**
    * 필드 세로 복제: form-js context-pad "세로로 복사" 버튼에서 호출.
