@@ -105,16 +105,6 @@ test.describe('멀티 선택 — Shift-click → 일괄 삭제 → Undo 복구',
     await page.keyboard.up('Shift');
     await page.waitForTimeout(300);
 
-    // 디버그: Shift-click 후 선택/포커스 상태
-    const dbg = await page.evaluate(() => {
-      const nodes = document.querySelectorAll('[data-outline-id]:not([data-outline-id="__outline_root__"])');
-      const selectedIds = Array.from(nodes).filter(n => (n as HTMLElement).className.includes('selected')).map(n => n.getAttribute('data-outline-id'));
-      const multiCanvas = Array.from(document.querySelectorAll('[data-outline-multi-selected="true"]')).map(n => n.getAttribute('data-id'));
-      const focused = `${document.activeElement?.tagName}.${document.activeElement?.className}`;
-      return { selectedIds, multiCanvas, focused };
-    });
-    console.log('Before Delete:', JSON.stringify(dbg));
-
     // Step 4: Delete 키로 일괄 삭제
     await page.keyboard.press('Delete');
     await page.waitForTimeout(500);
@@ -124,6 +114,7 @@ test.describe('멀티 선택 — Shift-click → 일괄 삭제 → Undo 복구',
     expect(afterDeleteCount).toBeLessThan(initialCount);
 
     // Step 5: Undo (Cmd/Ctrl+Z) 1회로 모든 필드 복구
+    // ShortcutModule이 document 레벨에서 Ctrl+Z를 처리하므로 canvas focus 불필요.
     const isMac = process.platform === 'darwin';
     const modifier = isMac ? 'Meta' : 'Control';
     await page.keyboard.press(`${modifier}+z`);

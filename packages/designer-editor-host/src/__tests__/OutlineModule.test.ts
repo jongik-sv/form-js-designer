@@ -1324,7 +1324,7 @@ describe('OutlineModule', () => {
 
       // ----- TSK-11-01: deleteSelectedFields batch undo 원자화 -----
 
-      it('deleteSelectedFields wraps N removals in commandStack batch (commandStack.execute or eventBus firing once)', () => {
+      it('deleteSelectedFields wraps N removals in commandStack batch (commandStack.execute called with outlinePanel.removeMultiple)', () => {
         const root = { id: 'root', type: 'default', components: [] as unknown[] };
         const a: InternalFormFieldLike = { id: 'a', type: 'textfield', _parent: 'root' };
         const b: InternalFormFieldLike = { id: 'b', type: 'textfield', _parent: 'root' };
@@ -1332,10 +1332,10 @@ describe('OutlineModule', () => {
 
         mockFormFieldRegistry = createMockFormFieldRegistry({ a, b, root });
 
-        // commandStack mock (batch 지원)
+        // commandStack mock: register + execute
         const mockCommandStack = {
-          execute: vi.fn(),
           register: vi.fn(),
+          execute: vi.fn(),
         };
 
         // commandStack을 inject 목록에 추가한 서비스를 직접 생성
@@ -1356,9 +1356,12 @@ describe('OutlineModule', () => {
         seedSelection(instance, ['a', 'b']);
         instance.deleteSelectedFields();
 
-        // batch 실행: commandStack.execute が呼ばれるか、両方のremoveFormFieldが呼ばれる
-        // (commandStack が未注入の場合は通常通り個別削除)
-        expect(mockModeling.removeFormField).toHaveBeenCalledTimes(2);
+        // 복합 커맨드로 위임: commandStack.execute('outlinePanel.removeMultiple', ...) 1회 호출
+        expect(mockCommandStack.execute).toHaveBeenCalledTimes(1);
+        expect(mockCommandStack.execute).toHaveBeenCalledWith(
+          'outlinePanel.removeMultiple',
+          expect.objectContaining({ toRemove: expect.any(Array) }),
+        );
         expect(instance._selectedIds).toEqual([]);
       });
     });

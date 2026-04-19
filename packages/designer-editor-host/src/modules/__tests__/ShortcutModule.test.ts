@@ -57,6 +57,13 @@ function createMockFormEditor(schema: unknown = { type: 'default', id: 'root', c
   };
 }
 
+function createMockCommandStack() {
+  return {
+    undo: vi.fn(),
+    redo: vi.fn(),
+  };
+}
+
 function makeShortcutService(
   eventBus: ReturnType<typeof createMockEventBus>,
   selection: ReturnType<typeof createMockSelection>,
@@ -64,9 +71,10 @@ function makeShortcutService(
   modeling: ReturnType<typeof createMockModeling>,
   outlinePanel: ReturnType<typeof createMockOutlinePanel>,
   formEditor?: ReturnType<typeof createMockFormEditor>,
+  commandStack?: ReturnType<typeof createMockCommandStack>,
 ) {
   const [, Constructor] = ShortcutModule.shortcutService as [string, new (...args: unknown[]) => unknown];
-  return new Constructor(eventBus, selection, registry, modeling, outlinePanel, formEditor);
+  return new Constructor(eventBus, selection, registry, modeling, outlinePanel, formEditor, commandStack);
 }
 
 function fireKeydown(key: string, opts: { ctrlKey?: boolean; metaKey?: boolean; shiftKey?: boolean; target?: HTMLElement } = {}) {
@@ -306,6 +314,74 @@ describe('ShortcutModule', () => {
       fireKeydown('Insert');
 
       expect(outlinePanel.duplicateField).toHaveBeenCalledWith('field-a');
+    });
+  });
+
+  // ----- Ctrl+Z / Ctrl+Shift+Z: Undo/Redo -----
+  describe('Ctrl+Z / Ctrl+Shift+Z — Undo/Redo (document 레벨)', () => {
+    let eventBus: ReturnType<typeof createMockEventBus>;
+    let selection: ReturnType<typeof createMockSelection>;
+    let registry: ReturnType<typeof createMockRegistry>;
+    let modeling: ReturnType<typeof createMockModeling>;
+    let outlinePanel: ReturnType<typeof createMockOutlinePanel>;
+    let formEditor: ReturnType<typeof createMockFormEditor>;
+    let commandStack: ReturnType<typeof createMockCommandStack>;
+
+    beforeEach(() => {
+      eventBus = createMockEventBus();
+      selection = createMockSelection();
+      registry = createMockRegistry();
+      modeling = createMockModeling();
+      outlinePanel = createMockOutlinePanel();
+      formEditor = createMockFormEditor();
+      commandStack = createMockCommandStack();
+    });
+
+    afterEach(() => {
+      eventBus.emit('diagram.destroy');
+    });
+
+    it('Ctrl+Z calls commandStack.undo()', () => {
+      makeShortcutService(eventBus, selection, registry, modeling, outlinePanel, formEditor, commandStack);
+
+      fireKeydown('z', { ctrlKey: true });
+
+      expect(commandStack.undo).toHaveBeenCalledTimes(1);
+    });
+
+    it('Meta+Z (Mac) calls commandStack.undo()', () => {
+      makeShortcutService(eventBus, selection, registry, modeling, outlinePanel, formEditor, commandStack);
+
+      fireKeydown('z', { metaKey: true });
+
+      expect(commandStack.undo).toHaveBeenCalledTimes(1);
+    });
+
+    it('Ctrl+Shift+Z calls commandStack.redo()', () => {
+      makeShortcutService(eventBus, selection, registry, modeling, outlinePanel, formEditor, commandStack);
+
+      fireKeydown('z', { ctrlKey: true, shiftKey: true });
+
+      expect(commandStack.redo).toHaveBeenCalledTimes(1);
+      expect(commandStack.undo).not.toHaveBeenCalled();
+    });
+
+    it('Ctrl+Z is no-op when target is INPUT', () => {
+      makeShortcutService(eventBus, selection, registry, modeling, outlinePanel, formEditor, commandStack);
+
+      const input = document.createElement('input');
+      document.body.appendChild(input);
+      fireKeydown('z', { ctrlKey: true, target: input });
+      document.body.removeChild(input);
+
+      expect(commandStack.undo).not.toHaveBeenCalled();
+    });
+
+    it('Ctrl+Z is no-op when commandStack is null', () => {
+      makeShortcutService(eventBus, selection, registry, modeling, outlinePanel, formEditor, undefined);
+
+      // Should not throw
+      expect(() => fireKeydown('z', { ctrlKey: true })).not.toThrow();
     });
   });
 });

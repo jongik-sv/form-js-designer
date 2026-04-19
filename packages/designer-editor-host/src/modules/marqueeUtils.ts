@@ -71,6 +71,9 @@ export function filterIntersecting(
   marqueeRect: Rect,
   excludedInsideTypes: Set<string>,
 ): string[] {
+  // O(1) lookup map — ancestor 타입 조회의 O(n²) find 제거
+  const entriesById = new Map(entries.map((e) => [e.id, e]));
+
   // 1단계: 교차하는 entry 수집
   const intersecting = entries.filter((entry) => rectsIntersect(marqueeRect, entry.rect));
 
@@ -78,39 +81,17 @@ export function filterIntersecting(
   const intersectingIdSet = new Set(intersecting.map((e) => e.id));
 
   // 2단계: excludedInsideTypes 조상 필터 적용
-  // 어떤 조상이 excludedInsideTypes에 속하면, 그 내부의 자식을 제외.
-  // 단, excludedInsideTypes 타입 자체가 intersecting에 포함된 경우 그 자신은 유지.
-  const afterExclude = intersecting.filter((entry) => {
-    // entry 자신은 조상 제외 규칙과 무관 — 조상이 excludedInsideTypes인지만 체크
-    for (const ancestorId of entry.ancestorIds) {
-      // ancestorId가 어떤 타입인지 찾는다
-      const ancestor = entries.find((e) => e.id === ancestorId);
-      if (ancestor && excludedInsideTypes.has(ancestor.type)) {
-        // 이 entry는 excludedInsideTypes 내부에 있으므로 제외
-        return false;
-      }
-    }
-    return true;
-  });
+  const afterExclude = intersecting.filter((entry) =>
+    entry.ancestorIds.every((ancestorId) => {
+      const ancestor = entriesById.get(ancestorId);
+      return !(ancestor && excludedInsideTypes.has(ancestor.type));
+    }),
+  );
 
   // 3단계: ancestor-dedup 적용
-  // afterExclude 중에서 intersectingIdSet 안에 ancestor가 있는 entry는 제외한다.
-  const result: string[] = [];
-  for (const entry of afterExclude) {
-    let hasSelectedAncestor = false;
-    for (const ancestorId of entry.ancestorIds) {
-      if (intersectingIdSet.has(ancestorId)) {
-        // 조상이 이미 intersecting에 포함 → 이 entry는 제외
-        hasSelectedAncestor = true;
-        break;
-      }
-    }
-    if (!hasSelectedAncestor) {
-      result.push(entry.id);
-    }
-  }
-
-  return result;
+  return afterExclude
+    .filter((entry) => !entry.ancestorIds.some((id) => intersectingIdSet.has(id)))
+    .map((entry) => entry.id);
 }
 
 /**

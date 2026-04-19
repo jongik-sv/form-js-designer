@@ -123,6 +123,28 @@ class OutlinePanelService {
     this._formLayouter = formLayouter;
     this._commandStack = commandStack || null;
 
+    // outlinePanel.removeMultiple: 멀티 선택 일괄 삭제를 단일 undo/redo 원자로 묶는 복합 커맨드.
+    // preExecute 훅에서 하위 커맨드를 등록하면 모두 같은 action.id를 공유하여 Ctrl+Z 1회로 복구.
+    // register (not registerHandler) — 인스턴스화 없이 핸들러 객체를 직접 등록.
+    const cs = this._commandStack as null | {
+      register?: (command: string, handler: unknown) => void;
+    };
+    if (typeof cs?.register === 'function') {
+      const modelingRef = this._modeling as unknown as {
+        removeFormField?: (field: unknown, parent: unknown, idx: number) => void;
+      };
+      cs.register('outlinePanel.removeMultiple', {
+        preExecute(context: { toRemove: Array<{ field: unknown; parent: unknown; idx: number }> }) {
+          if (!modelingRef.removeFormField) return;
+          for (const { field, parent, idx } of context.toRemove) {
+            modelingRef.removeFormField(field, parent, idx);
+          }
+        },
+        execute() { /* no-op: all work done in preExecute */ },
+        revert() { /* no-op: sub-commands handle their own revert via formField.remove undo */ },
+      });
+    }
+
     this._boundOnImportDone = () => this._onImportDone();
     this._boundOnChanged = () => this._onChanged();
     this._boundOnSelectionChanged = (event: unknown) => this._onSelectionChanged(event);
@@ -259,13 +281,11 @@ class OutlinePanelService {
    */
   deleteSelectedFields() {
     const ids = [...this._selectedIds];
-    console.log('[deleteSelectedFields] called with ids:', ids);
     if (ids.length === 0) return;
 
     const modeling = this._modeling as unknown as {
       removeFormField?: (field: unknown, parent: unknown, idx: number) => void;
     };
-    console.log('[deleteSelectedFields] modeling.removeFormField type:', typeof modeling.removeFormField);
     if (typeof modeling.removeFormField !== 'function') return;
 
     const selectedSet = new Set(ids);
@@ -276,22 +296,19 @@ class OutlinePanelService {
 
     for (const id of ids) {
       const field = this._formFieldRegistry.get(id) as InternalFormField | undefined;
-      console.log('[deleteSelectedFields] id:', id, 'field:', !!field, '_parent:', field?._parent, 'parent:', !!field?.parent);
       if (!field) continue;
       // 루트(type=default)는 삭제 불가
       if (!field._parent && !field.parent) continue;
       if (this._hasAncestorInSet(field, selectedSet)) continue;
 
       const parent = this._getParent(field);
-      const idx = parent ? this._findIndexInParent(parent, field.id) : -1;
-      console.log('[deleteSelectedFields] parent:', !!parent, 'idx:', idx);
       if (!parent) continue;
+      const idx = this._findIndexInParent(parent, field.id);
       if (idx === -1) continue;
 
       toRemove.push({ field, parent, idx });
     }
 
-    console.log('[deleteSelectedFields] toRemove.length:', toRemove.length);
     // 없을 경우 early return
     if (toRemove.length === 0) {
       this._selectedIds = [];
@@ -299,19 +316,26 @@ class OutlinePanelService {
       return;
     }
 
-    // 배치 실행: 모든 removal을 원자적으로 처리
-    // commandStack.changed 리스너를 잠시 제거하고 모든 삭제를 수행한 후
-    // 리스너를 다시 등록하고 한 번만 이벤트를 발화하여 undo/redo 원자화
-    this._eventBus.off('commandStack.changed', this._boundOnChanged);
+    // 인덱스 높은 것부터 제거: 선행 삭제로 형제 인덱스가 밀리는 것을 방지
+    toRemove.sort((a, b) => b.idx - a.idx);
 
-    for (const { field, parent, idx } of toRemove) {
-      modeling.removeFormField(field, parent, idx);
+    // outlinePanel.removeMultiple 복합 커맨드로 단일 undo/redo 원자 실행.
+    // 이 커맨드의 preExecute에서 각 formField.remove가 등록되어 모두 같은 id를 공유.
+    // 없으면(테스트 환경 등) 이벤트 리스너 suppression 방식으로 fallback.
+    const cs = this._commandStack as null | { execute?: (cmd: string, ctx: unknown) => void };
+    if (typeof cs?.execute === 'function') {
+      cs.execute('outlinePanel.removeMultiple', { toRemove });
+    } else {
+      // Fallback: commandStack 미존재 시 직접 순차 삭제
+      this._eventBus.off('commandStack.changed', this._boundOnChanged);
+      for (const { field, parent, idx } of toRemove) {
+        modeling.removeFormField(field, parent, idx);
+      }
+      this._eventBus.on('commandStack.changed', this._boundOnChanged);
     }
 
-    // 리스너 재등록
-    this._eventBus.on('commandStack.changed', this._boundOnChanged);
-
     this._selectedIds = [];
+    this._refreshNodes();
     this._render();
   }
 

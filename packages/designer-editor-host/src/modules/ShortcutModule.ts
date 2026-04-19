@@ -5,6 +5,8 @@
  * - Insert              : 현재 선택 필드를 세로로 복제 (outlinePanel.duplicateField)
  * - Ctrl/Meta+A         : 루트 children 전체 선택 (outlinePanel.setSelectedIds)
  * - Escape              : 선택 해제 (outlinePanel.clearSelection + selection.clear/set(null))
+ * - Ctrl/Meta+Z         : Undo (commandStack.undo) — canvas focus 없이도 동작
+ * - Ctrl/Meta+Shift+Z   : Redo (commandStack.redo) — canvas focus 없이도 동작
  *
  * form-js 내장 keyboard 서비스는 editor canvas 에 focus 가 있을 때만 동작하고
  * 또 `removeSelection` action 은 form-js-editor 에서 등록되지 않는다
@@ -54,6 +56,11 @@ interface FormEditorLike {
   getSchema(): unknown;
 }
 
+interface CommandStackLike {
+  undo?(): void;
+  redo?(): void;
+}
+
 interface InternalFormField {
   id: string;
   _parent?: string;
@@ -71,7 +78,7 @@ function isEditableTarget(target: EventTarget | null): boolean {
 }
 
 class ShortcutService {
-  static inject = ['eventBus', 'selection', 'formFieldRegistry', 'modeling', 'outlinePanel', 'formEditor'];
+  static inject = ['eventBus', 'selection', 'formFieldRegistry', 'modeling', 'outlinePanel', 'formEditor', 'commandStack'];
 
   private readonly _onKeyDown: (e: KeyboardEvent) => void;
 
@@ -82,6 +89,7 @@ class ShortcutService {
     modeling: ModelingLike,
     outlinePanel: OutlinePanelLike | null,
     formEditor?: FormEditorLike | null,
+    commandStack?: CommandStackLike | null,
   ) {
     this._onKeyDown = (event: KeyboardEvent) => {
       const key = event.key;
@@ -89,10 +97,11 @@ class ShortcutService {
       const isInsert = key === 'Insert';
       const isSelectAll = (key === 'a' || key === 'A') && (event.ctrlKey || event.metaKey);
       const isEscape = key === 'Escape';
+      const isUndo = (key === 'z' || key === 'Z') && (event.ctrlKey || event.metaKey) && !event.shiftKey;
+      const isRedo = (key === 'z' || key === 'Z') && (event.ctrlKey || event.metaKey) && event.shiftKey;
 
       // 멀티 선택 Delete: 포커스 위치와 무관하게 우선 처리 (props panel input에 포커스가 있어도 동작)
       const multiIds = outlinePanel?.getSelectedIds?.() ?? [];
-      console.log('[ShortcutModule] keydown:', key, 'multiIds:', multiIds, 'outlinePanel:', !!outlinePanel);
       if (isDelete && multiIds.length > 1 && typeof outlinePanel?.deleteSelectedFields === 'function') {
         event.preventDefault();
         event.stopPropagation();
@@ -101,6 +110,28 @@ class ShortcutService {
       }
 
       if (isEditableTarget(event.target)) return;
+
+      // form-js canvas(SVG)가 focus된 경우 form-js 내장 keyboard가 undo/redo를 처리하므로
+      // 우리 document 레벨 핸들러는 skip하여 이중 실행을 방지.
+      const isCanvasTarget =
+        event.target instanceof SVGElement ||
+        (event.target instanceof HTMLElement && !!event.target.closest('.fjs-editor-container'));
+
+      // Ctrl/Meta+Z → Undo (canvas focus 없을 때만 — canvas는 form-js가 처리)
+      if (isUndo && !isCanvasTarget && commandStack && typeof commandStack.undo === 'function') {
+        event.preventDefault();
+        event.stopPropagation();
+        commandStack.undo();
+        return;
+      }
+
+      // Ctrl/Meta+Shift+Z → Redo (canvas focus 없을 때만)
+      if (isRedo && !isCanvasTarget && commandStack && typeof commandStack.redo === 'function') {
+        event.preventDefault();
+        event.stopPropagation();
+        commandStack.redo();
+        return;
+      }
 
       // Ctrl/Meta+A → 루트 children 전체 선택
       if (isSelectAll) {
