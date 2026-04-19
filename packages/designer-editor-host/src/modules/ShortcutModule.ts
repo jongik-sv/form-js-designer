@@ -100,8 +100,10 @@ class ShortcutService {
       const isUndo = (key === 'z' || key === 'Z') && (event.ctrlKey || event.metaKey) && !event.shiftKey;
       const isRedo = (key === 'z' || key === 'Z') && (event.ctrlKey || event.metaKey) && event.shiftKey;
 
-      // 멀티 선택 Delete: 포커스 위치와 무관하게 우선 처리 (props panel input에 포커스가 있어도 동작)
+      // 현재 멀티 선택 id 목록 (이하 여러 분기에서 공유)
       const multiIds = outlinePanel?.getSelectedIds?.() ?? [];
+
+      // 멀티 선택 Delete: 포커스 위치와 무관하게 우선 처리 (props panel input에 포커스가 있어도 동작)
       if (isDelete && multiIds.length > 1 && typeof outlinePanel?.deleteSelectedFields === 'function') {
         event.preventDefault();
         event.stopPropagation();
@@ -191,7 +193,6 @@ class ShortcutService {
         event.preventDefault();
         event.stopPropagation();
         // 멀티 선택(≥2) 시 duplicateSelectedFields(), 단일 시 기존 duplicateField()
-        const multiIds = outlinePanel.getSelectedIds?.() ?? [];
         if (multiIds.length > 1 && typeof outlinePanel.duplicateSelectedFields === 'function') {
           outlinePanel.duplicateSelectedFields();
         } else {

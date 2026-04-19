@@ -646,7 +646,7 @@ node, vitest, vite, playwright
 - category: development
 - domain: frontend
 - model: sonnet
-- status: [ts]
+- status: [xx]
 - priority: high
 - assignee: -
 - schedule: 2026-04-20 ~ 2026-04-23
