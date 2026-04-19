@@ -758,7 +758,7 @@ node, vitest, vite, playwright
 - category: development
 - domain: fullstack
 - model: opus
-- status: [im]
+- status: [xx]
 - priority: critical
 - assignee: -
 - schedule: 2026-05-08 ~ 2026-05-11

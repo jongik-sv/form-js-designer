@@ -36,11 +36,12 @@ export class LayoutHeightService {
     this.eventBus = eventBus;
     this.formFieldRegistry = formFieldRegistry;
 
-    // DOM root: document 또는 .fjs-container fallback
-    this.root =
-      (typeof document !== 'undefined'
+    // DOM root: .fjs-container 우선, 없으면 document fallback
+    this.root = (
+      typeof document !== 'undefined'
         ? (document.querySelector('.fjs-container') ?? document)
-        : null) as ParentNode;
+        : null
+    ) as ParentNode;
 
     this._registerHooks();
   }
@@ -74,7 +75,8 @@ export class LayoutHeightService {
 /**
  * form-js additionalModules 규약 매니페스트
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const LayoutHeightModule = {
   __init__: ['layoutHeightService'],
-  layoutHeightService: ['type', LayoutHeightService as unknown as new (...args: unknown[]) => unknown],
+  layoutHeightService: ['type', LayoutHeightService as any],
 };

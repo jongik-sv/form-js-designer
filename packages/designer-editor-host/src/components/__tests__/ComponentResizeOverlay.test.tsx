@@ -170,8 +170,9 @@ describe('ComponentResizeOverlay', () => {
     expect(container.querySelector('[data-testid="component-resize-handle"]')).not.toBeNull();
   });
 
-  // Case 4: 선택 해제 시 핸들 사라짐
+  // Case 4: 선택 해제 시 핸들 사라짐 (200ms 디바운스 — fake timer 사용)
   it('4: selection 해제 시 resize-handle 미렌더', async () => {
+    vi.useFakeTimers();
     const editor = makeEditor();
     const eventBus = editor.get('eventBus');
 
@@ -192,8 +193,11 @@ describe('ComponentResizeOverlay', () => {
 
     await act(async () => {
       eventBus.fire('selection.changed', { selection: null });
+      vi.runAllTimers(); // 200ms 디바운스 즉시 실행
     });
     expect(queryByTestId('component-resize-handle')).toBeNull();
+
+    vi.useRealTimers();
   });
 
   // Case 5: html 타입도 대상 — 핸들 렌더됨

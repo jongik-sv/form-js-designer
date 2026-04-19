@@ -82,8 +82,9 @@ test.describe('Panel Resize & Toggle', () => {
     // 5. 재클릭 → 패널 복원
     await toggleBtn.click();
 
-    // 6. 너비 복원 확인
+    // 6. 너비 복원 확인 (CSS transition 0.15s 완료 대기 후 측정)
     await expect(sidePanel).not.toHaveClass(/side-panel--collapsed/, { timeout: 3000 });
+    await page.waitForTimeout(300); // CSS transition(0.15s) 완료 여유
     const restoredWidth = await sidePanel.evaluate((el) => el.getBoundingClientRect().width);
     expect(restoredWidth).toBeCloseTo(beforeWidth, -1); // ±10px 허용
   });

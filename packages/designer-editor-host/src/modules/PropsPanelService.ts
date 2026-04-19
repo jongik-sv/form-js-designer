@@ -138,30 +138,24 @@ export class PropsPanelService {
    */
   private _buildLayoutGroup(field: Record<string, unknown>): PropsGroup {
     const { modeling } = this;
+
+    const getLayout = () => (field['layout'] ?? {}) as Record<string, unknown>;
+    const toNum = (v: unknown): number | undefined =>
+      v === '' || v === null || v === undefined ? undefined : Number(v);
+    const setHeight = (v: unknown) =>
+      modeling.editFormField(field, 'layout', { ...getLayout(), height: toNum(v) });
+
     const heightEntry: FormJsPanelEntry = {
       id: 'props-entry-layout.height',
       key: 'layout.height',
       label: '높이(px)',
       component: (props: Record<string, unknown>) => {
-        const layout = (field['layout'] ?? {}) as Record<string, unknown>;
-        const currentValue = props['value'] !== undefined ? props['value'] : (layout['height'] ?? undefined);
-        const onChange = (v: unknown) => {
-          const numVal = v === '' || v === null || v === undefined ? undefined : Number(v);
-          modeling.editFormField(field, 'layout', { ...layout, height: numVal });
-        };
-        // 숫자 입력 DOM 요소 반환 (preact h)
+        const currentValue = props['value'] !== undefined ? props['value'] : (getLayout()['height'] ?? undefined);
         // PropsPanelContainer는 entries를 직접 렌더하므로 컴포넌트 팩토리 구조를 유지
-        return { type: 'number-input', value: currentValue, onChange, min: 36, max: 2000 };
+        return { type: 'number-input', value: currentValue, onChange: setHeight, min: 36, max: 2000 };
       },
-      isEdited: (_node: unknown) => {
-        const layout = (field['layout'] ?? {}) as Record<string, unknown>;
-        return layout['height'] != null;
-      },
-      set: (value: unknown) => {
-        const layout = (field['layout'] ?? {}) as Record<string, unknown>;
-        const numVal = value === '' || value === null || value === undefined ? undefined : Number(value);
-        modeling.editFormField(field, 'layout', { ...layout, height: numVal });
-      },
+      isEdited: (_node: unknown) => getLayout()['height'] != null,
+      set: setHeight,
       element: field,
     };
 
