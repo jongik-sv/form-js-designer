@@ -172,6 +172,58 @@
     outline-offset: -1px;
   }
 
+  /* ResizeHandle — 범용 리사이즈 핸들 (axis='x': col-resize, axis='y': row-resize) */
+  .resize-handle {
+    flex-shrink: 0;
+    background: transparent;
+    border: none;
+    position: relative;
+    z-index: 10;
+    transition: background 0.1s;
+    outline: none;
+  }
+
+  .resize-handle[data-axis='x'] {
+    width: 5px;
+    cursor: col-resize;
+  }
+
+  .resize-handle[data-axis='y'] {
+    height: 5px;
+    cursor: row-resize;
+  }
+
+  .resize-handle[data-axis='x']::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: #e0e0e0;
+    transform: translateX(-50%);
+  }
+
+  .resize-handle[data-axis='y']::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: #e0e0e0;
+    transform: translateY(-50%);
+  }
+
+  .resize-handle:hover {
+    background: rgba(59, 130, 246, 0.15);
+  }
+
+  .resize-handle:focus-visible {
+    outline: 2px solid #3b82f6;
+    outline-offset: -1px;
+  }
+
   /* SidePanelToggle — .app-layout의 독립 flex item으로 배치 */
   .side-panel-toggle {
     flex-shrink: 0;
