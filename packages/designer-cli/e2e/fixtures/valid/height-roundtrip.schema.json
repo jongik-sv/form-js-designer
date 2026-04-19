@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 19,
+  "id": "height-roundtrip",
+  "components": [
+    {
+      "type": "textarea",
+      "key": "description",
+      "label": "설명",
+      "layout": { "height": 200 }
+    },
+    {
+      "type": "textfield",
+      "key": "name",
+      "label": "이름",
+      "layout": { "rowHeight": 150 }
+    }
+  ]
+}

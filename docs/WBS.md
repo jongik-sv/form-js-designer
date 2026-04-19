@@ -738,7 +738,7 @@ node, vitest, vite, playwright
 - category: development
 - domain: frontend
 - model: sonnet
-- status: [  ]
+- status: [xx]
 - priority: high
 - assignee: -
 - schedule: 2026-05-06 ~ 2026-05-07
@@ -758,7 +758,7 @@ node, vitest, vite, playwright
 - category: development
 - domain: fullstack
 - model: opus
-- status: [  ]
+- status: [xx]
 - priority: critical
 - assignee: -
 - schedule: 2026-05-08 ~ 2026-05-11
@@ -781,7 +781,7 @@ node, vitest, vite, playwright
 - category: development
 - domain: fullstack
 - model: opus
-- status: [  ]
+- status: [xx]
 - priority: high
 - assignee: -
 - schedule: 2026-05-11 ~ 2026-05-14
@@ -803,7 +803,7 @@ node, vitest, vite, playwright
 - category: testing
 - domain: fullstack
 - model: sonnet
-- status: [  ]
+- status: [xx]
 - priority: high
 - assignee: -
 - schedule: 2026-05-14 ~ 2026-05-15

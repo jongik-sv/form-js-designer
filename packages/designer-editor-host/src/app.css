@@ -134,7 +134,7 @@
 
   .side-panel--empty {
     padding: 16px 12px;
-    color: #999;
+    color: #666;
     font-size: 13px;
   }
 
@@ -168,6 +168,58 @@
   }
 
   .panel-splitter:focus-visible {
+    outline: 2px solid #3b82f6;
+    outline-offset: -1px;
+  }
+
+  /* ResizeHandle — 범용 리사이즈 핸들 (axis='x': col-resize, axis='y': row-resize) */
+  .resize-handle {
+    flex-shrink: 0;
+    background: transparent;
+    border: none;
+    position: relative;
+    z-index: 10;
+    transition: background 0.1s;
+    outline: none;
+  }
+
+  .resize-handle[data-axis='x'] {
+    width: 5px;
+    cursor: col-resize;
+  }
+
+  .resize-handle[data-axis='y'] {
+    height: 5px;
+    cursor: row-resize;
+  }
+
+  .resize-handle[data-axis='x']::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: #e0e0e0;
+    transform: translateX(-50%);
+  }
+
+  .resize-handle[data-axis='y']::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: #e0e0e0;
+    transform: translateY(-50%);
+  }
+
+  .resize-handle:hover {
+    background: rgba(59, 130, 246, 0.15);
+  }
+
+  .resize-handle:focus-visible {
     outline: 2px solid #3b82f6;
     outline-offset: -1px;
   }
@@ -413,7 +465,7 @@
   }
 
   .validation-badge--idle {
-    color: #999;
+    color: #666;
   }
 
   /* PropsPanel */
@@ -423,7 +475,7 @@
 
   .props-panel--empty {
     padding: 16px 12px;
-    color: #999;
+    color: #666;
     font-size: 13px;
   }
 
@@ -713,5 +765,66 @@
     border: 1px solid #3b82f6;
     background: rgba(59, 130, 246, 0.08);
     pointer-events: none;
+  }
+
+  /**
+   * TSK-12-02: ComponentResizeOverlay — 컴포넌트 높이 리사이즈 핸들
+   *
+   * 선택된 대상 컴포넌트의 하단에 절대 위치로 렌더되는 리사이즈 바.
+   * editor-area(position:relative) 내부에서 field DOM 하단에 배치된다.
+   */
+  .fjs-designer-component-resize {
+    /* position/size set via inline style (fixed, tracks field rect) */
+  }
+
+  .fjs-designer-component-resize__handle {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background: #3b82f6;
+    opacity: 0.7;
+    cursor: row-resize;
+    pointer-events: all;
+    border-radius: 3px;
+    transition: opacity 0.15s;
+  }
+
+  .fjs-designer-component-resize__handle:hover,
+  .fjs-designer-component-resize__handle:focus {
+    opacity: 1;
+    outline: 2px solid #2563eb;
+    outline-offset: 1px;
+  }
+
+  /**
+   * TSK-12-03: RowResizeOverlay / RowResizeHandle — 행 높이 리사이즈 핸들
+   *
+   * 선택된 행(row) 하단에 배치되는 리사이즈 바.
+   * ChildrenSlot 경로: .fjs-layout-row 내부 마지막 자식.
+   * default 루트 경로: RowResizeOverlay가 fixed 포지셔닝으로 row DOM 추적.
+   */
+  .fjs-designer-row-resize {
+    /* ChildrenSlot 경로: Row 내 마지막 자식으로 렌더 */
+    width: 100%;
+    height: 4px;
+  }
+
+  .fjs-designer-row-resize__handle {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background: #10b981;
+    opacity: 0.6;
+    cursor: row-resize;
+    pointer-events: all;
+    border-radius: 2px;
+    transition: opacity 0.15s;
+  }
+
+  .fjs-designer-row-resize__handle:hover,
+  .fjs-designer-row-resize__handle:focus {
+    opacity: 1;
+    outline: 2px solid #059669;
+    outline-offset: 1px;
   }
 }

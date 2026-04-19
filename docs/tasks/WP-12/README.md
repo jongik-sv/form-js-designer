@@ -56,6 +56,12 @@ new Form({
 - `packages/designer-editor-host/src/components/PanelSplitter.tsx` — drag 핸들 DOM 패턴 답습
 - 시각 회귀 게이트는 panel-resize-toggle WP 에서 정착시킨 정책 그대로 사용
 
+## 기능 문서
+
+| 기능 | 경로 |
+|------|------|
+| 컴포넌트 & 행 리사이즈 | [docs/features/component-row-resize/README.md](../../features/component-row-resize/README.md) |
+
 ## 비목표 (WP-12 범위 외)
 - single-line input(textfield/select/checkbox 등) 자체의 height 조절 — 36px 고정 유지
 - spacer 의 `height` prop UX 개선 (별도 작업)

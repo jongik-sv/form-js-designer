@@ -19,6 +19,7 @@ import { FormEditor } from '@bpmn-io/form-js-editor';
 import { DesignerContainerModule } from '@form-js-designer/designer-core';
 import type { ValidationResult } from '@form-js-designer/designer-core';
 import { DesignerComponentsModule, migrateLegacyTabsSchema } from '@form-js-designer/designer-components';
+import { LayoutHeightModule } from '@form-js-designer/designer-runtime';
 import { PaletteModule } from './modules/PaletteModule';
 import { OutlineModule } from './modules/OutlineModule';
 import { MarqueeModule } from './modules/MarqueeModule';
@@ -38,6 +39,8 @@ import { ToolbarButtons } from './components/ToolbarButtons';
 import { ValidationBadge } from './components/ValidationBadge';
 import { PanelSplitter } from './components/PanelSplitter';
 import { SidePanelToggle } from './components/SidePanelToggle';
+import { ComponentResizeOverlay } from './components/ComponentResizeOverlay';
+import { RowResizeOverlay } from './components/RowResizeOverlay';
 import { usePanelResize } from './hooks/usePanelResize';
 import { installPropsPanelFocusGuard } from './hooks/usePropsPanelFocusGuard';
 import { useSidePanelTab } from './router';
@@ -129,6 +132,8 @@ export function App(): h.JSX.Element {
         LivePreviewModule,
         ValidateModule,
         ExportModule,
+        // TSK-12-02: layout.height DOM inline style 주입
+        LayoutHeightModule,
       ];
 
       // propertiesPanel.parent 를 제공하면 form-js 내장 "fjs-editor-properties-container"
@@ -261,6 +266,16 @@ export function App(): h.JSX.Element {
             />
           </div>
           <div class="editor-container" ref={editorRef} data-testid="editor-root" />
+          {/* TSK-12-02: 컴포넌트 높이 리사이즈 핸들 — editor 기준 absolute 포지셔닝
+              services.eventBus 를 조건으로 사용: setServices()가 트리거한 리렌더 시점에
+              editorInstanceRef.current 도 반드시 채워져 있음이 보장된다. */}
+          {services.eventBus && editorInstanceRef.current && (
+            <ComponentResizeOverlay editor={editorInstanceRef.current} />
+          )}
+          {/* TSK-12-03: 행 높이 리사이즈 핸들 — default 루트 행 대응 */}
+          {services.eventBus && editorInstanceRef.current && (
+            <RowResizeOverlay editor={editorInstanceRef.current} />
+          )}
         </div>
       </div>
 

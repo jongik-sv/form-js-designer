@@ -143,7 +143,11 @@ export function EditorHost({
         if (id) {
           const me = e as MouseEvent;
           const additive = !!(me.shiftKey || me.metaKey || me.ctrlKey);
-          onSelect(id, additive ? { additive: true } : undefined);
+          if (additive) {
+            onSelect(id, { additive: true });
+          } else {
+            onSelect(id, undefined);
+          }
         }
       }
     };

@@ -100,4 +100,49 @@ describe('panelEntryAdapter', () => {
     const adapted = panelEntryAdapter(entry, ctx);
     expect(adapted.element).toBe(ctx.field);
   });
+
+  // Case 7: 중첩 경로 read — layout.height 값 반환
+  it('7: 중첩 키 "layout.height" read — field의 layout.height 값 반환', () => {
+    const entry = makeMockEntry({ key: 'layout.height', widgetType: 'number', defaultValue: undefined });
+    const ctx = makeMockCtx({
+      field: { id: 'f1', type: 'textarea', layout: { height: 180, columns: 8 } },
+    });
+    const adapted = panelEntryAdapter(entry, ctx);
+    // component 호출 시 value가 layout.height(180)로 설정되는지 확인
+    if (typeof adapted.component === 'function') {
+      let capturedValue: unknown;
+      (entry.widget.edit as ReturnType<typeof vi.fn>).mockImplementation((v: unknown) => {
+        capturedValue = v;
+        return null;
+      });
+      adapted.component({ value: undefined });
+      expect(capturedValue).toBe(180);
+    }
+  });
+
+  // Case 8: 중첩 경로 write — modeling.editFormField(field, 'layout', {height:240, columns:8}) 호출
+  it('8: 중첩 키 "layout.height" set(240) → modeling.editFormField(field, "layout", {height:240, columns:8})', () => {
+    const entry = makeMockEntry({ key: 'layout.height', widgetType: 'number', defaultValue: undefined });
+    const ctx = makeMockCtx({
+      field: { id: 'f1', type: 'textarea', label: 'x', layout: { height: 180, columns: 8 } },
+    });
+    const adapted = panelEntryAdapter(entry, ctx);
+    adapted.set(240);
+    expect(ctx.modeling.editFormField).toHaveBeenCalledWith(
+      ctx.field,
+      'layout',
+      { height: 240, columns: 8 },
+    );
+  });
+
+  // Case 9: 기존 flat 경로('label') 동작 변경 없음
+  it('9: 기존 flat 경로 "label" set — modeling.editFormField(field, {label: value}) 호출', () => {
+    const entry = makeMockEntry({ key: 'label' });
+    const ctx = makeMockCtx({
+      field: { id: 'f1', type: 'text', label: '' },
+    });
+    const adapted = panelEntryAdapter(entry, ctx);
+    adapted.set('Hello');
+    expect(ctx.modeling.editFormField).toHaveBeenCalledWith(ctx.field, { label: 'Hello' });
+  });
 });

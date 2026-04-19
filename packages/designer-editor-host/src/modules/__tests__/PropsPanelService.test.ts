@@ -23,6 +23,11 @@ vi.mock('@form-js-designer/designer-core', () => ({
   },
 }));
 
+// designer-runtime mock — LAYOUT_HEIGHT_TARGET_TYPES만 필요
+vi.mock('@form-js-designer/designer-runtime', () => ({
+  LAYOUT_HEIGHT_TARGET_TYPES: ['textarea', 'html', 'table', 'group', 'card', 'stack', 'modal', 'tabs', 'tabPanel'],
+}));
+
 import { propsSchemaToPanel, UnknownWidgetError } from '@form-js-designer/designer-core';
 import { PropsPanelService } from '../PropsPanelService';
 
@@ -151,8 +156,8 @@ describe('PropsPanelService', () => {
     expect(groups).toHaveLength(0);
   });
 
-  // Case 7: propsSchema가 비어있는 컴포넌트 → 빈 entries 그룹
-  it('7: propsSchema 빈 컴포넌트 → 빈 entries 그룹', () => {
+  // Case 7: propsSchema가 비어있는 컴포넌트 + 대상 타입(card) → designer-layout 그룹만 반환
+  it('7: propsSchema 빈 card 컴포넌트 → designer-props 없고 designer-layout만 반환', () => {
     const deps = makeDeps();
     deps.formFieldRegistry.get = vi.fn().mockReturnValue({
       type: 'card',
@@ -166,7 +171,9 @@ describe('PropsPanelService', () => {
       deps.modeling,
     );
     const groups = service.getGroups(makeField('card'));
-    expect(groups).toHaveLength(0);
+    // card는 대상 타입이므로 designer-layout 그룹 1개
+    expect(groups.length).toBeGreaterThanOrEqual(1);
+    expect(groups.some((g: { id: string }) => g.id === 'designer-layout')).toBe(true);
   });
 
   // Case 8: propertiesPanel이 없어도 graceful 초기화 (fallback)
@@ -224,5 +231,184 @@ describe('PropsPanelService', () => {
     );
     const groups = service.getGroups(null as unknown as { type: string; id: string });
     expect(groups).toHaveLength(0);
+  });
+
+  // Case 11: target type(textarea)일 때 Layout 그룹에 layout.height 엔트리 포함
+  it('11: textarea 필드 getGroups → designer-layout 그룹에 layout.height 엔트리 포함', () => {
+    const deps = makeDeps();
+    deps.formFieldRegistry.get = vi.fn().mockReturnValue({
+      type: 'textarea',
+      propsSchema: { properties: {} },
+    });
+    mockPropsSchemaToPanel.mockReturnValue([]);
+    const service = new PropsPanelService(
+      deps.eventBus,
+      deps.formFieldRegistry,
+      deps.propertiesPanel,
+      deps.modeling,
+    );
+    const groups = service.getGroups(makeField('textarea'));
+    const layoutGroup = groups.find((g: { id: string }) => g.id === 'designer-layout') as
+      | { id: string; entries: Array<{ key?: string }> }
+      | undefined;
+    expect(layoutGroup).toBeDefined();
+    expect(layoutGroup!.entries.some((e) => e.key === 'layout.height')).toBe(true);
+  });
+
+  // Case 12: 비대상 타입(textfield)은 Layout 그룹 없음
+  it('12: textfield 필드 getGroups → designer-layout 그룹 없음', () => {
+    const deps = makeDeps();
+    deps.formFieldRegistry.get = vi.fn().mockReturnValue({
+      type: 'textfield',
+      propsSchema: { properties: {} },
+    });
+    mockPropsSchemaToPanel.mockReturnValue([]);
+    const service = new PropsPanelService(
+      deps.eventBus,
+      deps.formFieldRegistry,
+      deps.propertiesPanel,
+      deps.modeling,
+    );
+    const groups = service.getGroups(makeField('textfield'));
+    const layoutGroup = groups.find((g: { id: string }) => g.id === 'designer-layout');
+    expect(layoutGroup).toBeUndefined();
+  });
+
+  // TSK-12-03: rowHeight 엔트리 테스트
+
+  // Case 13a: 첫 컴포넌트 선택 → layout.rowHeight 엔트리 포함
+  it('13a: 첫 컴포넌트 선택 시 designer-layout에 layout.rowHeight 엔트리 포함 (TSK-12-03)', () => {
+    const deps = makeDeps();
+    deps.formFieldRegistry.get = vi.fn().mockReturnValue({
+      type: 'textfield',
+      propsSchema: { properties: {} },
+    });
+    mockPropsSchemaToPanel.mockReturnValue([]);
+    // formLayouter mock: textfield(id='field1')이 row의 첫 컴포넌트
+    const formLayouter = {
+      getRows: vi.fn().mockReturnValue([
+        { id: 'R1', components: ['field1', 'field2'] },
+      ]),
+    };
+    const service = new PropsPanelService(
+      deps.eventBus,
+      deps.formFieldRegistry,
+      deps.propertiesPanel,
+      deps.modeling,
+      formLayouter,
+    );
+    const groups = service.getGroups(makeField('textfield', 'field1'));
+    const layoutGroup = groups.find((g: { id: string }) => g.id === 'designer-layout') as
+      | { id: string; entries: Array<{ key?: string }> }
+      | undefined;
+    expect(layoutGroup).toBeDefined();
+    expect(layoutGroup!.entries.some((e) => e.key === 'layout.rowHeight')).toBe(true);
+  });
+
+  // Case 13b: 두 번째 컴포넌트 선택 → layout.rowHeight 엔트리 없음
+  it('13b: 두 번째 컴포넌트 선택 시 layout.rowHeight 엔트리 없음 (TSK-12-03)', () => {
+    const deps = makeDeps();
+    deps.formFieldRegistry.get = vi.fn().mockReturnValue({
+      type: 'textfield',
+      propsSchema: { properties: {} },
+    });
+    mockPropsSchemaToPanel.mockReturnValue([]);
+    const formLayouter = {
+      getRows: vi.fn().mockReturnValue([
+        { id: 'R1', components: ['field1', 'field2'] },
+      ]),
+    };
+    const service = new PropsPanelService(
+      deps.eventBus,
+      deps.formFieldRegistry,
+      deps.propertiesPanel,
+      deps.modeling,
+      formLayouter,
+    );
+    // field2는 두 번째 컴포넌트
+    const groups = service.getGroups(makeField('textfield', 'field2'));
+    const layoutGroup = groups.find((g: { id: string }) => g.id === 'designer-layout') as
+      | { id: string; entries: Array<{ key?: string }> }
+      | undefined;
+    // designer-layout은 없거나, 있어도 rowHeight 엔트리 없음
+    if (layoutGroup) {
+      expect(layoutGroup.entries.some((e) => e.key === 'layout.rowHeight')).toBe(false);
+    }
+  });
+
+  // Case 13c: formLayouter 없을 때 rowHeight 엔트리 없음
+  it('13c: formLayouter 없으면 rowHeight 엔트리 없음 (TSK-12-03)', () => {
+    const deps = makeDeps();
+    deps.formFieldRegistry.get = vi.fn().mockReturnValue({
+      type: 'textfield',
+      propsSchema: { properties: {} },
+    });
+    mockPropsSchemaToPanel.mockReturnValue([]);
+    const service = new PropsPanelService(
+      deps.eventBus,
+      deps.formFieldRegistry,
+      deps.propertiesPanel,
+      deps.modeling,
+      // formLayouter 없음
+    );
+    const groups = service.getGroups(makeField('textfield', 'field1'));
+    const layoutGroup = groups.find((g: { id: string }) => g.id === 'designer-layout');
+    if (layoutGroup) {
+      const lg = layoutGroup as { entries: Array<{ key?: string }> };
+      expect(lg.entries.some((e) => e.key === 'layout.rowHeight')).toBe(false);
+    }
+    // rowHeight 엔트리 없거나 designer-layout 자체가 없음
+  });
+
+  // Case 13d: layout.height와 layout.rowHeight는 독립 — 둘 다 designer-layout에 공존 가능
+  it('13d: textarea + 첫 컴포넌트 → layout.height와 layout.rowHeight 둘 다 포함 (독립성)', () => {
+    const deps = makeDeps();
+    deps.formFieldRegistry.get = vi.fn().mockReturnValue({
+      type: 'textarea',
+      propsSchema: { properties: {} },
+    });
+    mockPropsSchemaToPanel.mockReturnValue([]);
+    const formLayouter = {
+      getRows: vi.fn().mockReturnValue([
+        { id: 'R1', components: ['field1'] }, // textarea 단독 행
+      ]),
+    };
+    const service = new PropsPanelService(
+      deps.eventBus,
+      deps.formFieldRegistry,
+      deps.propertiesPanel,
+      deps.modeling,
+      formLayouter,
+    );
+    const groups = service.getGroups(makeField('textarea', 'field1'));
+    const layoutGroup = groups.find((g: { id: string }) => g.id === 'designer-layout') as
+      | { id: string; entries: Array<{ key?: string }> }
+      | undefined;
+    expect(layoutGroup).toBeDefined();
+    // layout.height (컴포넌트 개별 높이) 및 layout.rowHeight (행 높이) 둘 다 포함
+    expect(layoutGroup!.entries.some((e) => e.key === 'layout.height')).toBe(true);
+    expect(layoutGroup!.entries.some((e) => e.key === 'layout.rowHeight')).toBe(true);
+  });
+
+  // Case 13: html, table, group, card, stack, modal, tabs, tabPanel도 Layout 그룹 포함
+  it('13: 모든 대상 타입은 designer-layout 그룹 포함', () => {
+    const targetTypes = ['html', 'table', 'group', 'card', 'stack', 'modal', 'tabs', 'tabPanel'];
+    for (const type of targetTypes) {
+      const deps = makeDeps();
+      deps.formFieldRegistry.get = vi.fn().mockReturnValue({
+        type,
+        propsSchema: { properties: {} },
+      });
+      mockPropsSchemaToPanel.mockReturnValue([]);
+      const service = new PropsPanelService(
+        deps.eventBus,
+        deps.formFieldRegistry,
+        deps.propertiesPanel,
+        deps.modeling,
+      );
+      const groups = service.getGroups(makeField(type));
+      const layoutGroup = groups.find((g: { id: string }) => g.id === 'designer-layout');
+      expect(layoutGroup).toBeDefined();
+    }
   });
 });
