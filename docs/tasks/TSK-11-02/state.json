@@ -1,0 +1,18 @@
+{
+  "status": "[im]",
+  "started_at": "2026-04-19T08:15:12Z",
+  "last": {
+    "event": "build.ok",
+    "at": "2026-04-19T08:15:12Z"
+  },
+  "phase_history": [
+    {
+      "event": "build.ok",
+      "from": "[dd]",
+      "to": "[im]",
+      "at": "2026-04-19T08:15:12Z",
+      "elapsed_seconds": 0
+    }
+  ],
+  "updated": "2026-04-19T08:15:12Z"
+}

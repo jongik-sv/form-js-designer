@@ -7,7 +7,7 @@ import { getDropPosition } from './outlineUtils';
 export interface OutlinePanelProps {
   nodes: OutlineNode[];
   selectedIds: string[];
-  onSelect: (id: string, opts?: { additive?: boolean }) => void;
+  onSelect: (id: string, opts?: { additive?: boolean; range?: boolean }) => void;
   onDrop: (dragId: string, targetId: string, position: DropPosition) => void;
   onDropMulti?: OnDropMulti;
   onCopy: (id: string) => void;
@@ -32,7 +32,7 @@ interface OutlineNodeItemProps {
   node: OutlineNode;
   depth: number;
   selectedIds: string[];
-  onSelect: (id: string, opts?: { additive?: boolean }) => void;
+  onSelect: (id: string, opts?: { additive?: boolean; range?: boolean }) => void;
   collapsedIds: Set<string>;
   onToggle: (id: string) => void;
   isVirtualRoot?: boolean;
@@ -132,7 +132,11 @@ function OutlineNodeItem({
             data-outline-id={node.id}
             data-testid={`outline-node-${node.id}`}
             onClick={(e) => {
-              if (e.shiftKey || e.metaKey || e.ctrlKey) {
+              if (e.shiftKey) {
+                // shift: range 선택 (anchor→target 사이 모든 노드)
+                onSelect(node.id, { range: true });
+              } else if (e.metaKey || e.ctrlKey) {
+                // ctrl/meta: additive 토글 (개별 추가/제거)
                 onSelect(node.id, { additive: true });
               } else {
                 onSelect(node.id);

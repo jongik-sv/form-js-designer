@@ -96,6 +96,34 @@ export function deepCloneWithNewIds(
 }
 
 /**
+ * 스키마 트리를 DFS 순서로 순회하여 모든 노드의 id 배열을 반환한다.
+ * 루트 자체(type=default)는 포함하지 않으며, 자식부터 포함한다.
+ * schemaRoot의 id가 없는 노드도 안전하게 처리.
+ */
+export interface FlatIdSchema {
+  id?: string;
+  type?: string;
+  components?: FlatIdSchema[];
+  [key: string]: unknown;
+}
+
+export function collectFlatIds(schema: FlatIdSchema): string[] {
+  const result: string[] = [];
+  function dfs(node: FlatIdSchema, isRoot: boolean) {
+    if (!isRoot && node.id) {
+      result.push(node.id);
+    }
+    if (Array.isArray(node.components)) {
+      for (const child of node.components) {
+        dfs(child, false);
+      }
+    }
+  }
+  dfs(schema, true);
+  return result;
+}
+
+/**
  * 컨테이너 드롭 위치 계산에 사용하는 경계 비율 상수.
  * - CONTAINER_UPPER_RATIO: 이 비율 미만이면 'before' (상위 25%)
  * - CONTAINER_LOWER_RATIO: 이 비율 이상이면 'after'  (하위 25%)

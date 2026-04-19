@@ -1,7 +1,7 @@
 import { h, render } from 'preact';
 import { OutlinePanel } from './OutlinePanel';
 import { schemaToOutline } from './schemaToOutline';
-import { deepCloneWithNewIds, generateId, collectKeys } from './outlineUtils';
+import { deepCloneWithNewIds, generateId, collectKeys, collectFlatIds } from './outlineUtils';
 import type { OutlineNode, DropPosition } from './outlineTypes';
 import type { FieldSchema } from './outlineUtils';
 
@@ -83,6 +83,12 @@ class OutlinePanelService {
   _schemaVersion: number = 0;
   /** in-memory 클립보드: 복사된 FieldSchema 스냅샷 (deep clone with new ids) */
   _clipboard: FieldSchema | null = null;
+  /**
+   * Range 선택 anchor id.
+   * 단순 클릭 시 갱신, shift-click(range) 시 anchor→target 범위 계산에 사용.
+   * additive(ctrl) 클릭 시에도 갱신.
+   */
+  _anchorId: string | null = null;
   /**
    * additive 클릭 직후 동기적으로 form-js가 발화하는 selection.changed 이벤트가
    * _selectedIds를 단일 id로 덮어쓰지 않도록 한 번만 skip 하는 가드.
@@ -169,7 +175,7 @@ class OutlinePanelService {
         key: this._schemaVersion,
         nodes: this._nodes,
         selectedIds: this._selectedIds,
-        onSelect: (id: string, opts?: { additive?: boolean }) =>
+        onSelect: (id: string, opts?: { additive?: boolean; range?: boolean }) =>
           this._handleSelect(id, opts),
         onDrop: (dragId: string, targetId: string, position: DropPosition) =>
           this._handleDrop(dragId, targetId, position),
@@ -216,13 +222,21 @@ class OutlinePanelService {
     return field.parent;
   }
 
-  _handleSelect(id: string, opts?: { additive?: boolean }) {
+  _handleSelect(id: string, opts?: { additive?: boolean; range?: boolean }) {
     // id가 스키마에 없는 엣지 케이스는 no-op
     const formField = this._formFieldRegistry.get(id);
     if (!formField) return;
 
+    // shift-click: range 선택 (anchor→target 사이 DFS 범위)
+    if (opts?.range) {
+      this._handleRangeSelect(id);
+      return;
+    }
+
     if (opts?.additive) {
       this._toggleSelectedId(id);
+      // additive click → anchor도 해당 id로 갱신
+      this._anchorId = id;
       // form-js selection은 마지막 클릭 필드를 primary로 유지 (props-panel 표시용).
       // 뒤따르는 selection.changed가 _selectedIds를 덮어쓰지 않도록 가드.
       this._skipNextSelectionOverwrite = true;
@@ -231,7 +245,62 @@ class OutlinePanelService {
       return;
     }
 
+    // 단순 클릭: anchor 갱신
+    this._anchorId = id;
     this._selection.set(formField);
+  }
+
+  /**
+   * Range 선택 처리: anchor↔target 사이 DFS flat order의 모든 노드를 선택 집합에 union.
+   * anchor가 없으면 target을 anchor로 삼고 단일 선택과 동일하게 처리.
+   * anchor는 range 클릭으로는 변경되지 않는다.
+   */
+  private _handleRangeSelect(targetId: string) {
+    const anchorId = this._anchorId;
+    if (!anchorId) {
+      // anchor 없으면 단순 선택처럼 처리
+      const formField = this._formFieldRegistry.get(targetId);
+      if (!formField) return;
+      this._anchorId = targetId;
+      this._selection.set(formField);
+      return;
+    }
+
+    // 스키마 DFS flat ids 계산
+    const schema = this._formEditor.getSchema() as { id?: string; components?: unknown[] } | null | undefined;
+    if (!schema) return;
+
+    const flatIds = collectFlatIds(schema as Parameters<typeof collectFlatIds>[0]);
+    const anchorIdx = flatIds.indexOf(anchorId);
+    const targetIdx = flatIds.indexOf(targetId);
+
+    if (anchorIdx === -1 || targetIdx === -1) {
+      // anchor 또는 target이 flat list에 없으면 target만 단일 선택
+      const formField = this._formFieldRegistry.get(targetId);
+      if (formField) {
+        this._selectedIds = [targetId];
+        this._skipNextSelectionOverwrite = true;
+        this._selection.set(formField);
+        this._render();
+      }
+      return;
+    }
+
+    const lo = Math.min(anchorIdx, targetIdx);
+    const hi = Math.max(anchorIdx, targetIdx);
+    const rangeIds = flatIds.slice(lo, hi + 1);
+
+    // 기존 _selectedIds와 union
+    const combined = new Set([...this._selectedIds, ...rangeIds]);
+    this._selectedIds = [...combined];
+
+    // form-js selection: target을 primary로
+    const formField = this._formFieldRegistry.get(targetId);
+    if (formField) {
+      this._skipNextSelectionOverwrite = true;
+      this._selection.set(formField);
+    }
+    this._render();
   }
 
   /** _selectedIds 배열에 id가 있으면 제거, 없으면 추가 (토글). */
@@ -267,10 +336,16 @@ class OutlinePanelService {
     const id = fieldEl.getAttribute('data-id');
     if (!id) return;
 
-    this._toggleSelectedId(id);
-    this._skipNextSelectionOverwrite = true;
-    // render는 selection.changed 핸들러 또는 여기서 한 번 — 가드 덕분에 중복 overwrite 없음
-    this._render();
+    if (e.shiftKey) {
+      // shift: range 선택
+      this._handleRangeSelect(id);
+    } else {
+      // ctrl/meta: additive 토글
+      this._toggleSelectedId(id);
+      this._anchorId = id;
+      this._skipNextSelectionOverwrite = true;
+      this._render();
+    }
   }
 
   /**
@@ -869,6 +944,8 @@ class OutlinePanelService {
     const e = event as { selection?: { id?: string } | null } | undefined;
     const sel = e && 'selection' in e ? e.selection : null;
     this._selectedIds = sel?.id ? [sel.id] : [];
+    // 단순 외부 selection 변경 시 anchor도 갱신
+    this._anchorId = sel?.id ?? null;
     this._render();
   }
 
