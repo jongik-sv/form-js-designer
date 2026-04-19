@@ -21,9 +21,38 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const GOLDEN_DIR = path.join(__dirname, 'fixtures', 'golden');
 const GOLDEN_PATH = path.join(GOLDEN_DIR, 'resize-visual.png');
 
+type PW = import('@playwright/test').Page;
+
 /** 팔레트 아이템을 data-field-type으로 찾는 헬퍼 */
-function paletteItem(page: import('@playwright/test').Page, fieldType: string) {
+function paletteItem(page: PW, fieldType: string) {
   return page.locator(`.fjs-palette-field[data-field-type="${fieldType}"]`).first();
+}
+
+/** 팔레트 아이템을 캔버스로 드롭하는 헬퍼 */
+async function dropToCanvas(page: PW, fieldType: string) {
+  const src = paletteItem(page, fieldType);
+  await expect(src).toBeVisible({ timeout: 10000 });
+  const target = page
+    .locator('.fjs-empty-editor-card, .fjs-editor-container, .fjs-drop-container-vertical')
+    .first();
+  await expect(target).toBeVisible({ timeout: 10000 });
+  await src.dragTo(target);
+  await page.waitForTimeout(400);
+}
+
+/** 핸들을 수직으로 드래그하는 헬퍼 */
+async function dragHandleBy(page: PW, selector: string, deltaY: number) {
+  const handle = page.locator(selector);
+  await expect(handle).toBeVisible({ timeout: 5000 });
+  const box = await handle.boundingBox();
+  if (!box) throw new Error(`${selector} bounding box 없음`);
+  const cx = box.x + box.width / 2;
+  const cy = box.y + box.height / 2;
+  await page.mouse.move(cx, cy);
+  await page.mouse.down();
+  await page.mouse.move(cx, cy + deltaY, { steps: 30 });
+  await page.mouse.up();
+  await page.waitForTimeout(500);
 }
 
 test.describe('Editor Resize Visual Regression — TSK-12-04', () => {
@@ -38,37 +67,14 @@ test.describe('Editor Resize Visual Regression — TSK-12-04', () => {
 
   test('(시각 회귀) textarea resize 후 스크린샷 pixelmatch diff ≤ 0.1%', async ({ page }) => {
     // (클릭 경로) textarea 드롭
-    const src = paletteItem(page, 'textarea');
-    await expect(src).toBeVisible({ timeout: 10000 });
-    const target = page
-      .locator('.fjs-empty-editor-card, .fjs-editor-container, .fjs-drop-container-vertical')
-      .first();
-    await expect(target).toBeVisible({ timeout: 10000 });
-    await src.dragTo(target);
-    await page.waitForTimeout(400);
+    await dropToCanvas(page, 'textarea');
     await page.waitForSelector('.fjs-form-field-textarea', { timeout: 10000 });
 
     // 컴포넌트 클릭 → 선택
-    const textareaField = page.locator('.fjs-form-field-textarea').first();
-    await textareaField.click();
+    await page.locator('.fjs-form-field-textarea').first().click();
 
-    // component-resize-handle 표시 확인
-    const handle = page.locator('[data-testid="component-resize-handle"]');
-    await expect(handle).toBeVisible({ timeout: 5000 });
-
-    // 핸들 드래그 +200px
-    const handleBox = await handle.boundingBox();
-    if (!handleBox) throw new Error('component-resize-handle bounding box 없음');
-
-    await page.mouse.move(handleBox.x + handleBox.width / 2, handleBox.y + handleBox.height / 2);
-    await page.mouse.down();
-    await page.mouse.move(
-      handleBox.x + handleBox.width / 2,
-      handleBox.y + handleBox.height / 2 + 200,
-      { steps: 30 },
-    );
-    await page.mouse.up();
-    await page.waitForTimeout(500);
+    // 핸들 드래그 +200px (dragHandleBy 내부에서 handle 표시 확인)
+    await dragHandleBy(page, '[data-testid="component-resize-handle"]', 200);
 
     // 렌더 안정화 (2 rAF)
     await page.evaluate(

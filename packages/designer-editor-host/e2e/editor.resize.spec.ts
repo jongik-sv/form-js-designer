@@ -16,16 +16,15 @@
 
 import { test, expect } from '@playwright/test';
 
+type PW = import('@playwright/test').Page;
+
 /** 팔레트 아이템을 data-field-type으로 찾는 헬퍼 */
-function paletteItem(page: import('@playwright/test').Page, fieldType: string) {
+function paletteItem(page: PW, fieldType: string) {
   return page.locator(`.fjs-palette-field[data-field-type="${fieldType}"]`).first();
 }
 
 /** 팔레트 아이템을 캔버스로 dragTo로 드롭하는 헬퍼 */
-async function dropToCanvas(
-  page: import('@playwright/test').Page,
-  fieldType: string,
-) {
+async function dropToCanvas(page: PW, fieldType: string) {
   const src = paletteItem(page, fieldType);
   await expect(src).toBeVisible({ timeout: 10000 });
   const target = page
@@ -34,6 +33,21 @@ async function dropToCanvas(
   await expect(target).toBeVisible({ timeout: 10000 });
   await src.dragTo(target);
   await page.waitForTimeout(400);
+}
+
+/** 핸들을 수직으로 드래그하는 헬퍼 */
+async function dragHandleBy(page: PW, selector: string, deltaY: number) {
+  const handle = page.locator(selector);
+  await expect(handle).toBeVisible({ timeout: 5000 });
+  const box = await handle.boundingBox();
+  if (!box) throw new Error(`${selector} bounding box 없음`);
+  const cx = box.x + box.width / 2;
+  const cy = box.y + box.height / 2;
+  await page.mouse.move(cx, cy);
+  await page.mouse.down();
+  await page.mouse.move(cx, cy + deltaY, { steps: 20 });
+  await page.mouse.up();
+  await page.waitForTimeout(300);
 }
 
 test.describe('Editor Resize — TSK-12-04 통합 스펙', () => {
@@ -67,17 +81,7 @@ test.describe('Editor Resize — TSK-12-04 통합 스펙', () => {
     await expect(handle).toBeVisible({ timeout: 5000 });
 
     // 핸들 드래그 +125px (아래)
-    const handleBox = await handle.boundingBox();
-    if (!handleBox) throw new Error('component-resize-handle bounding box 없음');
-
-    const startX = handleBox.x + handleBox.width / 2;
-    const startY = handleBox.y + handleBox.height / 2;
-
-    await page.mouse.move(startX, startY);
-    await page.mouse.down();
-    await page.mouse.move(startX, startY + 125, { steps: 20 });
-    await page.mouse.up();
-    await page.waitForTimeout(300);
+    await dragHandleBy(page, '[data-testid="component-resize-handle"]', 125);
 
     // aria-valuenow > 100 검증
     const handleAfter = page.locator('[data-testid="component-resize-handle"]');
@@ -108,28 +112,13 @@ test.describe('Editor Resize — TSK-12-04 통합 스펙', () => {
     // 컴포넌트 클릭 → 선택
     await page.locator('.fjs-form-field-textfield').first().click();
 
-    // row-resize-handle 표시 확인
-    const rowHandle = page.locator('[data-testid="row-resize-handle"]').first();
-    await expect(rowHandle).toBeVisible({ timeout: 5000 });
-
-    // 행 높이 변경 전 측정
-    const rowBefore = page.locator('.fjs-layout-row').first();
-    const rowBoxBefore = await rowBefore.boundingBox();
+    // 행 높이 변경 전 측정 (dragHandleBy 내부에서 handle 표시 확인)
+    const rowBoxBefore = await page.locator('.fjs-layout-row').first().boundingBox();
     const heightBefore = rowBoxBefore?.height ?? 0;
 
-    // 핸들 드래그 +160px
-    const handleBox = await rowHandle.boundingBox();
-    if (!handleBox) throw new Error('row-resize-handle bounding box 없음');
-
-    await page.mouse.move(handleBox.x + handleBox.width / 2, handleBox.y + handleBox.height / 2);
-    await page.mouse.down();
-    await page.mouse.move(
-      handleBox.x + handleBox.width / 2,
-      handleBox.y + handleBox.height / 2 + 160,
-      { steps: 20 },
-    );
-    await page.mouse.up();
-    await page.waitForTimeout(500);
+    // 핸들 드래그 +160px (내부에서 row-resize-handle 표시 확인)
+    await dragHandleBy(page, '[data-testid="row-resize-handle"]', 160);
+    await page.waitForTimeout(200); // DOM 안정화 추가 대기
 
     // min-height가 빈 문자열이 아님을 확인 (rowHeight 적용됨)
     const rowEl = page.locator('.fjs-layout-row').first();

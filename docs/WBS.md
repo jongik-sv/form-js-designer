@@ -803,7 +803,7 @@ node, vitest, vite, playwright
 - category: testing
 - domain: fullstack
 - model: sonnet
-- status: [im]
+- status: [xx]
 - priority: high
 - assignee: -
 - schedule: 2026-05-14 ~ 2026-05-15

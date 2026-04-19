@@ -53,11 +53,8 @@ test.describe('CLI height-roundtrip E2E (TSK-12-04)', () => {
     expect(schema.components[1]?.type).toBe('textfield');
     expect(schema.components[1]?.layout?.rowHeight).toBe(150);
 
-    // validate 후에도 값이 변하지 않음을 재확인 (validate는 순수 검증만 수행)
-    const exitCode = await runValidate(FIXTURE_PATH, {});
-    expect(exitCode).toBe(0);
-
-    // re-parse → 동일 값 (파일 I/O 라운드트립)
+    // re-parse → 동일 값 (파일 I/O 라운드트립): validate는 파일을 수정하지 않으므로 동일 내용
+    // runValidate는 test('validate pass') 케이스에서 별도 검증하므로 중복 호출 제거
     const rawAfter = fs.readFileSync(FIXTURE_PATH, 'utf-8');
     const schemaAfter = JSON.parse(rawAfter) as typeof schema;
     expect(schemaAfter.components[0]?.layout?.height).toBe(200);

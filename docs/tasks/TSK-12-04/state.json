@@ -1,9 +1,9 @@
 {
   "id": "TSK-12-04",
-  "status": "[im]",
+  "status": "[xx]",
   "last": {
-    "event": "test.fail",
-    "at": "2026-04-19T11:47:17Z"
+    "event": "refactor.ok",
+    "at": "2026-04-19T12:49:17Z"
   },
   "phase_history": [
     {
@@ -25,8 +25,24 @@
       "from": "[im]",
       "to": "[im]",
       "at": "2026-04-19T11:47:17Z"
+    },
+    {
+      "event": "test.ok",
+      "from": "[im]",
+      "to": "[ts]",
+      "at": "2026-04-19T12:43:27Z",
+      "elapsed_seconds": 3370
+    },
+    {
+      "event": "refactor.ok",
+      "from": "[ts]",
+      "to": "[xx]",
+      "at": "2026-04-19T12:49:17Z",
+      "elapsed_seconds": 350
     }
   ],
   "started_at": "2026-04-19T10:00:00Z",
-  "updated": "2026-04-19T11:47:17Z"
+  "updated": "2026-04-19T12:49:17Z",
+  "completed_at": "2026-04-19T12:49:17Z",
+  "elapsed_seconds": 10157
 }
