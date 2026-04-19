@@ -84,13 +84,23 @@ class ShortcutService {
     formEditor?: FormEditorLike | null,
   ) {
     this._onKeyDown = (event: KeyboardEvent) => {
-      if (isEditableTarget(event.target)) return;
-
       const key = event.key;
       const isDelete = key === 'Delete' || key === 'Del';
       const isInsert = key === 'Insert';
       const isSelectAll = (key === 'a' || key === 'A') && (event.ctrlKey || event.metaKey);
       const isEscape = key === 'Escape';
+
+      // 멀티 선택 Delete: 포커스 위치와 무관하게 우선 처리 (props panel input에 포커스가 있어도 동작)
+      const multiIds = outlinePanel?.getSelectedIds?.() ?? [];
+      console.log('[ShortcutModule] keydown:', key, 'multiIds:', multiIds, 'outlinePanel:', !!outlinePanel);
+      if (isDelete && multiIds.length > 1 && typeof outlinePanel?.deleteSelectedFields === 'function') {
+        event.preventDefault();
+        event.stopPropagation();
+        outlinePanel.deleteSelectedFields();
+        return;
+      }
+
+      if (isEditableTarget(event.target)) return;
 
       // Ctrl/Meta+A → 루트 children 전체 선택
       if (isSelectAll) {
@@ -123,15 +133,6 @@ class ShortcutService {
       }
 
       if (!isDelete && !isInsert) return;
-
-      // 멀티 선택 Delete: OutlineModule이 관리하는 _selectedIds 전체를 대상으로 일괄 삭제
-      const multiIds = outlinePanel?.getSelectedIds?.() ?? [];
-      if (isDelete && multiIds.length > 1 && typeof outlinePanel?.deleteSelectedFields === 'function') {
-        event.preventDefault();
-        event.stopPropagation();
-        outlinePanel.deleteSelectedFields();
-        return;
-      }
 
       const raw = selection.get?.();
       const selected = Array.isArray(raw) ? raw[0] : raw;

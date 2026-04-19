@@ -710,7 +710,7 @@ node, vitest, vite, playwright
 - category: development
 - domain: frontend
 - model: opus
-- status: [im]
+- status: [xx]
 - priority: medium
 - assignee: -
 - schedule: 2026-05-01 ~ 2026-05-05

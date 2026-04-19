@@ -98,9 +98,22 @@ test.describe('멀티 선택 — Shift-click → 일괄 삭제 → Undo 복구',
     await page.waitForTimeout(200);
 
     // Step 3: Shift+Click으로 두 번째 노드 추가 선택
+    // keyboard.down/up으로 Shift 키 상태를 명시적으로 유지하여 shiftKey=true 보장
     const secondNode = outlineNodes.nth(1);
-    await secondNode.click({ modifiers: ['Shift'] });
-    await page.waitForTimeout(200);
+    await page.keyboard.down('Shift');
+    await secondNode.click();
+    await page.keyboard.up('Shift');
+    await page.waitForTimeout(300);
+
+    // 디버그: Shift-click 후 선택/포커스 상태
+    const dbg = await page.evaluate(() => {
+      const nodes = document.querySelectorAll('[data-outline-id]:not([data-outline-id="__outline_root__"])');
+      const selectedIds = Array.from(nodes).filter(n => (n as HTMLElement).className.includes('selected')).map(n => n.getAttribute('data-outline-id'));
+      const multiCanvas = Array.from(document.querySelectorAll('[data-outline-multi-selected="true"]')).map(n => n.getAttribute('data-id'));
+      const focused = `${document.activeElement?.tagName}.${document.activeElement?.className}`;
+      return { selectedIds, multiCanvas, focused };
+    });
+    console.log('Before Delete:', JSON.stringify(dbg));
 
     // Step 4: Delete 키로 일괄 삭제
     await page.keyboard.press('Delete');
@@ -135,8 +148,10 @@ test.describe('멀티 선택 — Shift-click → 일괄 삭제 → Undo 복구',
     // 첫 번째 선택 후 두 번째 Shift-click
     await outlineNodes.first().click();
     await page.waitForTimeout(150);
-    await outlineNodes.nth(1).click({ modifiers: ['Shift'] });
-    await page.waitForTimeout(150);
+    await page.keyboard.down('Shift');
+    await outlineNodes.nth(1).click();
+    await page.keyboard.up('Shift');
+    await page.waitForTimeout(200);
 
     // Delete
     await page.keyboard.press('Delete');

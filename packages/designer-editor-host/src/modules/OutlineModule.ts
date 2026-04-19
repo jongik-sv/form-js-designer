@@ -259,22 +259,16 @@ class OutlinePanelService {
    */
   deleteSelectedFields() {
     const ids = [...this._selectedIds];
+    console.log('[deleteSelectedFields] called with ids:', ids);
     if (ids.length === 0) return;
 
     const modeling = this._modeling as unknown as {
       removeFormField?: (field: unknown, parent: unknown, idx: number) => void;
     };
+    console.log('[deleteSelectedFields] modeling.removeFormField type:', typeof modeling.removeFormField);
     if (typeof modeling.removeFormField !== 'function') return;
 
     const selectedSet = new Set(ids);
-    const hasSelectedAncestor = (field: InternalFormField | undefined): boolean => {
-      let cur = field ? this._getParent(field) : undefined;
-      while (cur) {
-        if (cur.id && selectedSet.has(cur.id)) return true;
-        cur = this._getParent(cur);
-      }
-      return false;
-    };
 
     // Batch execution: 모든 deletion을 한 번의 undo/redo 원자로 처리
     // 생성할 제거 작업 목록 준비
@@ -282,19 +276,22 @@ class OutlinePanelService {
 
     for (const id of ids) {
       const field = this._formFieldRegistry.get(id) as InternalFormField | undefined;
+      console.log('[deleteSelectedFields] id:', id, 'field:', !!field, '_parent:', field?._parent, 'parent:', !!field?.parent);
       if (!field) continue;
       // 루트(type=default)는 삭제 불가
       if (!field._parent && !field.parent) continue;
-      if (hasSelectedAncestor(field)) continue;
+      if (this._hasAncestorInSet(field, selectedSet)) continue;
 
       const parent = this._getParent(field);
+      const idx = parent ? this._findIndexInParent(parent, field.id) : -1;
+      console.log('[deleteSelectedFields] parent:', !!parent, 'idx:', idx);
       if (!parent) continue;
-      const idx = this._findIndexInParent(parent, field.id);
       if (idx === -1) continue;
 
       toRemove.push({ field, parent, idx });
     }
 
+    console.log('[deleteSelectedFields] toRemove.length:', toRemove.length);
     // 없을 경우 early return
     if (toRemove.length === 0) {
       this._selectedIds = [];
@@ -448,6 +445,37 @@ class OutlinePanelService {
   }
 
   /**
+   * 조상 체인에 idSet 내 id가 하나라도 있으면 true를 반환.
+   * deleteSelectedFields · duplicateSelectedFields · _handleMultiDrop에서 공유하는
+   * "ancestor 제외" 판정 로직을 통합한 헬퍼.
+   */
+  private _hasAncestorInSet(
+    field: InternalFormField | undefined,
+    idSet: Set<string>,
+  ): boolean {
+    let cur = field ? this._getParent(field) : undefined;
+    while (cur) {
+      if (cur.id && idSet.has(cur.id)) return true;
+      cur = this._getParent(cur);
+    }
+    return false;
+  }
+
+  /**
+   * attrs 객체에서 layout.row 속성을 제거하고 수정된 attrs를 반환.
+   * 세로 복제(_duplicateFieldVertical) · 일괄 복제(duplicateSelectedFields) 모두
+   * 새 row에 배치하므로 동일한 제거 로직을 공유한다.
+   */
+  private static _stripLayoutRow(attrs: Record<string, unknown>): Record<string, unknown> {
+    if (attrs.layout && typeof attrs.layout === 'object') {
+      const layout = { ...(attrs.layout as Record<string, unknown>) };
+      delete layout['row'];
+      return { ...attrs, layout };
+    }
+    return attrs;
+  }
+
+  /**
    * 복사 핸들러: formField를 deep clone(새 ID 포함)하여 in-memory 클립보드에 저장.
    */
   _handleCopy(id: string) {
@@ -552,14 +580,6 @@ class OutlinePanelService {
 
     // ancestor 필터링
     const selectedSet = new Set(ids);
-    const hasSelectedAncestor = (field: InternalFormField | undefined): boolean => {
-      let cur = field ? this._getParent(field) : undefined;
-      while (cur) {
-        if (cur.id && selectedSet.has(cur.id)) return true;
-        cur = this._getParent(cur);
-      }
-      return false;
-    };
 
     // 대상 필드 목록 수집 (ancestor 제외)
     const toProcess: Array<{ field: InternalFormField; parent: InternalFormField; idx: number }> = [];
@@ -567,7 +587,7 @@ class OutlinePanelService {
       const field = this._formFieldRegistry.get(id) as InternalFormField | undefined;
       if (!field) continue;
       if (!field._parent && !field.parent) continue; // 루트 제외
-      if (hasSelectedAncestor(field)) continue;
+      if (this._hasAncestorInSet(field, selectedSet)) continue;
       const parent = this._getParent(field);
       if (!parent) continue;
       const idx = this._findIndexInParent(parent, field.id);
@@ -590,13 +610,9 @@ class OutlinePanelService {
     const newIdsReversed: string[] = [];
 
     for (const { field, parent, idx } of orderedByDesc) {
-      const attrs = deepCloneWithNewIds(field as unknown as FieldSchema, existingKeys) as Record<string, unknown>;
-      // 세로 복제: layout.row 제거 (새 row에 배치)
-      if (attrs.layout && typeof attrs.layout === 'object') {
-        const layout = { ...(attrs.layout as Record<string, unknown>) };
-        delete layout['row'];
-        attrs.layout = layout;
-      }
+      const attrs = OutlinePanelService._stripLayoutRow(
+        deepCloneWithNewIds(field as unknown as FieldSchema, existingKeys) as Record<string, unknown>,
+      );
       const insertIdx = idx + 1;
       this._modeling.addFormField(attrs, parent, insertIdx);
       newIdsReversed.push((attrs as { id?: string }).id ?? '');
@@ -629,15 +645,7 @@ class OutlinePanelService {
     const dragIdsSet = new Set(dragIds);
 
     // target이 드래그 집합 중 하나의 후손인지 확인
-    const hasAncestorInSet = (field: InternalFormField | undefined): boolean => {
-      let cur = field ? this._getParent(field) : undefined;
-      while (cur) {
-        if (cur.id && dragIdsSet.has(cur.id)) return true;
-        cur = this._getParent(cur);
-      }
-      return false;
-    };
-    if (hasAncestorInSet(targetField)) return;
+    if (this._hasAncestorInSet(targetField, dragIdsSet)) return;
 
     // 대상 필드 목록 수집 (존재하지 않거나 루트인 것 제외)
     const toMove: Array<{ field: InternalFormField; parent: InternalFormField; idx: number }> = [];
@@ -694,13 +702,11 @@ class OutlinePanelService {
 
     // 세로 복사: 새 row에 배치해야 하므로 clone된 layout.row를 제거
     // (deepCloneWithNewIds는 layout 속성을 그대로 복사하므로 원본 row ID가 유지됨)
-    if (attrs.layout && typeof attrs.layout === 'object') {
-      const layout = { ...(attrs.layout as Record<string, unknown>) };
-      delete layout['row'];
-      attrs.layout = layout;
-    }
-
-    this._modeling.addFormField(attrs, parent, insertIdx);
+    this._modeling.addFormField(
+      OutlinePanelService._stripLayoutRow(attrs),
+      parent,
+      insertIdx,
+    );
   }
 
   /**
