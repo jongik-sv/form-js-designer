@@ -14,9 +14,9 @@ import { h } from 'preact';
 import { useState, useEffect, useRef, useCallback } from 'preact/hooks';
 import { ResizeHandle } from './ResizeHandle';
 import { useElementResize } from '../hooks/useElementResize';
+import { ROW_HEIGHT_MIN, ROW_HEIGHT_MAX } from '@form-js-designer/designer-runtime';
+import type { RowLike } from '@form-js-designer/designer-runtime';
 
-const ROW_HEIGHT_MIN = 36;
-const ROW_HEIGHT_MAX = 2000;
 const HANDLE_HEIGHT = 6;
 
 interface AnyField {
@@ -24,11 +24,6 @@ interface AnyField {
   type: string;
   layout?: { rowHeight?: number; height?: number; [key: string]: unknown };
   [key: string]: unknown;
-}
-
-interface RowLike {
-  id: string;
-  components: string[];
 }
 
 interface EventBusLike {

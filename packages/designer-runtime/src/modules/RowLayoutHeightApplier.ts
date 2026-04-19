@@ -32,13 +32,7 @@ export interface ApplierFieldWithRow {
  */
 function allRows(rowGroups: FormLayouterLike['_rows']): RowLike[] {
   if (!rowGroups) return [];
-  const result: RowLike[] = [];
-  for (const group of rowGroups) {
-    for (const row of group.rows ?? []) {
-      result.push(row);
-    }
-  }
-  return result;
+  return rowGroups.flatMap((group) => group.rows ?? []);
 }
 
 /**
