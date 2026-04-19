@@ -62,6 +62,6 @@ export interface ViewerHostProps {
 // ---------------------------------------------------------------------------
 export interface EditorHostProps extends ViewerHostProps {
   selectedIds: readonly string[];
-  onSelect?: (id: string) => void;
+  onSelect?: (id: string, opts?: { additive?: boolean }) => void;
   renderContextSlots?: Partial<FormRenderContextSlots>;
 }

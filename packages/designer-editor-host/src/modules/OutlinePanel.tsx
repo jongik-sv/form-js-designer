@@ -6,7 +6,7 @@ import { getDropPosition } from './outlineUtils';
 export interface OutlinePanelProps {
   nodes: OutlineNode[];
   selectedIds: string[];
-  onSelect: (id: string) => void;
+  onSelect: (id: string, opts?: { additive?: boolean }) => void;
   onDrop: (dragId: string, targetId: string, position: DropPosition) => void;
   onCopy: (id: string) => void;
   onPaste: () => void;
@@ -30,7 +30,7 @@ interface OutlineNodeItemProps {
   node: OutlineNode;
   depth: number;
   selectedIds: string[];
-  onSelect: (id: string) => void;
+  onSelect: (id: string, opts?: { additive?: boolean }) => void;
   collapsedIds: Set<string>;
   onToggle: (id: string) => void;
   isVirtualRoot?: boolean;
@@ -129,7 +129,13 @@ function OutlineNodeItem({
             class={`outline-node${isSelected ? ' outline-node--selected' : ''}`}
             data-outline-id={node.id}
             data-testid={`outline-node-${node.id}`}
-            onClick={() => onSelect(node.id)}
+            onClick={(e) => {
+              if (e.shiftKey || e.metaKey || e.ctrlKey) {
+                onSelect(node.id, { additive: true });
+              } else {
+                onSelect(node.id);
+              }
+            }}
             type="button"
             aria-selected={isSelected ? 'true' : 'false'}
             draggable={true}

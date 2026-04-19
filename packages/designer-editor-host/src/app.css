@@ -677,4 +677,15 @@
   .fjs-editor-container .designer-container-hover-guard .fjs-children {
     pointer-events: auto;
   }
+
+  /**
+   * 멀티 선택 보조 표시 — form-js는 기본적으로 단일 선택(.fjs-editor-selected)만
+   * 스타일링하므로, shift/ctrl/meta 클릭으로 추가된 보조 필드는 동일한 톤의
+   * outline으로 강조한다.
+   */
+  .fjs-editor-container [data-outline-multi-selected='true'] {
+    outline: 2px dashed #3b82f6;
+    outline-offset: -2px;
+    background: rgba(59, 130, 246, 0.08);
+  }
 }

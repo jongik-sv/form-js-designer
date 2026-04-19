@@ -634,3 +634,190 @@ node, vitest, vite, playwright
   - `v1.0.0-rc.1` 태그
 - acceptance:
   - 라이선스 gate 통과, 태그 푸시 완료
+
+---
+
+## WP-11: 멀티 선택 확장 ⬜
+- schedule: 2026-04-20 ~ 2026-05-05
+- description: 캔버스·아웃라인 공통 멀티 선택 UX 강화. baseline(MVP: shift/ctrl/meta 클릭 토글 + Delete 일괄 삭제)은 이미 구현됨(`develop`). 본 WP에서 Undo 배치, OS 표준 Range 선택, Ctrl+A/Escape 단축키, 마퀴(rubber-band) 선택, 일괄 복제/DnD 이동, E2E 회귀 스펙을 추가한다.
+- depends: TSK-06-01 (OutlineModule·ShortcutModule), TSK-03-01 (OverlayLayer)
+
+### TSK-11-01: Undo 배치 + Ctrl+A/Escape 단축키 + E2E 회귀 스펙
+- category: development
+- domain: frontend
+- model: sonnet
+- status: [dd]
+- priority: high
+- assignee: -
+- schedule: 2026-04-20 ~ 2026-04-23
+- tags: multi-select, undo, shortcut, e2e
+- depends: -
+- entry-point: `/` (designer-editor-host App)
+- prd-ref: PRD §4 AC #1 (Outline 선택 동기화)
+- requirements:
+  - `OutlineModule.deleteSelectedFields()` 를 form-js `commandStack` 의 복합 command 로 감싸 단일 undo/redo 원자화
+  - 전역 키보드 `Ctrl/Meta+A` → 현재 루트 children 전체 선택 (input/contenteditable 포커스 시 no-op)
+  - `Escape` → 선택 해제 (`_selectedIds=[]`, form-js `selection.clear()`)
+  - `editor.multiselect.spec.ts` E2E: shift-click → 일괄 삭제 → undo 1회 복구 / Ctrl+A → Escape 시나리오
+- acceptance:
+  - vitest 신규 테스트 ≥ 4 통과, 기존 226 테스트 회귀 0
+  - Playwright `multiselect.spec.ts` green (visible 1회 포함)
+  - 일괄 삭제 후 Undo 한 번으로 모든 필드 복구
+
+### TSK-11-02: Range 선택 (shift-click 연속 범위) + 시각 개선
+- category: development
+- domain: frontend
+- model: sonnet
+- status: [dd]
+- priority: medium
+- assignee: -
+- schedule: 2026-04-23 ~ 2026-04-25
+- tags: multi-select, range, ux
+- depends: TSK-11-01
+- entry-point: `/`
+- prd-ref: PRD §4 AC #1
+- requirements:
+  - OutlineModule 에 `_anchorId` 도입(단순 클릭 시 갱신, shift 클릭 시 anchor→target 사이 형제를 선택 집합에 포함)
+  - DFS flat order(parent 재귀 순회) 기준 anchor↔target 사이 전 노드를 집합 union
+  - secondary 선택 CSS(`data-outline-multi-selected`) dashed → solid 보강, form-js container 레이어 간섭 회피 (z-index/background-clip 조정)
+  - 아웃라인 패널 트리에서도 shift-click range 적용
+- acceptance:
+  - vitest 신규: range add / range within nested container / anchor 갱신 규칙
+  - Playwright: A~E 5개 필드에서 A 클릭 → shift+E 클릭 → 5개 모두 선택 확인
+
+### TSK-11-03: 마퀴(rubber-band) 선택
+- category: development
+- domain: frontend
+- model: opus
+- status: [  ]
+- priority: medium
+- assignee: -
+- schedule: 2026-04-27 ~ 2026-05-01
+- tags: multi-select, marquee, overlay
+- depends: TSK-11-02
+- entry-point: `/`
+- prd-ref: PRD §4 AC #1
+- requirements:
+  - `OverlayLayer`(또는 신규 `MarqueeLayer`)에 `mousedown` → `mousemove` → `mouseup` 사이 드래그 박스 DOM 렌더
+  - 빈 영역 mousedown 시작 / 필드 위 mousedown은 form-js DnD에 양보 (pointer-events 가드)
+  - 드래그 종료 시 박스 rect 와 `[data-id]` 요소 bounding rect 교차 판정 → `_selectedIds` 교체 또는 union(shift 누름 여부)
+  - tabs inside 같은 특수 컨테이너 제외 규칙은 기존 `DISABLED_INSIDE_TYPES` 와 정합
+- acceptance:
+  - vitest: rect intersection 순수 함수 테스트 (경계/부분 겹침/완전 포함)
+  - Playwright: 빈 영역 드래그로 3개 교차 필드 선택 → 일괄 삭제까지 연결
+
+### TSK-11-04: 일괄 복제 + 멀티 DnD 이동
+- category: development
+- domain: frontend
+- model: opus
+- status: [  ]
+- priority: medium
+- assignee: -
+- schedule: 2026-05-01 ~ 2026-05-05
+- tags: multi-select, duplicate, dnd
+- depends: TSK-11-01
+- entry-point: `/`
+- prd-ref: PRD §4 AC #1, #7 (Export 라운드트립)
+- requirements:
+  - `OutlinePanelService.duplicateSelectedFields()` — `_selectedIds` 전부를 원 위치 직후에 deep clone(새 id/key) 삽입. 복제본으로 선택 전환.
+  - ShortcutModule `Insert` 키: 멀티 시 `duplicateSelectedFields()`, 단일 시 기존 세로 복제
+  - DnD: OutlinePanel `draggable` 노드에서 멀티 선택 중이면 drag payload 를 `id-list` 로 직렬화 → drop 핸들러에서 순회 이동 (commandStack 단일 원자)
+  - key 충돌 방지 로직은 기존 `_handlePaste` 의 `collectKeys` 재사용
+- acceptance:
+  - vitest: `duplicateSelectedFields`(형제 순서 유지) / DnD 멀티 이동 / key rename 누적
+  - Playwright: 3 선택 → Insert → 6개 → undo 1회 → 3개 복귀
+
+---
+
+## WP-12: 컴포넌트/행 리사이즈 핸들 ⬜
+- schedule: 2026-05-06 ~ 2026-05-15
+- description: 캔버스에서 컴포넌트(textarea/html/group/container) 하단·행(row) 하단에 드래그 핸들을 노출, 사용자가 직접 높이를 조절. 스키마에 `layout.height`(컴포넌트) / `layout.rowHeight`(행 첫 컴포넌트)로 저장하고 designer-runtime의 신규 `LayoutHeightModule`을 통해 viewer에서도 동일한 높이로 렌더된다(디자이너=뷰어 동등성). spacer는 form-js viewer가 이미 지원하는 `height` prop을 그대로 사용한다.
+- depends: TSK-03-01 (OverlayLayer), WP-04 (custom container 컴포넌트), `panel-resize-toggle`(usePanelResize 패턴 재사용)
+
+### TSK-12-01: useElementResize 훅 + ResizeHandle 공통 컴포넌트
+- category: development
+- domain: frontend
+- model: sonnet
+- status: [  ]
+- priority: high
+- assignee: -
+- schedule: 2026-05-06 ~ 2026-05-07
+- tags: resize, hook, primitive
+- depends: -
+- entry-point: `packages/designer-editor-host/src/hooks/`
+- prd-ref: PRD §4 AC #4 (WYSIWYG 편집)
+- requirements:
+  - 기존 `usePanelResize`(packages/designer-editor-host/src/hooks/usePanelResize.ts) 의 pointercapture·body cursor·cleanup 패턴을 일반화한 `useElementResize({ axis: 'y'|'x', initial, min, max, onChange, onCommit })` 훅 신설
+  - `ResizeHandle` Preact 컴포넌트(`<div role="separator" aria-orientation="horizontal">`) — 드래그 시작·키보드(Arrow/Home/End)·`aria-valuenow`/`aria-valuemin`/`aria-valuemax`
+  - CSS는 designer-editor-host의 전역 `app.css` `@layer components` 평문(ADR-0001 D4 준수)
+- acceptance:
+  - vitest 신규: pointer drag delta → onChange/onCommit 호출, min/max clamp, keyboard delta(±10), Home/End → min/max
+  - 기존 `usePanelResize` 회귀 0 (가능하면 내부에서 useElementResize로 위임)
+
+### TSK-12-02: 컴포넌트 높이 핸들 (`layout.height`) + viewer 적용 모듈
+- category: development
+- domain: fullstack
+- model: opus
+- status: [  ]
+- priority: critical
+- assignee: -
+- schedule: 2026-05-08 ~ 2026-05-11
+- tags: resize, schema, layout, viewer-parity
+- depends: TSK-12-01
+- entry-point: `packages/designer-core/src/`, `packages/designer-runtime/src/`
+- prd-ref: PRD §4 AC #4, AC #7 (Export 라운드트립)
+- requirements:
+  - 대상 컴포넌트: `textarea`, `html`, `table`, `group`, custom container(`card`/`stack`/`modal`/`tabs`/`tabPanel`). spacer는 기존 `height` prop 그대로 (TSK-12-02 범위 외)
+  - 스키마 키: `field.layout.height: number`(px). form-js의 기존 `layout.{row,columns}` 객체에 추가. unknown key는 form-js viewer가 무시하므로 직접 호환 깨짐 없음
+  - 디자이너 측: 선택된 대상 컴포넌트의 OverlayLayer 하단에 `<ResizeHandle>` 렌더, drag 종료 시 form-js `editFieldCommand` 로 `layout.height` 갱신 → undo/redo 자동
+  - viewer 동등성: 신규 `packages/designer-runtime/src/modules/LayoutHeightModule.ts` 작성. form-js `additionalModules` 로 designer/viewer 양쪽에 등록. `formFields.changed` / `formField.added` 이벤트 hook + `[data-id]` 직접 조회로 inline `style.height` 주입(textarea는 자식 `<textarea>` 까지 100%)
+  - propsPanel: 대상 컴포넌트에 "높이(px)" 숫자 입력 추가 (핸들과 동일 prop 편집)
+- acceptance:
+  - vitest 신규: `layout.height` 갱신 → editFieldCommand 발행, LayoutHeightModule이 DOM에 inline style 주입(jsdom)
+  - Playwright(visible): textarea 핸들 드래그 → 75→200px → 스키마 export 확인 → 동일 스키마를 viewer 페이지(`/preview`)로 import 시 동일 높이 렌더
+  - 기존 form-js viewer 회귀 0 (designer-editor-host preview 라우트 시각 회귀 1px 이내)
+
+### TSK-12-03: 행 높이 핸들 (`layout.rowHeight`) + viewer 적용
+- category: development
+- domain: fullstack
+- model: opus
+- status: [  ]
+- priority: high
+- assignee: -
+- schedule: 2026-05-11 ~ 2026-05-14
+- tags: resize, row, layout, viewer-parity
+- depends: TSK-12-02
+- entry-point: `packages/designer-core/src/container/ChildrenSlot.tsx`, `packages/designer-runtime/src/modules/LayoutHeightModule.ts`
+- prd-ref: PRD §4 AC #4
+- requirements:
+  - 저장 위치: 해당 row 첫 컴포넌트의 `layout.rowHeight: number`(px). form-js `formLayouter.getRows(parentId)[i].components[0]` 으로 결정. 첫 컴포넌트가 바뀌면(이동/삭제) WBS-12-03 의 행 핸들도 자연스레 새 첫 컴포넌트를 따라감.
+  - 디자이너 측: `ChildrenSlot` 의 `<Row>` 자식 끝에 `<ResizeHandle axis="y">` 삽입. drag 종료 시 첫 컴포넌트의 `layout.rowHeight` 갱신.
+  - viewer 측: `LayoutHeightModule` 확장 — `[data-row-id]` 행 DOM 에 `min-height` 주입. row 의 첫 컴포넌트의 `layout.rowHeight` 를 lookup.
+  - 단일행 single-line 필드만 있는 row 도 핸들 표시(빈 공간 허용). `align-items: start` 유지로 input 은 위쪽 정렬.
+- acceptance:
+  - vitest 신규: 행 핸들 drag → 첫 컴포넌트 `layout.rowHeight` 갱신, 첫 컴포넌트 삭제 시 새 첫 컴포넌트로 height 이전(또는 reset 정책 — TSK 설계 단계에서 결정)
+  - Playwright(visible): 한 행에 textfield + textarea → 행 핸들 드래그로 행 높이 200px → textarea 가 행 전체를 채우고 textfield 는 위쪽 정렬 유지 확인 → viewer 라우트에서 동일 결과
+  - 회귀: 기존 row 자동 height(`flex: auto`) 동작 유지 (rowHeight 미설정 시 변화 없음)
+
+### TSK-12-04: E2E 라운드트립 + 시각 회귀 + 문서
+- category: testing
+- domain: fullstack
+- model: sonnet
+- status: [  ]
+- priority: high
+- assignee: -
+- schedule: 2026-05-14 ~ 2026-05-15
+- tags: e2e, schema, regression, docs
+- depends: TSK-12-02, TSK-12-03
+- entry-point: `packages/designer-editor-host/test/e2e/`, `packages/designer-cli/test/`
+- prd-ref: PRD §4 AC #7 (Export 라운드트립)
+- requirements:
+  - E2E `editor.resize.spec.ts`: 컴포넌트 핸들 + 행 핸들 + propsPanel 숫자 입력 3 경로 시각 일치
+  - 스키마 라운드트립: designer 에서 height 설정 → JSON export → `designer-cli validate` pass → re-import 시 동일 height 복원
+  - 시각 회귀: pixel diff 0 또는 <0.1% (panel-resize-toggle 회귀 정책 준수)
+  - 문서: `docs/features/component-row-resize/` 신설 (PRD/사용법/스키마 예시/제약)
+- acceptance:
+  - Playwright `editor.resize.spec.ts` 3 케이스 green
+  - `designer-cli validate` 신규 fixture pass
+  - 시각 회귀 게이트 통과
+  - `docs/features/component-row-resize/README.md` 작성 + WP-12 README 와 상호 링크

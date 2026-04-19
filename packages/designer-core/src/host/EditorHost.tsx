@@ -140,7 +140,11 @@ export function EditorHost({
       const field = target.closest('[data-fjs-id]');
       if (field) {
         const id = field.getAttribute('data-fjs-id');
-        if (id) onSelect(id);
+        if (id) {
+          const me = e as MouseEvent;
+          const additive = !!(me.shiftKey || me.metaKey || me.ctrlKey);
+          onSelect(id, additive ? { additive: true } : undefined);
+        }
       }
     };
 

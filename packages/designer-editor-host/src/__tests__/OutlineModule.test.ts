@@ -52,6 +52,7 @@ function createMockModeling() {
   return {
     moveFormField: vi.fn(),
     addFormField: vi.fn(),
+    removeFormField: vi.fn(),
   };
 }
 
@@ -864,5 +865,148 @@ describe('OutlineModule', () => {
         expect(children[2]?.getAttribute('data-action')).toBe('delete');
       });
     });
+
+    // ----- 15. 멀티 선택 (shift/ctrl/meta click + 일괄 삭제) -----
+    describe('multi-select', () => {
+      function seedSelection(
+        instance: unknown,
+        ids: string[],
+      ) {
+        (instance as { _selectedIds: string[] })._selectedIds = [...ids];
+      }
+
+      it('_handleSelect with additive=true toggles id into _selectedIds (add)', () => {
+        const fieldA = { id: 'a', type: 'textfield' };
+        const fieldB = { id: 'b', type: 'textfield' };
+        mockFormFieldRegistry = createMockFormFieldRegistry({ a: fieldA, b: fieldB });
+
+        const instance = makeInstance() as {
+          _handleSelect: (id: string, opts?: { additive?: boolean }) => void;
+          _selectedIds: string[];
+        };
+
+        // 초기에 a가 선택된 상태
+        seedSelection(instance, ['a']);
+
+        instance._handleSelect('b', { additive: true });
+
+        expect(instance._selectedIds).toEqual(['a', 'b']);
+        expect(mockSelection.set).toHaveBeenCalledWith(fieldB);
+      });
+
+      it('_handleSelect with additive=true toggles id out of _selectedIds (remove)', () => {
+        const fieldA = { id: 'a', type: 'textfield' };
+        const fieldB = { id: 'b', type: 'textfield' };
+        mockFormFieldRegistry = createMockFormFieldRegistry({ a: fieldA, b: fieldB });
+
+        const instance = makeInstance() as {
+          _handleSelect: (id: string, opts?: { additive?: boolean }) => void;
+          _selectedIds: string[];
+        };
+
+        seedSelection(instance, ['a', 'b']);
+
+        instance._handleSelect('a', { additive: true });
+
+        expect(instance._selectedIds).toEqual(['b']);
+      });
+
+      it('_onSelectionChanged does NOT overwrite _selectedIds when guard flag is set', () => {
+        const fieldA = { id: 'a', type: 'textfield' };
+        const fieldB = { id: 'b', type: 'textfield' };
+        mockFormFieldRegistry = createMockFormFieldRegistry({ a: fieldA, b: fieldB });
+
+        const instance = makeInstance() as {
+          _handleSelect: (id: string, opts?: { additive?: boolean }) => void;
+          _selectedIds: string[];
+        };
+        seedSelection(instance, ['a']);
+
+        // additive click → selection.set 호출 → guard 설정 → 동기로 selection.changed 발화
+        instance._handleSelect('b', { additive: true });
+        expect(instance._selectedIds).toEqual(['a', 'b']);
+
+        // form-js가 뒤이어 발화하는 selection.changed (primary=b)
+        mockEventBus.emit('selection.changed', { selection: { id: 'b' } });
+
+        // 멀티 상태가 유지되어야 함
+        expect(instance._selectedIds).toEqual(['a', 'b']);
+
+        // 가드는 1회 소모 → 다음 selection.changed는 정상 동작 (단일 overwrite)
+        mockEventBus.emit('selection.changed', { selection: { id: 'a' } });
+        expect(instance._selectedIds).toEqual(['a']);
+      });
+
+      it('deleteSelectedFields removes every selected field via modeling.removeFormField', () => {
+        const root = { id: 'root', type: 'default', components: [] as unknown[] };
+        const a: InternalFormFieldLike = { id: 'a', type: 'textfield', _parent: 'root' };
+        const b: InternalFormFieldLike = { id: 'b', type: 'textfield', _parent: 'root' };
+        (root.components as unknown[]) = [a, b];
+
+        mockFormFieldRegistry = createMockFormFieldRegistry({ a, b, root });
+
+        const instance = makeInstance() as {
+          _selectedIds: string[];
+          deleteSelectedFields: () => void;
+        };
+
+        seedSelection(instance, ['a', 'b']);
+        instance.deleteSelectedFields();
+
+        expect(mockModeling.removeFormField).toHaveBeenCalledTimes(2);
+        expect(instance._selectedIds).toEqual([]);
+      });
+
+      it('deleteSelectedFields skips descendants of already-selected ancestor (dedup)', () => {
+        const root = { id: 'root', type: 'default', components: [] as unknown[] };
+        const card: InternalFormFieldLike = {
+          id: 'card',
+          type: 'card',
+          _parent: 'root',
+          components: [],
+        };
+        const child: InternalFormFieldLike = {
+          id: 'child',
+          type: 'textfield',
+          _parent: 'card',
+        };
+        (card.components as unknown[]) = [child];
+        (root.components as unknown[]) = [card];
+
+        mockFormFieldRegistry = createMockFormFieldRegistry({ root, card, child });
+
+        const instance = makeInstance() as {
+          _selectedIds: string[];
+          deleteSelectedFields: () => void;
+        };
+
+        seedSelection(instance, ['card', 'child']);
+        instance.deleteSelectedFields();
+
+        expect(mockModeling.removeFormField).toHaveBeenCalledTimes(1);
+        const [removedField] = mockModeling.removeFormField.mock.calls[0]!;
+        expect((removedField as { id?: string }).id).toBe('card');
+      });
+
+      it('getSelectedIds returns a copy of _selectedIds', () => {
+        const instance = makeInstance() as {
+          _selectedIds: string[];
+          getSelectedIds: () => string[];
+        };
+        seedSelection(instance, ['x', 'y']);
+        const out = instance.getSelectedIds();
+        expect(out).toEqual(['x', 'y']);
+        out.push('z');
+        expect(instance._selectedIds).toEqual(['x', 'y']);
+      });
+    });
   });
 });
+
+// 멀티 선택 테스트에서만 쓰는 InternalFormField 모양의 최소 shape
+interface InternalFormFieldLike {
+  id: string;
+  type: string;
+  _parent?: string;
+  components?: unknown[];
+}

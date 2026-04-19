@@ -83,6 +83,11 @@ class OutlinePanelService {
   _schemaVersion: number = 0;
   /** in-memory 클립보드: 복사된 FieldSchema 스냅샷 (deep clone with new ids) */
   _clipboard: FieldSchema | null = null;
+  /**
+   * additive 클릭 직후 동기적으로 form-js가 발화하는 selection.changed 이벤트가
+   * _selectedIds를 단일 id로 덮어쓰지 않도록 한 번만 skip 하는 가드.
+   */
+  private _skipNextSelectionOverwrite = false;
 
   _eventBus: FormJsEventBus;
   _formEditor: FormJsFormEditor;
@@ -94,6 +99,7 @@ class OutlinePanelService {
   private _boundOnImportDone: () => void;
   private _boundOnChanged: () => void;
   private _boundOnSelectionChanged: (event: unknown) => void;
+  private _boundOnCanvasClickCapture: (e: MouseEvent) => void;
   /** form-js context-pad(삭제 버튼 영역) 감시 — 복제 버튼 주입용 */
   private _contextPadObserver: MutationObserver | null = null;
 
@@ -117,22 +123,29 @@ class OutlinePanelService {
     this._boundOnImportDone = () => this._onImportDone();
     this._boundOnChanged = () => this._onChanged();
     this._boundOnSelectionChanged = (event: unknown) => this._onSelectionChanged(event);
+    this._boundOnCanvasClickCapture = (e: MouseEvent) => this._onCanvasClickCapture(e);
 
     eventBus.on('import.done', this._boundOnImportDone);
     eventBus.on('commandStack.changed', this._boundOnChanged);
     eventBus.on('selection.changed', this._boundOnSelectionChanged);
 
+    if (typeof document !== 'undefined') {
+      document.addEventListener('click', this._boundOnCanvasClickCapture, true);
+    }
+
     this._startContextPadObserver();
   }
 
   private _render() {
+    this._syncCanvasSelectionMarks();
     if (!this._container) return;
     render(
       h(OutlinePanel, {
         key: this._schemaVersion,
         nodes: this._nodes,
         selectedIds: this._selectedIds,
-        onSelect: (id: string) => this._handleSelect(id),
+        onSelect: (id: string, opts?: { additive?: boolean }) =>
+          this._handleSelect(id, opts),
         onDrop: (dragId: string, targetId: string, position: DropPosition) =>
           this._handleDrop(dragId, targetId, position),
         onCopy: (id: string) => this._handleCopy(id),
@@ -140,6 +153,26 @@ class OutlinePanelService {
       }),
       this._container,
     );
+  }
+
+  /**
+   * 캔버스 DOM에 data-outline-multi-selected 속성을 동기화한다.
+   * form-js는 기본적으로 단일 선택(.fjs-editor-selected)만 CSS로 표시하므로,
+   * 멀티 선택된 보조 필드를 같은 스타일로 강조하기 위한 마킹.
+   */
+  private _syncCanvasSelectionMarks() {
+    if (typeof document === 'undefined') return;
+    const marked = document.querySelectorAll('[data-outline-multi-selected]');
+    marked.forEach((el) => el.removeAttribute('data-outline-multi-selected'));
+    if (this._selectedIds.length < 2) return;
+    for (const id of this._selectedIds) {
+      const el = document.querySelector(
+        `.fjs-editor-container [data-id="${CSS.escape(id)}"]`,
+      );
+      if (el instanceof HTMLElement) {
+        el.setAttribute('data-outline-multi-selected', 'true');
+      }
+    }
   }
 
   /**
@@ -156,11 +189,110 @@ class OutlinePanelService {
     return field.parent;
   }
 
-  _handleSelect(id: string) {
+  _handleSelect(id: string, opts?: { additive?: boolean }) {
     // id가 스키마에 없는 엣지 케이스는 no-op
     const formField = this._formFieldRegistry.get(id);
     if (!formField) return;
+
+    if (opts?.additive) {
+      this._toggleSelectedId(id);
+      // form-js selection은 마지막 클릭 필드를 primary로 유지 (props-panel 표시용).
+      // 뒤따르는 selection.changed가 _selectedIds를 덮어쓰지 않도록 가드.
+      this._skipNextSelectionOverwrite = true;
+      this._selection.set(formField);
+      this._render();
+      return;
+    }
+
     this._selection.set(formField);
+  }
+
+  /** _selectedIds 배열에 id가 있으면 제거, 없으면 추가 (토글). */
+  private _toggleSelectedId(id: string) {
+    const idx = this._selectedIds.indexOf(id);
+    if (idx >= 0) {
+      this._selectedIds = this._selectedIds.filter((x) => x !== id);
+    } else {
+      this._selectedIds = [...this._selectedIds, id];
+    }
+  }
+
+  /**
+   * 캔버스 클릭 capture-phase 핸들러.
+   * shift/ctrl/meta 모디파이어가 눌린 상태에서 form-js 필드 DOM을 클릭한 경우
+   * _selectedIds에 토글한다. 이벤트 전파는 막지 않아 form-js의 기본 selection
+   * (마지막 클릭 필드 = primary)은 그대로 동작한다.
+   * 뒤따르는 selection.changed가 _selectedIds를 덮어쓰지 않도록 가드 플래그를 올린다.
+   */
+  private _onCanvasClickCapture(e: MouseEvent) {
+    if (!(e.shiftKey || e.ctrlKey || e.metaKey)) return;
+    const target = e.target as HTMLElement | null;
+    if (!target || typeof target.closest !== 'function') return;
+
+    // 아웃라인 패널 내부 클릭은 OutlinePanel 자체 핸들러가 처리하므로 제외
+    if (target.closest('.outline-panel')) return;
+
+    // form-js 에디터 캔버스 내부의 [data-id] 필드만 대상
+    const canvas = target.closest('.fjs-editor-container');
+    if (!canvas) return;
+    const fieldEl = target.closest('[data-id]') as HTMLElement | null;
+    if (!fieldEl) return;
+    const id = fieldEl.getAttribute('data-id');
+    if (!id) return;
+
+    this._toggleSelectedId(id);
+    this._skipNextSelectionOverwrite = true;
+    // render는 selection.changed 핸들러 또는 여기서 한 번 — 가드 덕분에 중복 overwrite 없음
+    this._render();
+  }
+
+  /**
+   * 현재 멀티 선택된 모든 필드를 일괄 삭제.
+   * - 부모 연쇄에 이미 선택된 ancestor가 있는 하위 노드는 제외(이중 삭제 방지)
+   * - 각 필드의 현재 인덱스를 매 루프 새로 조회 (선행 삭제로 형제 index 이동)
+   * ShortcutModule(Delete 키)에서 호출한다.
+   */
+  deleteSelectedFields() {
+    const ids = [...this._selectedIds];
+    if (ids.length === 0) return;
+
+    const modeling = this._modeling as unknown as {
+      removeFormField?: (field: unknown, parent: unknown, idx: number) => void;
+    };
+    if (typeof modeling.removeFormField !== 'function') return;
+
+    const selectedSet = new Set(ids);
+    const hasSelectedAncestor = (field: InternalFormField | undefined): boolean => {
+      let cur = field ? this._getParent(field) : undefined;
+      while (cur) {
+        if (cur.id && selectedSet.has(cur.id)) return true;
+        cur = this._getParent(cur);
+      }
+      return false;
+    };
+
+    for (const id of ids) {
+      const field = this._formFieldRegistry.get(id) as InternalFormField | undefined;
+      if (!field) continue;
+      // 루트(type=default)는 삭제 불가
+      if (!field._parent && !field.parent) continue;
+      if (hasSelectedAncestor(field)) continue;
+
+      const parent = this._getParent(field);
+      if (!parent) continue;
+      const idx = this._findIndexInParent(parent, field.id);
+      if (idx === -1) continue;
+
+      modeling.removeFormField(field, parent, idx);
+    }
+
+    this._selectedIds = [];
+    this._render();
+  }
+
+  /** 외부에서 현재 선택 집합을 읽기 위한 접근자. */
+  getSelectedIds(): string[] {
+    return [...this._selectedIds];
   }
 
   /**
@@ -492,6 +624,14 @@ class OutlinePanelService {
 
   // payload: { selection: formFieldObject | null } — 단일 선택 모델
   private _onSelectionChanged(event: unknown) {
+    // additive 클릭 직후 form-js가 동기로 발화한 selection.changed는
+    // 멀티 선택 집합을 덮어쓰지 않도록 한 번 skip.
+    if (this._skipNextSelectionOverwrite) {
+      this._skipNextSelectionOverwrite = false;
+      this._render();
+      return;
+    }
+
     const e = event as { selection?: { id?: string } | null } | undefined;
     const sel = e && 'selection' in e ? e.selection : null;
     this._selectedIds = sel?.id ? [sel.id] : [];
@@ -507,6 +647,10 @@ class OutlinePanelService {
     this._eventBus.off('import.done', this._boundOnImportDone);
     this._eventBus.off('commandStack.changed', this._boundOnChanged);
     this._eventBus.off('selection.changed', this._boundOnSelectionChanged);
+
+    if (typeof document !== 'undefined') {
+      document.removeEventListener('click', this._boundOnCanvasClickCapture, true);
+    }
 
     if (this._contextPadObserver) {
       this._contextPadObserver.disconnect();

@@ -34,6 +34,10 @@ interface ModelingLike {
 interface OutlinePanelLike {
   /** OutlineModule 에 정의된 세로 복제 공개 메서드 */
   duplicateField(id: string): void;
+  /** 멀티 선택 전체 일괄 삭제 공개 메서드 */
+  deleteSelectedFields?(): void;
+  /** 현재 멀티 선택 id 배열 */
+  getSelectedIds?(): string[];
 }
 
 interface InternalFormField {
@@ -69,6 +73,15 @@ class ShortcutService {
       const isDelete = key === 'Delete' || key === 'Del';
       const isInsert = key === 'Insert';
       if (!isDelete && !isInsert) return;
+
+      // 멀티 선택 Delete: OutlineModule이 관리하는 _selectedIds 전체를 대상으로 일괄 삭제
+      const multiIds = outlinePanel?.getSelectedIds?.() ?? [];
+      if (isDelete && multiIds.length > 1 && typeof outlinePanel?.deleteSelectedFields === 'function') {
+        event.preventDefault();
+        event.stopPropagation();
+        outlinePanel.deleteSelectedFields();
+        return;
+      }
 
       const raw = selection.get?.();
       const selected = Array.isArray(raw) ? raw[0] : raw;
