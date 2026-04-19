@@ -2,24 +2,41 @@
 
 form-js 기반 전문 화면 디자이너. WYSIWYG · AI-driven · 한국어(ko) 1차.
 
-## 문서
+## 서브프로젝트
 
-- [`docs/PRD.md`](./docs/PRD.md) — 1차 릴리스 제품 요구사항
-- [`docs/TRD.md`](./docs/TRD.md) — 기술 명세 (패키지·스키마·인터페이스·NFR)
-- [`docs/idea.md`](./docs/idea.md) — 기술 설계 원본 (탐색·결정 기록)
-- [`docs/adr/`](./docs/adr/) — 아키텍처 결정 기록 (ADR)
+본 레포는 서브프로젝트 단위로 문서와 작업을 분리한다 (`dev-plugin` SUBPROJECT 규약 호환).
+
+- **`designer`** — form-js 기반 WYSIWYG 디자이너 본체
+- **`vscode-ext`** — VSCode / Notion 스타일 마크다운 뷰어용 form-js 렌더·편집 확장
+
+## 문서 (designer)
+
+- [`docs/designer/PRD.md`](./docs/designer/PRD.md) — 1차 릴리스 제품 요구사항
+- [`docs/designer/TRD.md`](./docs/designer/TRD.md) — 기술 명세 (패키지·스키마·인터페이스·NFR)
+- [`docs/designer/wbs.md`](./docs/designer/wbs.md) — Work Breakdown Structure
+- [`docs/designer/idea.md`](./docs/designer/idea.md) — 기술 설계 원본 (탐색·결정 기록)
+- [`docs/designer/adr/`](./docs/designer/adr/) — 아키텍처 결정 기록 (ADR)
+
+## 문서 (vscode-ext)
+
+- [`docs/vscode-ext/PRD.md`](./docs/vscode-ext/PRD.md) — 확장 제품 요구사항
+- [`docs/vscode-ext/TRD.md`](./docs/vscode-ext/TRD.md) — 확장 기술 명세
 
 ## 구조
 
 ```
 form-js-designer/
-├── docs/                    # PRD, TRD, ADR
+├── docs/
+│   ├── designer/            # 디자이너 서브프로젝트 (PRD/TRD/wbs/ADR/features/tasks)
+│   └── vscode-ext/          # VSCode extension 서브프로젝트
 ├── packages/
-│   ├── designer-core/       # (예정) defineComponent, OverlayLayer 유틸
-│   ├── designer-components/ # (예정) Card/Stack/Tabs/Modal/Button
-│   ├── designer-table/      # (예정) TanStack Table 래퍼
-│   ├── designer-i18n/       # (예정) ko 번들 + t() 함수
-│   └── designer-cli/        # (예정) validate / import / publish
+│   ├── designer-core/       # defineComponent, OverlayLayer 유틸
+│   ├── designer-components/ # Card/Stack/Tabs/Modal/Button
+│   ├── designer-editor-host/# 편집기 호스트
+│   ├── designer-runtime/    # 런타임 모듈
+│   ├── designer-i18n/       # ko 번들
+│   ├── designer-cli/        # validate / import / publish
+│   └── designer-vscode-extension/  # (예정) vscode-ext 산출물
 └── .claude/                 # Skills, Slash Commands
 ```
 
