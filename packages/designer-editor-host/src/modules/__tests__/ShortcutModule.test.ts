@@ -245,4 +245,67 @@ describe('ShortcutModule', () => {
       expect(outlinePanel.clearSelection).not.toHaveBeenCalled();
     });
   });
+
+  // ----- TSK-11-04: Insert 키 멀티 분기 -----
+  describe('Insert 키 — 단일/멀티 분기 (TSK-11-04)', () => {
+    let eventBus: ReturnType<typeof createMockEventBus>;
+    let selection: ReturnType<typeof createMockSelection>;
+    let registry: ReturnType<typeof createMockRegistry>;
+    let modeling: ReturnType<typeof createMockModeling>;
+    let formEditor: ReturnType<typeof createMockFormEditor>;
+
+    beforeEach(() => {
+      eventBus = createMockEventBus();
+      selection = createMockSelection({ id: 'field-a', _parent: 'root' });
+      registry = createMockRegistry({
+        'field-a': { id: 'field-a', _parent: 'root', components: [] },
+      });
+      modeling = createMockModeling();
+      formEditor = createMockFormEditor();
+    });
+
+    afterEach(() => {
+      eventBus.emit('diagram.destroy');
+    });
+
+    it('Insert — 단일 선택 시 duplicateField(id) 호출', () => {
+      const outlinePanel = createMockOutlinePanel({
+        getSelectedIds: vi.fn().mockReturnValue(['field-a']),
+        duplicateSelectedFields: vi.fn(),
+      });
+      makeShortcutService(eventBus, selection, registry, modeling, outlinePanel, formEditor);
+
+      fireKeydown('Insert');
+
+      expect(outlinePanel.duplicateField).toHaveBeenCalledWith('field-a');
+      expect(outlinePanel.duplicateSelectedFields).not.toHaveBeenCalled();
+    });
+
+    it('Insert — 멀티 선택(≥2) 시 duplicateSelectedFields() 호출', () => {
+      selection = createMockSelection({ id: 'field-a', _parent: 'root' });
+      const outlinePanel = createMockOutlinePanel({
+        getSelectedIds: vi.fn().mockReturnValue(['field-a', 'field-b']),
+        duplicateSelectedFields: vi.fn(),
+      });
+      makeShortcutService(eventBus, selection, registry, modeling, outlinePanel, formEditor);
+
+      fireKeydown('Insert');
+
+      expect(outlinePanel.duplicateSelectedFields).toHaveBeenCalled();
+      expect(outlinePanel.duplicateField).not.toHaveBeenCalled();
+    });
+
+    it('Insert — duplicateSelectedFields 없으면 단일 경로 fallback', () => {
+      const outlinePanel = createMockOutlinePanel({
+        getSelectedIds: vi.fn().mockReturnValue(['field-a', 'field-b']),
+        // duplicateSelectedFields 미정의 (old API)
+      });
+      delete (outlinePanel as Record<string, unknown>)['duplicateSelectedFields'];
+      makeShortcutService(eventBus, selection, registry, modeling, outlinePanel, formEditor);
+
+      fireKeydown('Insert');
+
+      expect(outlinePanel.duplicateField).toHaveBeenCalledWith('field-a');
+    });
+  });
 });
