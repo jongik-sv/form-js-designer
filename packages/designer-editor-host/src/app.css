@@ -769,4 +769,36 @@
     outline: 2px solid #2563eb;
     outline-offset: 1px;
   }
+
+  /**
+   * TSK-12-03: RowResizeOverlay / RowResizeHandle — 행 높이 리사이즈 핸들
+   *
+   * 선택된 행(row) 하단에 배치되는 리사이즈 바.
+   * ChildrenSlot 경로: .fjs-layout-row 내부 마지막 자식.
+   * default 루트 경로: RowResizeOverlay가 fixed 포지셔닝으로 row DOM 추적.
+   */
+  .fjs-designer-row-resize {
+    /* ChildrenSlot 경로: Row 내 마지막 자식으로 렌더 */
+    width: 100%;
+    height: 4px;
+  }
+
+  .fjs-designer-row-resize__handle {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background: #10b981;
+    opacity: 0.6;
+    cursor: row-resize;
+    pointer-events: all;
+    border-radius: 2px;
+    transition: opacity 0.15s;
+  }
+
+  .fjs-designer-row-resize__handle:hover,
+  .fjs-designer-row-resize__handle:focus {
+    opacity: 1;
+    outline: 2px solid #059669;
+    outline-offset: 1px;
+  }
 }

@@ -39,6 +39,7 @@ import { ValidationBadge } from './components/ValidationBadge';
 import { PanelSplitter } from './components/PanelSplitter';
 import { SidePanelToggle } from './components/SidePanelToggle';
 import { ComponentResizeOverlay } from './components/ComponentResizeOverlay';
+import { RowResizeOverlay } from './components/RowResizeOverlay';
 import { usePanelResize } from './hooks/usePanelResize';
 import { installPropsPanelFocusGuard } from './hooks/usePropsPanelFocusGuard';
 import { useSidePanelTab } from './router';
@@ -266,6 +267,10 @@ export function App(): h.JSX.Element {
           {/* TSK-12-02: 컴포넌트 높이 리사이즈 핸들 — editor 기준 absolute 포지셔닝 */}
           {editorInstanceRef.current && (
             <ComponentResizeOverlay editor={editorInstanceRef.current} />
+          )}
+          {/* TSK-12-03: 행 높이 리사이즈 핸들 — default 루트 행 대응 */}
+          {editorInstanceRef.current && (
+            <RowResizeOverlay editor={editorInstanceRef.current} />
           )}
         </div>
       </div>

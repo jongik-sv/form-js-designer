@@ -11,6 +11,8 @@
 
 import { applyLayoutHeight } from './LayoutHeightApplier';
 import type { ApplierField } from './LayoutHeightApplier';
+import { applyRowHeight } from './RowLayoutHeightApplier';
+import type { FormLayouterLike } from './RowLayoutHeightApplier';
 
 interface EventBusLike {
   on(event: string, handler: (...args: unknown[]) => void): void;
@@ -22,19 +24,26 @@ interface FormFieldRegistryLike {
 
 /**
  * LayoutHeightService — DI 서비스 클래스.
- * $inject: ['eventBus', 'formFieldRegistry']
+ * $inject: ['eventBus', 'formFieldRegistry', 'formLayouter']
+ * formLayouter는 optional (viewer에 없을 수 있음)
  */
 export class LayoutHeightService {
-  static $inject = ['eventBus', 'formFieldRegistry'];
+  static $inject = ['eventBus', 'formFieldRegistry', 'formLayouter'];
 
   private readonly eventBus: EventBusLike;
   private readonly formFieldRegistry: FormFieldRegistryLike;
+  private readonly formLayouter: FormLayouterLike | undefined;
   // form-js config.container 또는 fallback
   private readonly root: ParentNode;
 
-  constructor(eventBus: EventBusLike, formFieldRegistry: FormFieldRegistryLike) {
+  constructor(
+    eventBus: EventBusLike,
+    formFieldRegistry: FormFieldRegistryLike,
+    formLayouter?: FormLayouterLike,
+  ) {
     this.eventBus = eventBus;
     this.formFieldRegistry = formFieldRegistry;
+    this.formLayouter = formLayouter;
 
     // DOM root: .fjs-container 우선, 없으면 document fallback
     this.root = (
@@ -52,6 +61,7 @@ export class LayoutHeightService {
       'import.done',
       'elements.changed',
       'commandStack.formField.edit.postExecuted',
+      'form.layoutCalculated',
     ]) {
       this.eventBus.on(event, () => this._applyAll());
     }
@@ -69,6 +79,7 @@ export class LayoutHeightService {
   private _applyAll(): void {
     const fields = this.formFieldRegistry.getAll();
     applyLayoutHeight(this.root, fields);
+    applyRowHeight(this.root, fields, this.formLayouter);
   }
 }
 
