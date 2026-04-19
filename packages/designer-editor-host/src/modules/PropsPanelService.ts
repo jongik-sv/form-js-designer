@@ -225,7 +225,7 @@ export class PropsPanelService {
         modeling.editFormField(field, 'layout', { ...getLayout(), rowHeight: toNum(v) });
 
       entries.push({
-        id: 'props-entry-layout.rowHeight',
+        id: 'layout.rowHeight',
         key: 'layout.rowHeight',
         label: '행 높이(px)',
         component: (props: Record<string, unknown>) => {

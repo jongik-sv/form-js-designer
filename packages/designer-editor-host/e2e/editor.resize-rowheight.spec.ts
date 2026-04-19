@@ -129,14 +129,7 @@ test.describe('Editor Row Resize Height — TSK-12-03', () => {
     await page.waitForTimeout(500);
 
     // Live Preview 탭 클릭 (클릭 경로로 viewer 진입)
-    const previewTab = page.locator('[data-testid="sidebar-tabs"] button, .tabs-tab, button').filter({ hasText: /미리보기|preview/i }).first();
-    if (await previewTab.isVisible({ timeout: 3000 })) {
-      await previewTab.click();
-    } else {
-      // sidebar 탭 직접 찾기
-      const tabs = page.locator('[data-testid="tab-preview"], [data-tab="preview"]');
-      await tabs.first().click({ timeout: 5000 });
-    }
+    await page.locator('[data-testid="sidebar-preview"]').click();
 
     await page.waitForSelector('#live-preview-root, [data-testid="live-preview-root"]', { timeout: 10000 });
 

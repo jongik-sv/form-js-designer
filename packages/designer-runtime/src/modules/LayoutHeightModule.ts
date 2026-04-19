@@ -61,6 +61,7 @@ export class LayoutHeightService {
       'import.done',
       'elements.changed',
       'commandStack.formField.edit.postExecuted',
+      'commandStack.formField.remove.postExecuted',
       'form.layoutCalculated',
     ]) {
       this.eventBus.on(event, () => this._applyAll());
