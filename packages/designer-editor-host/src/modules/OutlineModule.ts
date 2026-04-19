@@ -3,7 +3,7 @@ import { OutlinePanel } from './OutlinePanel';
 import { schemaToOutline } from './schemaToOutline';
 import { deepCloneWithNewIds, generateId, collectKeys, collectFlatIds } from './outlineUtils';
 import type { OutlineNode, DropPosition } from './outlineTypes';
-import type { FieldSchema } from './outlineUtils';
+import type { FieldSchema, FlatIdSchema } from './outlineUtils';
 
 export interface FormJsEventBus {
   on(event: string, callback: (event?: unknown) => void): void;
@@ -267,10 +267,10 @@ class OutlinePanelService {
     }
 
     // 스키마 DFS flat ids 계산
-    const schema = this._formEditor.getSchema() as { id?: string; components?: unknown[] } | null | undefined;
+    const schema = this._formEditor.getSchema() as FlatIdSchema | null | undefined;
     if (!schema) return;
 
-    const flatIds = collectFlatIds(schema as Parameters<typeof collectFlatIds>[0]);
+    const flatIds = collectFlatIds(schema);
     const anchorIdx = flatIds.indexOf(anchorId);
     const targetIdx = flatIds.indexOf(targetId);
 
@@ -338,13 +338,10 @@ class OutlinePanelService {
 
     if (e.shiftKey) {
       // shift: range 선택
-      this._handleRangeSelect(id);
+      this._handleSelect(id, { range: true });
     } else {
       // ctrl/meta: additive 토글
-      this._toggleSelectedId(id);
-      this._anchorId = id;
-      this._skipNextSelectionOverwrite = true;
-      this._render();
+      this._handleSelect(id, { additive: true });
     }
   }
 
