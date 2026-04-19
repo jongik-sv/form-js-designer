@@ -195,7 +195,25 @@ describe('EditorHost', () => {
       field.click();
     });
 
-    expect(onSelect).toHaveBeenCalledWith('field-abc');
+    expect(onSelect).toHaveBeenCalledWith('field-abc', undefined);
+  });
+
+  // 6-1. onSelect 콜백 — shift+클릭 (range selection, TSK-11-02)
+  it('calls onSelect with additive flag when shift is pressed during click', () => {
+    const onSelect = vi.fn();
+    mountEditor({ onSelect }, container);
+
+    const shell = container.querySelector('#fjs-designer-shell')!;
+    const field = document.createElement('div');
+    field.setAttribute('data-fjs-id', 'field-xyz');
+    shell.appendChild(field);
+
+    act(() => {
+      const event = new MouseEvent('click', { bubbles: true, shiftKey: true });
+      field.dispatchEvent(event);
+    });
+
+    expect(onSelect).toHaveBeenCalledWith('field-xyz', { additive: true });
   });
 
   // 7. unmount 시 overlay-root cleanup

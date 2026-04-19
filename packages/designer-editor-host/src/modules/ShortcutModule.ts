@@ -3,6 +3,10 @@
  *
  * - Delete / Del        : 현재 선택 필드 삭제 (modeling.removeFormField)
  * - Insert              : 현재 선택 필드를 세로로 복제 (outlinePanel.duplicateField)
+ * - Ctrl/Meta+A         : 루트 children 전체 선택 (outlinePanel.setSelectedIds)
+ * - Escape              : 선택 해제 (outlinePanel.clearSelection + selection.clear/set(null))
+ * - Ctrl/Meta+Z         : Undo (commandStack.undo) — canvas focus 없이도 동작
+ * - Ctrl/Meta+Shift+Z   : Redo (commandStack.redo) — canvas focus 없이도 동작
  *
  * form-js 내장 keyboard 서비스는 editor canvas 에 focus 가 있을 때만 동작하고
  * 또 `removeSelection` action 은 form-js-editor 에서 등록되지 않는다
@@ -21,6 +25,8 @@ interface SelectedField {
 
 interface SelectionLike {
   get(): SelectedField | SelectedField[] | null;
+  set?(element: unknown): void;
+  clear?(): void;
 }
 
 interface FormFieldRegistryLike {
@@ -34,10 +40,25 @@ interface ModelingLike {
 interface OutlinePanelLike {
   /** OutlineModule 에 정의된 세로 복제 공개 메서드 */
   duplicateField(id: string): void;
+  /** 멀티 선택 전체 일괄 복제 공개 메서드 (TSK-11-04) */
+  duplicateSelectedFields?(): void;
   /** 멀티 선택 전체 일괄 삭제 공개 메서드 */
   deleteSelectedFields?(): void;
   /** 현재 멀티 선택 id 배열 */
   getSelectedIds?(): string[];
+  /** 선택 집합 일괄 지정 (Ctrl+A) */
+  setSelectedIds?(ids: string[]): void;
+  /** 선택 해제 (Escape) */
+  clearSelection?(): void;
+}
+
+interface FormEditorLike {
+  getSchema(): unknown;
+}
+
+interface CommandStackLike {
+  undo?(): void;
+  redo?(): void;
 }
 
 interface InternalFormField {
@@ -50,12 +71,14 @@ function isEditableTarget(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) return false;
   const tag = target.tagName;
   if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return true;
+  // isContentEditable: jsdom에서는 undefined일 수 있으므로 contentEditable 속성도 확인
   if (target.isContentEditable) return true;
+  if (target.contentEditable === 'true') return true;
   return false;
 }
 
 class ShortcutService {
-  static inject = ['eventBus', 'selection', 'formFieldRegistry', 'modeling', 'outlinePanel'];
+  static inject = ['eventBus', 'selection', 'formFieldRegistry', 'modeling', 'outlinePanel', 'formEditor', 'commandStack'];
 
   private readonly _onKeyDown: (e: KeyboardEvent) => void;
 
@@ -65,23 +88,84 @@ class ShortcutService {
     formFieldRegistry: FormFieldRegistryLike,
     modeling: ModelingLike,
     outlinePanel: OutlinePanelLike | null,
+    formEditor?: FormEditorLike | null,
+    commandStack?: CommandStackLike | null,
   ) {
     this._onKeyDown = (event: KeyboardEvent) => {
-      if (isEditableTarget(event.target)) return;
-
       const key = event.key;
       const isDelete = key === 'Delete' || key === 'Del';
       const isInsert = key === 'Insert';
-      if (!isDelete && !isInsert) return;
+      const isSelectAll = (key === 'a' || key === 'A') && (event.ctrlKey || event.metaKey);
+      const isEscape = key === 'Escape';
+      const isUndo = (key === 'z' || key === 'Z') && (event.ctrlKey || event.metaKey) && !event.shiftKey;
+      const isRedo = (key === 'z' || key === 'Z') && (event.ctrlKey || event.metaKey) && event.shiftKey;
 
-      // 멀티 선택 Delete: OutlineModule이 관리하는 _selectedIds 전체를 대상으로 일괄 삭제
+      // 현재 멀티 선택 id 목록 (이하 여러 분기에서 공유)
       const multiIds = outlinePanel?.getSelectedIds?.() ?? [];
+
+      // 멀티 선택 Delete: 포커스 위치와 무관하게 우선 처리 (props panel input에 포커스가 있어도 동작)
       if (isDelete && multiIds.length > 1 && typeof outlinePanel?.deleteSelectedFields === 'function') {
         event.preventDefault();
         event.stopPropagation();
         outlinePanel.deleteSelectedFields();
         return;
       }
+
+      if (isEditableTarget(event.target)) return;
+
+      // form-js canvas(SVG)가 focus된 경우 form-js 내장 keyboard가 undo/redo를 처리하므로
+      // 우리 document 레벨 핸들러는 skip하여 이중 실행을 방지.
+      const isCanvasTarget =
+        event.target instanceof SVGElement ||
+        (event.target instanceof HTMLElement && !!event.target.closest('.fjs-editor-container'));
+
+      // Ctrl/Meta+Z → Undo (canvas focus 없을 때만 — canvas는 form-js가 처리)
+      if (isUndo && !isCanvasTarget && commandStack && typeof commandStack.undo === 'function') {
+        event.preventDefault();
+        event.stopPropagation();
+        commandStack.undo();
+        return;
+      }
+
+      // Ctrl/Meta+Shift+Z → Redo (canvas focus 없을 때만)
+      if (isRedo && !isCanvasTarget && commandStack && typeof commandStack.redo === 'function') {
+        event.preventDefault();
+        event.stopPropagation();
+        commandStack.redo();
+        return;
+      }
+
+      // Ctrl/Meta+A → 루트 children 전체 선택
+      if (isSelectAll) {
+        event.preventDefault();
+        event.stopPropagation();
+        if (outlinePanel && typeof outlinePanel.setSelectedIds === 'function' && formEditor) {
+          const schema = formEditor.getSchema() as { components?: Array<{ id: string }> } | null | undefined;
+          const ids = Array.isArray(schema?.components)
+            ? schema.components.map((c) => c.id).filter(Boolean)
+            : [];
+          outlinePanel.setSelectedIds(ids);
+        }
+        return;
+      }
+
+      // Escape → 선택 해제
+      if (isEscape) {
+        event.preventDefault();
+        event.stopPropagation();
+        if (outlinePanel && typeof outlinePanel.clearSelection === 'function') {
+          outlinePanel.clearSelection();
+        }
+        // form-js selection도 해제
+        if (typeof selection.clear === 'function') {
+          selection.clear();
+        } else if (typeof selection.set === 'function') {
+          selection.set(null);
+        }
+        return;
+      }
+
+      if (!isDelete && !isInsert) return;
 
       const raw = selection.get?.();
       const selected = Array.isArray(raw) ? raw[0] : raw;
@@ -108,7 +192,12 @@ class ShortcutService {
       if (isInsert && outlinePanel) {
         event.preventDefault();
         event.stopPropagation();
-        outlinePanel.duplicateField(selected.id);
+        // 멀티 선택(≥2) 시 duplicateSelectedFields(), 단일 시 기존 duplicateField()
+        if (multiIds.length > 1 && typeof outlinePanel.duplicateSelectedFields === 'function') {
+          outlinePanel.duplicateSelectedFields();
+        } else {
+          outlinePanel.duplicateField(selected.id);
+        }
       }
     };
 

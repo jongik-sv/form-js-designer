@@ -1,13 +1,15 @@
 import { h } from 'preact';
 import { useState, useCallback, useRef } from 'preact/hooks';
-import type { OutlineNode, DropPosition } from './outlineTypes';
+import type { OutlineNode, DropPosition, OnDropMulti } from './outlineTypes';
+import { MULTI_DRAG_MIME } from './outlineTypes';
 import { getDropPosition } from './outlineUtils';
 
 export interface OutlinePanelProps {
   nodes: OutlineNode[];
   selectedIds: string[];
-  onSelect: (id: string, opts?: { additive?: boolean }) => void;
+  onSelect: (id: string, opts?: { additive?: boolean; range?: boolean }) => void;
   onDrop: (dragId: string, targetId: string, position: DropPosition) => void;
+  onDropMulti?: OnDropMulti;
   onCopy: (id: string) => void;
   onPaste: () => void;
 }
@@ -30,7 +32,7 @@ interface OutlineNodeItemProps {
   node: OutlineNode;
   depth: number;
   selectedIds: string[];
-  onSelect: (id: string, opts?: { additive?: boolean }) => void;
+  onSelect: (id: string, opts?: { additive?: boolean; range?: boolean }) => void;
   collapsedIds: Set<string>;
   onToggle: (id: string) => void;
   isVirtualRoot?: boolean;
@@ -130,7 +132,11 @@ function OutlineNodeItem({
             data-outline-id={node.id}
             data-testid={`outline-node-${node.id}`}
             onClick={(e) => {
-              if (e.shiftKey || e.metaKey || e.ctrlKey) {
+              if (e.shiftKey) {
+                // shift: range 선택 (anchor→target 사이 모든 노드)
+                onSelect(node.id, { range: true });
+              } else if (e.metaKey || e.ctrlKey) {
+                // ctrl/meta: additive 토글 (개별 추가/제거)
                 onSelect(node.id, { additive: true });
               } else {
                 onSelect(node.id);
@@ -176,6 +182,7 @@ export function OutlinePanel({
   selectedIds,
   onSelect,
   onDrop,
+  onDropMulti,
   onCopy,
   onPaste,
 }: OutlinePanelProps): h.JSX.Element {
@@ -201,11 +208,15 @@ export function OutlinePanel({
     if (e.dataTransfer) {
       e.dataTransfer.effectAllowed = 'move';
       e.dataTransfer.setData('text/plain', id);
+      // 멀티 선택 중이고 드래그 대상이 선택 집합에 포함된 경우 id-list 직렬화
+      if (selectedIds.includes(id) && selectedIds.length > 1) {
+        e.dataTransfer.setData(MULTI_DRAG_MIME, JSON.stringify(selectedIds));
+      }
     }
     // 드래그 중 노드에 CSS 마킹
     const target = e.currentTarget as HTMLElement;
     target.classList.add('outline-node--dragging');
-  }, []);
+  }, [selectedIds]);
 
   const handleDragOver = useCallback(
     (e: DragEvent, id: string, type: string) => {
@@ -240,11 +251,25 @@ export function OutlinePanel({
       setDragOverPosition(null);
       dragIdRef.current = null;
 
-      if (dragId && position) {
-        onDrop(dragId, targetId, position);
+      if (!dragId || !position) return;
+
+      // 멀티 DnD: application/x-outline-id-list 먼저 시도
+      const multiPayload = e.dataTransfer?.getData(MULTI_DRAG_MIME);
+      if (multiPayload) {
+        try {
+          const ids = JSON.parse(multiPayload) as string[];
+          if (Array.isArray(ids) && ids.length > 1 && onDropMulti) {
+            onDropMulti(ids, targetId, position);
+            return;
+          }
+        } catch {
+          // JSON 파싱 실패 → 단일 드래그 fallback
+        }
       }
+
+      onDrop(dragId, targetId, position);
     },
-    [dragOverPosition, onDrop],
+    [dragOverPosition, onDrop, onDropMulti],
   );
 
   /** Cmd/Ctrl+C/V 키보드 이벤트 처리 */

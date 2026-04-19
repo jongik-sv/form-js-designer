@@ -21,6 +21,7 @@ import type { ValidationResult } from '@form-js-designer/designer-core';
 import { DesignerComponentsModule, migrateLegacyTabsSchema } from '@form-js-designer/designer-components';
 import { PaletteModule } from './modules/PaletteModule';
 import { OutlineModule } from './modules/OutlineModule';
+import { MarqueeModule } from './modules/MarqueeModule';
 import { ShortcutModule } from './modules/ShortcutModule';
 import { PropsPanelModule } from './modules/PropsPanelModule';
 import { PropsPanelService } from './modules/PropsPanelService';
@@ -122,6 +123,7 @@ export function App(): h.JSX.Element {
         DesignerComponentsModule,
         PaletteModule,
         OutlineModule,
+        MarqueeModule,
         ShortcutModule,
         PropsPanelModule,
         LivePreviewModule,
