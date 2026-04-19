@@ -56,25 +56,32 @@ export class LayoutHeightService {
   }
 
   private _registerHooks(): void {
-    // 즉시 적용 이벤트
-    for (const event of [
-      'import.done',
-      'elements.changed',
-      'commandStack.formField.edit.postExecuted',
-      'commandStack.formField.remove.postExecuted',
-      'form.layoutCalculated',
-    ]) {
-      this.eventBus.on(event, () => this._applyAll());
-    }
-
-    // formField.add 는 DOM insert 전에 발화할 수 있으므로 rAF 지연
-    this.eventBus.on('formField.add', () => {
+    const scheduleApply = () => {
       const schedule =
         typeof requestAnimationFrame === 'function'
           ? requestAnimationFrame
           : (cb: FrameRequestCallback) => setTimeout(() => cb(0), 0);
       schedule(() => this._applyAll());
-    });
+    };
+
+    // 즉시 적용 이벤트 (DOM이 이미 업데이트된 이후 발화)
+    for (const event of [
+      'import.done',
+      'elements.changed',
+      'commandStack.formField.edit.postExecuted',
+      'form.layoutCalculated',
+    ]) {
+      this.eventBus.on(event, () => this._applyAll());
+    }
+
+    // remove / add 는 DOM insert/remove 전에 발화할 수 있으므로 rAF 지연
+    // remove.postExecuted: formLayouter._rows 갱신이 이벤트 이후에 완료될 수 있음
+    for (const event of [
+      'commandStack.formField.remove.postExecuted',
+      'formField.add',
+    ]) {
+      this.eventBus.on(event, scheduleApply);
+    }
   }
 
   private _applyAll(): void {

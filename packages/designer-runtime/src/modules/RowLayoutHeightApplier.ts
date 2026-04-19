@@ -62,16 +62,16 @@ function applyMinHeight(el: HTMLElement, rowHeight: number | undefined): void {
  * formLayouter 경유 경로:
  * _rows를 순회하여 각 row의 첫 컴포넌트의 rowHeight를 row DOM에 주입.
  * [data-row-id="<rowId>"] 우선, 없으면 positional fallback (.fjs-layout-row nth).
+ *
+ * allRowEls는 applyRowHeight에서 미리 초기화(clear)된 상태로 전달된다.
  */
 function applyWithLayouter(
   root: ParentNode,
   fieldMap: Map<string, ApplierFieldWithRow>,
   layouter: FormLayouterLike,
+  allRowEls: HTMLElement[],
 ): void {
   const rows = allRows(layouter._rows);
-
-  // positional fallback을 위한 전체 .fjs-layout-row 목록
-  const allRowEls = Array.from(root.querySelectorAll('.fjs-layout-row')) as HTMLElement[];
   let positionalIdx = 0;
 
   for (const row of rows) {
@@ -120,6 +120,9 @@ function applyWithoutLayouter(root: ParentNode, fields: ApplierFieldWithRow[]): 
 /**
  * row DOM에 layout.rowHeight를 min-height로 주입한다.
  *
+ * 항상 먼저 모든 .fjs-layout-row min-height를 초기화한 후 값을 재적용한다.
+ * 이렇게 하면 필드 삭제 후에도 stale min-height가 잔류하지 않는다.
+ *
  * @param root       탐색 범위 DOM 노드
  * @param fields     formFieldRegistry.getAll() 결과
  * @param formLayouter  optional — 있으면 row 구조 기반 정확한 매칭
@@ -129,9 +132,15 @@ export function applyRowHeight(
   fields: ApplierFieldWithRow[],
   formLayouter?: FormLayouterLike,
 ): void {
+  // 먼저 모든 .fjs-layout-row min-height 초기화 (stale 값 방지)
+  const allRowEls = Array.from(root.querySelectorAll('.fjs-layout-row')) as HTMLElement[];
+  for (const el of allRowEls) {
+    el.style.minHeight = '';
+  }
+
   if (formLayouter && formLayouter._rows) {
     const fieldMap = buildFieldMap(fields);
-    applyWithLayouter(root, fieldMap, formLayouter);
+    applyWithLayouter(root, fieldMap, formLayouter, allRowEls);
   } else {
     applyWithoutLayouter(root, fields);
   }

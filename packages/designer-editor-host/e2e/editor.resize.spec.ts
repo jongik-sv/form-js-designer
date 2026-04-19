@@ -41,6 +41,13 @@ test.describe('Editor Resize — TSK-12-04 통합 스펙', () => {
     await page.goto('/');
     await page.waitForSelector('[data-testid="editor-root"]', { timeout: 15000 });
     await page.waitForSelector('.fjs-palette', { timeout: 15000 });
+    // Properties 탭을 미리 열어 PropsPanelContainer를 마운트 상태로 유지
+    // (selection.changed 이벤트가 클릭 즉시 캡처되도록)
+    const propsTab = page.locator('[data-testid="sidebar-props"]').first();
+    if (await propsTab.isVisible({ timeout: 3000 }).catch(() => false)) {
+      await propsTab.click();
+      await page.waitForTimeout(200);
+    }
   });
 
   // ────────────────────────────────────────────────────────────
@@ -143,26 +150,22 @@ test.describe('Editor Resize — TSK-12-04 통합 스펙', () => {
     await dropToCanvas(page, 'textarea');
     await page.waitForSelector('.fjs-form-field-textarea', { timeout: 10000 });
 
-    // 컴포넌트 클릭 → 선택
+    // 컴포넌트 클릭 → 선택 (beforeEach에서 Properties 탭이 이미 열린 상태)
     const textareaField = page.locator('.fjs-form-field-textarea').first();
+    // 두 번 클릭: 첫 번째는 캔버스 포커스 확보, 두 번째는 필드 선택 확실히 함
     await textareaField.click();
+    await page.waitForTimeout(200);
+    await textareaField.click();
+    await page.waitForTimeout(400);
 
-    // Properties 탭 클릭 (클릭 경로)
-    const propsTab = page
-      .locator('[data-testid="sidebar-props"], button:has-text("속성"), button:has-text("Properties")')
-      .first();
-    const propsTabVisible = await propsTab.isVisible({ timeout: 3000 }).catch(() => false);
-    if (propsTabVisible) {
-      await propsTab.click();
-      await page.waitForTimeout(300);
-    }
+    // props-entry-layout.height 엔트리 컨테이너 확인
+    const heightEntry = page.locator('[data-testid="props-entry-layout.height"]');
+    await expect(heightEntry).toBeVisible({ timeout: 8000 });
 
-    // props-entry-layout.height 입력 필드 찾기
-    const heightInput = page.locator('[data-testid="props-entry-layout.height"]');
-    await expect(heightInput).toBeVisible({ timeout: 5000 });
-
-    // 값 입력 후 Enter
-    await heightInput.click({ clickCount: 3 }); // 전체 선택
+    // 컨테이너 내부 input[type=number] 요소 찾아 값 입력
+    const heightInput = heightEntry.locator('input[type="number"]').first();
+    await expect(heightInput).toBeVisible({ timeout: 3000 });
+    await heightInput.click({ clickCount: 3 });
     await heightInput.fill('300');
     await page.keyboard.press('Enter');
     await page.waitForTimeout(300);

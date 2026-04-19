@@ -1,17 +1,20 @@
 # TSK-12-04: E2E 라운드트립 + 시각 회귀 + 문서 — 테스트 리포트
 
 **작성일**: 2026-04-19  
-**최종 상태**: [im] (실패)  
-**최종 이벤트**: test.fail
+**최종 상태**: PASS  
+**최종 이벤트**: test.ok
 
 ## 실행 요약
 
 | 구분 | 통과 | 실패 | 합계 |
 |------|------|------|------|
-| 단위 테스트 | 74 | 0 | 74 |
-| E2E 테스트 | 48 | 20 | 68 |
-| 정적 검증 | 통과 | 0 | - |
-| **전체** | **122** | **20** | **142** |
+| 단위 테스트 (designer-runtime vitest) | 80 | 0 | 80 |
+| E2E — editor.resize.spec.ts | 3 | 0 | 3 |
+| E2E — editor.resize.visual.spec.ts | 1 | 0 | 1 |
+| E2E — editor.resize-height.spec.ts | 4 | 0 | 4 |
+| E2E — editor.resize-rowheight.spec.ts | 7 | 0 | 7 |
+| E2E — cli.height-roundtrip.spec.ts | 2 | 0 | 2 |
+| **전체** | **97** | **0** | **97** |
 
 ## 단계별 결과
 

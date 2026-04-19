@@ -45,6 +45,12 @@ test.describe('Editor Row Resize Height — TSK-12-03', () => {
     await page.goto('/');
     await page.waitForSelector('[data-testid="editor-root"]', { timeout: 15000 });
     await page.waitForSelector('.fjs-palette', { timeout: 15000 });
+    // Properties 탭을 미리 열어 PropsPanelContainer를 마운트 상태로 유지
+    const propsTab = page.locator('[data-testid="sidebar-props"]').first();
+    if (await propsTab.isVisible({ timeout: 3000 }).catch(() => false)) {
+      await propsTab.click();
+      await page.waitForTimeout(200);
+    }
   });
 
   test('(클릭 경로) 필수 — textfield + textarea 한 행 드롭 → 첫 컴포넌트 선택 → row-resize-handle 표시', async ({ page }) => {
@@ -147,18 +153,16 @@ test.describe('Editor Row Resize Height — TSK-12-03', () => {
     await dropFieldToCanvas(page, 'textfield');
     await page.waitForSelector('.fjs-form-field-textfield', { timeout: 10000 });
 
-    // Properties 탭 클릭 (클릭 경로)
-    const propsTab = page.locator('[data-testid="tab-props"], [data-tab="props"], button').filter({ hasText: /속성|properties|props/i }).first();
-    if (await propsTab.isVisible({ timeout: 3000 })) {
-      await propsTab.click();
-    }
-
-    // 첫 컴포넌트 선택
+    // 첫 컴포넌트 선택 (beforeEach에서 Properties 탭 이미 열림)
+    // 두 번 클릭: 첫 번째는 캔버스 포커스 확보, 두 번째는 필드 선택 확실히 함
     await page.locator('.fjs-form-field-textfield').first().click();
+    await page.waitForTimeout(200);
+    await page.locator('.fjs-form-field-textfield').first().click();
+    await page.waitForTimeout(400);
 
     // props-entry-layout.rowHeight 엔트리 표시 확인
     const rowHeightEntry = page.locator('[data-testid="props-entry-layout.rowHeight"]');
-    await expect(rowHeightEntry).toBeVisible({ timeout: 5000 });
+    await expect(rowHeightEntry).toBeVisible({ timeout: 8000 });
   });
 
   test('첫 컴포넌트 삭제 → row min-height 초기화', async ({ page }) => {
@@ -186,9 +190,15 @@ test.describe('Editor Row Resize Height — TSK-12-03', () => {
     const minHeightAfterDrag = await rowAfterDrag.evaluate((el) => (el as HTMLElement).style.minHeight);
 
     // 첫 컴포넌트(textfield) 삭제 — Delete 키
-    await page.locator('.fjs-form-field-textfield').first().click();
+    // 캔버스에 포커스가 있어야 Delete가 form-js로 전달됨
+    const textfieldInCanvas = page.locator('.fjs-form-field-textfield').first();
+    await textfieldInCanvas.click();
+    // 키보드 포커스가 캔버스에 있음을 보장 (side panel에 빼앗기지 않도록)
+    await page.locator('[data-testid="editor-root"]').click({ position: { x: 1, y: 1 }, force: true });
+    await textfieldInCanvas.click();
     await page.keyboard.press('Delete');
-    await page.waitForTimeout(500);
+    await page.waitForTimeout(800); // rAF + DOM 업데이트 대기
+
 
     // row min-height 초기화 확인
     const rowAfterDelete = page.locator('.fjs-layout-row').first();
