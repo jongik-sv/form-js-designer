@@ -29,8 +29,10 @@ describe('messages 타입 narrowing', () => {
     const msg: FormJsMessage = {
       type: 'edit-opened',
       schema: '{"components":[]}',
+      uri: 'file:///test.md',
       mdStart: 5,
       mdEnd: 15,
+      docVersion: 1,
     };
 
     if (msg.type === 'edit-opened') {
@@ -44,12 +46,18 @@ describe('messages 타입 narrowing', () => {
   it('type: "save-schema" 메시지가 SaveSchemaMessage로 타입 narrowing된다', () => {
     const msg: FormJsMessage = {
       type: 'save-schema',
+      uri: 'file:///test.md',
+      mdStart: 5,
+      mdEnd: 10,
       schema: '{"components":[]}',
+      docVersion: 1,
     };
 
     if (msg.type === 'save-schema') {
       const narrowed: SaveSchemaMessage = msg;
       expect(narrowed.schema).toBe('{"components":[]}');
+      expect(narrowed.uri).toBe('file:///test.md');
+      expect(narrowed.docVersion).toBe(1);
     } else {
       throw new Error('narrowing failed');
     }
@@ -75,12 +83,14 @@ describe('messages 타입 narrowing', () => {
   it('type: "source-updated" 메시지가 SourceUpdatedMessage로 타입 narrowing된다', () => {
     const msg: FormJsMessage = {
       type: 'source-updated',
-      schema: '{"type":"default"}',
+      uri: 'file:///test.md',
+      version: 3,
     };
 
     if (msg.type === 'source-updated') {
       const narrowed: SourceUpdatedMessage = msg;
-      expect(narrowed.schema).toBe('{"type":"default"}');
+      expect(narrowed.uri).toBe('file:///test.md');
+      expect(narrowed.version).toBe(3);
     } else {
       throw new Error('narrowing failed');
     }
@@ -108,8 +118,10 @@ describe('messages 타입 narrowing', () => {
     const msg: EditOpenedMessage = {
       type: 'edit-opened',
       schema: '{}',
+      uri: 'file:///test.md',
       mdStart: 1,
       mdEnd: 5,
+      docVersion: 1,
     };
     expect(msg.type).toBe('edit-opened');
     expect(msg.schema).toBe('{}');

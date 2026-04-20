@@ -34,13 +34,24 @@ export interface EditClosedMessage {
 export interface EditOpenedMessage {
   type: 'edit-opened';
   schema: string;
+  uri: string;
   mdStart: number;
   mdEnd: number;
+  docVersion: number;
 }
 
 export interface SaveSchemaMessage {
   type: 'save-schema';
+  /** 대상 Markdown 파일 URI 문자열 */
+  uri: string;
+  /** 펜스 블록 시작 라인 (0-based) */
+  mdStart: number;
+  /** 펜스 블록 종료 라인 (0-based) */
+  mdEnd: number;
+  /** 직렬화된 스키마 JSON 문자열 */
   schema: string;
+  /** webview가 본 마지막 TextDocument.version */
+  docVersion: number;
 }
 
 export interface SaveResultMessage {
@@ -51,7 +62,10 @@ export interface SaveResultMessage {
 
 export interface SourceUpdatedMessage {
   type: 'source-updated';
-  schema: string;
+  /** 변경된 Markdown 파일 URI 문자열 */
+  uri: string;
+  /** 변경 후 TextDocument.version */
+  version: number;
 }
 
 /** preview.ts가 각 .form-js-block의 마운트 결과를 보고한다. */

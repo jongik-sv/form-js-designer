@@ -33,10 +33,17 @@ interface CustomEditorWindow extends Window {
 interface FormEditorInstance {
   destroy(): void;
   saveSchema?(): unknown;
+  getSchema?(): unknown;
 }
 
 let vscodeApi: VsCodeApi | null = null;
 let editorInstance: FormEditorInstance | null = null;
+
+/** webview가 알고 있는 현재 문서 메타 정보 (edit-opened / source-updated로 갱신) */
+let currentUri = '';
+let currentMdStart = 0;
+let currentMdEnd = 0;
+let lastKnownDocVersion = 0;
 
 /**
  * form-js editor를 #app 컨테이너에 마운트한다.
@@ -71,24 +78,60 @@ export async function mountEditor(schema: unknown): Promise<void> {
 
 /**
  * extension host로 save-schema 메시지를 송신한다.
- * 실제 저장 처리는 TSK-02-04에서 연결한다.
+ * TSK-02-04: uri, mdStart, mdEnd, docVersion 포함.
  */
 export function sendSaveSchema(): void {
   if (!vscodeApi || !editorInstance) return;
 
   try {
-    const schema = typeof editorInstance.saveSchema === 'function'
-      ? editorInstance.saveSchema()
-      : null;
+    const rawSchema = typeof editorInstance.getSchema === 'function'
+      ? editorInstance.getSchema()
+      : typeof editorInstance.saveSchema === 'function'
+        ? editorInstance.saveSchema()
+        : null;
 
     const msg: SaveSchemaMessage = {
       type: 'save-schema',
-      schema: schema ? JSON.stringify(schema) : '{}',
+      uri: currentUri,
+      mdStart: currentMdStart,
+      mdEnd: currentMdEnd,
+      schema: rawSchema != null ? JSON.stringify(rawSchema) : '{}',
+      docVersion: lastKnownDocVersion,
     };
     vscodeApi.postMessage(msg);
   } catch (err) {
     console.error('[form-js editor] save-schema 송신 실패:', err);
   }
+}
+
+/**
+ * 저장 토스트 메시지를 표시한다.
+ */
+export function showSaveToast(message: string, kind: 'success' | 'info' = 'success'): void {
+  const existing = document.querySelector('[data-testid="form-js-save-toast"]');
+  if (existing) existing.remove();
+
+  const toast = document.createElement('div');
+  toast.setAttribute('data-testid', 'form-js-save-toast');
+  toast.setAttribute('data-kind', kind);
+  toast.textContent = message;
+  toast.style.cssText = 'position:fixed;bottom:16px;right:16px;padding:8px 16px;border-radius:4px;z-index:9999;';
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 3000);
+}
+
+/**
+ * 에러 배너를 표시한다.
+ */
+export function showErrorBanner(message: string): void {
+  const existing = document.querySelector('[data-testid="form-js-error-banner"]');
+  if (existing) existing.remove();
+
+  const banner = document.createElement('div');
+  banner.setAttribute('data-testid', 'form-js-error-banner');
+  banner.textContent = message;
+  banner.style.cssText = 'position:fixed;top:0;left:0;right:0;padding:8px 16px;z-index:9999;';
+  document.body.appendChild(banner);
 }
 
 export function init(): void {
@@ -102,25 +145,59 @@ export function init(): void {
     vscodeApi = win.acquireVsCodeApi();
   }
 
-  // edit-opened 메시지 수신
+  // edit-opened / save-result / source-updated 메시지 수신
   window.addEventListener('message', (event: MessageEvent) => {
-    const msg = event.data as EditOpenedMessage;
-    if (msg?.type === 'edit-opened') {
+    const msg = event.data as { type?: string };
+    if (!msg?.type) return;
+
+    if (msg.type === 'edit-opened') {
+      const opened = msg as EditOpenedMessage;
+      currentUri = opened.uri ?? currentUri;
+      currentMdStart = opened.mdStart ?? 0;
+      currentMdEnd = opened.mdEnd ?? 0;
+      lastKnownDocVersion = opened.docVersion ?? 0;
+
       let schema: unknown;
       try {
-        schema = typeof msg.schema === 'string' ? JSON.parse(msg.schema) : msg.schema;
+        schema = typeof opened.schema === 'string' ? JSON.parse(opened.schema) : opened.schema;
       } catch {
         schema = { type: 'default', components: [] };
       }
       void mountEditor(schema);
+      return;
+    }
+
+    if (msg.type === 'source-updated') {
+      const upd = msg as import('../shared/messages').SourceUpdatedMessage;
+      lastKnownDocVersion = upd.version;
+      showSaveToast('문서가 외부에서 변경되었습니다.', 'info');
+      return;
+    }
+
+    if (msg.type === 'save-result') {
+      const result = msg as import('../shared/messages').SaveResultMessage;
+      if (result.ok) {
+        showSaveToast('저장되었습니다.');
+      } else if (result.error !== 'cancelled') {
+        showErrorBanner(`저장 실패: ${result.error ?? '알 수 없는 오류'}`);
+      }
+      return;
     }
   });
 
-  // 저장 버튼 wiring (스텁 — TSK-02-04에서 완성)
-  const saveBtn = document.getElementById('save-btn');
+  // 저장 버튼 wiring (TSK-02-04)
+  const saveBtn = document.querySelector<HTMLElement>('[data-testid="form-js-save-button"]');
   if (saveBtn) {
     saveBtn.addEventListener('click', sendSaveSchema);
   }
+
+  // Cmd+S / Ctrl+S keydown 캡처
+  window.addEventListener('keydown', (event: KeyboardEvent) => {
+    if ((event.metaKey || event.ctrlKey) && event.key === 's') {
+      event.preventDefault();
+      sendSaveSchema();
+    }
+  });
 
   // unload 시 정리
   window.addEventListener('unload', () => {

@@ -35,6 +35,18 @@
       {
         "command": "formJs.openBlockEditor",
         "title": "form-js: Open Block Editor"
+      },
+      {
+        "command": "formJs.saveBlockEditor",
+        "title": "form-js: Save Block Editor"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "formJs.saveBlockEditor",
+        "key": "ctrl+s",
+        "mac": "cmd+s",
+        "when": "activeCustomEditorId == 'form-js.block-editor'"
       }
     ],
     "customEditors": [

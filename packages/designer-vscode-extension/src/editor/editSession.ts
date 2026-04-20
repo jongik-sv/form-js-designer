@@ -20,6 +20,15 @@ export interface EditSession {
   mdEnd: number;
   /** 편집 webview 패널 (dispose 가능 객체) */
   panel: { dispose(): void };
+  /** TSK-02-04: Custom Editor 부팅 시점의 doc.version */
+  openedDocVersion?: number;
+  /** TSK-02-04: source-updated로 갱신된 마지막 알려진 doc.version */
+  lastKnownDocVersion?: number;
+  /**
+   * TSK-02-04: 자체 applyEdit으로 발생하는 onDidChangeTextDocument 이벤트를
+   * source-updated로 흘리지 않기 위한 in-flight 버전 토큰 집합.
+   */
+  pendingSaveTokens?: Set<number>;
 }
 
 /** 세션 lock 상태 변화 이벤트 */
@@ -140,6 +149,37 @@ export class EditSessionRegistry {
    */
   unmarkOpening(uri: string): void {
     this.openingURIs.delete(uri);
+  }
+
+  // ── TSK-02-04: in-flight save token 관리 ─────────────────────────────────
+
+  /**
+   * URI의 세션 pendingSaveTokens에 버전을 등록한다.
+   * sourceWatcher가 해당 버전의 변경 이벤트를 self-edit으로 억제하는 데 사용된다.
+   */
+  markSaveInFlight(uri: string, version: number): void {
+    const session = this.sessions.get(uri);
+    if (!session) return;
+    if (!session.pendingSaveTokens) {
+      session.pendingSaveTokens = new Set();
+    }
+    session.pendingSaveTokens.add(version);
+  }
+
+  /**
+   * URI의 세션 pendingSaveTokens에서 버전을 제거한다.
+   */
+  clearSaveInFlight(uri: string, version: number): void {
+    const session = this.sessions.get(uri);
+    if (!session) return;
+    session.pendingSaveTokens?.delete(version);
+  }
+
+  /**
+   * URI로 활성 세션을 조회한다 (getActive의 alias — sourceWatcher duck-type 호환).
+   */
+  findByUri(uri: string): EditSession | undefined {
+    return this.sessions.get(uri);
   }
 
   private emit(event: SessionEvent): void {

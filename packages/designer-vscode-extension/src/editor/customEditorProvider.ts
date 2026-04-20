@@ -111,8 +111,10 @@ export class FormJsBlockEditorProvider {
     const editOpenedMsg: EditOpenedMessage = {
       type: 'edit-opened',
       schema,
+      uri,
       mdStart,
       mdEnd,
+      docVersion: document.version,
     };
 
     setImmediate(() => {
