@@ -727,7 +727,7 @@ node, vitest
 - category: development
 - domain: frontend
 - model: opus
-- status: [ ]
+- status: [dd]
 - priority: critical
 - assignee: -
 - schedule: 2026-05-09 ~ 2026-05-10
@@ -846,7 +846,7 @@ node, vitest
 - category: development
 - domain: fullstack
 - model: sonnet
-- status: [ ]
+- status: [dd]
 - priority: high
 - assignee: -
 - schedule: 2026-05-15 ~ 2026-05-16

@@ -13,7 +13,9 @@
     "vscode": "^1.85.0",
     "node": ">=20"
   },
-  "categories": ["Other"],
+  "categories": [
+    "Other"
+  ],
   "type": "commonjs",
   "main": "./dist/extension.cjs",
   "activationEvents": [
@@ -23,7 +25,9 @@
   "contributes": {
     "markdown": {
       "markdownItPlugins": true,
-      "previewScripts": ["./dist/webview/preview.js"],
+      "previewScripts": [
+        "./dist/webview/preview.js"
+      ],
       "previewStyles": [
         "./media/form-js.css",
         "./media/form-js-base.css",
@@ -35,7 +39,9 @@
         "viewType": "formJsDesigner.formEditor",
         "displayName": "Form.js Designer",
         "selector": [
-          { "filenamePattern": "*.form.json" }
+          {
+            "filenamePattern": "*.form.json"
+          }
         ],
         "priority": "option"
       }
@@ -70,6 +76,7 @@
   "dependencies": {
     "@bpmn-io/form-js-editor": "^1.21.2",
     "@bpmn-io/form-js-viewer": "^1.21.2",
-    "preact": "^10.19.3"
+    "preact": "^10.19.3",
+    "zod": "^3.25.76"
   }
 }
