@@ -5,8 +5,9 @@
  * extendMarkdownIt(md) 를 호출하여 host markdown-it 인스턴스에 플러그인을 주입한다.
  * VSCode는 이 함수를 최초 1회만 호출하므로 중복 등록 방어 불필요.
  *
- * 참고: TSK-01-01 범위에서는 activate/deactivate extension lifecycle은
- *       stub로 유지하고, markdown plugin wiring만 구현한다.
+ * TSK-01-04: FORM_JS_TEST_MODE=1 환경에서 test bridge를 활성화한다.
+ *   - webview postMessage 'test-mount-complete' 수신 → _testMountState 업데이트
+ *   - 'form-js._test.getMountState' 커맨드 등록 (테스트 폴링용)
  */
 import type MarkdownIt from 'markdown-it';
 import { formJsMarkdownPlugin } from './markdown/plugin';
@@ -23,11 +24,45 @@ export function extendMarkdownIt(md: MarkdownIt): MarkdownIt {
 }
 
 /**
- * Extension activate — TSK-01-01 범위에서는 stub.
- * 후속 Task(Custom Editor 등)에서 실제 기능 추가 예정.
+ * Extension activate.
+ *
+ * FORM_JS_TEST_MODE=1 환경에서 test bridge를 활성화한다:
+ * - 'form-js._test.getMountState' 커맨드를 등록하여 URI별 마운트 상태를 반환한다.
+ * - webview 메시지 'test-mount-complete' 수신 시 _testMountState를 업데이트한다.
+ *   (실제 webview 메시지 수신은 패널별 onDidReceiveMessage 핸들러에서 처리하며,
+ *    여기서는 커맨드 등록만 수행한다.)
  */
-export function activate(): void {
-  // stub: 후속 task에서 구현
+export function activate(
+  context?: import('vscode').ExtensionContext
+): void {
+  if (process.env['FORM_JS_TEST_MODE'] !== '1') {
+    return;
+  }
+
+  // vscode 모듈은 extension host 런타임에서만 사용 가능
+  // Node.js 환경에서 require로 로드
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const vscode = require('vscode') as typeof import('vscode');
+    const { updateMountState, getMountStateForUri } = require('./testBridge') as typeof import('./testBridge');
+
+    const disposable = vscode.commands.registerCommand(
+      'form-js._test.getMountState',
+      (uri: string) => {
+        return getMountStateForUri(uri);
+      }
+    );
+
+    if (context) {
+      context.subscriptions.push(disposable);
+    }
+
+    // updateMountState를 전역으로 노출하여 webview 메시지 핸들러에서 사용 가능하게 함
+    // (실제 패널 메시지 수신 핸들러는 향후 Custom Editor 구현 시 추가)
+    (globalThis as Record<string, unknown>)['__formJsUpdateMountState'] = updateMountState;
+  } catch {
+    // extension host 환경이 아닌 경우 무시
+  }
 }
 
 /**

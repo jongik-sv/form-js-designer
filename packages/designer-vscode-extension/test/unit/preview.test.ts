@@ -346,9 +346,10 @@ describe('applyTheme', () => {
 describe('mountViewers: createForm 오류 격리', () => {
   it('createForm이 throw하면 해당 블록에 오류 배너가 표시되고 나머지는 계속 처리된다', async () => {
     const successDestroy = vi.fn();
+    const successImportSchema = vi.fn();
     mockCreateForm
       .mockRejectedValueOnce(new Error('mount failed'))
-      .mockResolvedValueOnce({ destroy: successDestroy });
+      .mockResolvedValueOnce({ destroy: successDestroy, importSchema: successImportSchema });
 
     createBlock({ id: 'f1', components: [] }, 'failId');
     createBlock({ id: 'f2', components: [] }, 'successId');

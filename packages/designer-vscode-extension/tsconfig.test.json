@@ -1,0 +1,25 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "CommonJS",
+    "moduleResolution": "node",
+    "lib": ["ES2022"],
+    "outDir": "dist",
+    "noEmit": false,
+    "types": ["node", "mocha"],
+    "declaration": false,
+    "declarationMap": false,
+    "sourceMap": true,
+    "skipLibCheck": true
+  },
+  "include": [
+    "src/**/*",
+    "test/integration/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "test/unit/**/*",
+    "test/e2e/**/*"
+  ]
+}

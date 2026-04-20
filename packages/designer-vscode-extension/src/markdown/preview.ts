@@ -7,10 +7,19 @@
  * - instanceMap으로 인스턴스 관리 (disposeAll → viewerCache 동시 초기화)
  * - JSON 파싱 실패 / createForm 실패 시 .form-js-block--error 배너 렌더
  * - MutationObserver로 data-vscode-theme-kind 변화를 구독하여 테마 즉시 반영
+ *
+ * TSK-01-04: test bridge 발신
+ * - FORM_JS_TEST_BRIDGE=true(esbuild define) 시 마운트 완료 후
+ *   acquireVsCodeApi().postMessage({ type: 'test-mount-complete', blocks })를 발송
  */
 import { createForm } from '@bpmn-io/form-js-viewer';
 import { LRUCache } from './lruCache';
 import { renderErrorBanner } from './errorBanner';
+import type { BlockMountState, TestMountCompleteMessage } from '../shared/messages';
+
+// esbuild define으로 주입되는 test bridge 플래그.
+// production 빌드에서는 false로 tree-shaking된다.
+declare const FORM_JS_TEST_BRIDGE: boolean;
 
 /** viewer 인스턴스를 보관하는 모듈 스코프 싱글턴 */
 export interface FormViewerInstance {
@@ -53,6 +62,8 @@ function getFormBlocks(): HTMLElement[] {
  */
 export async function mountViewers(): Promise<void> {
   const blocks = getFormBlocks();
+  // test bridge용 블록 마운트 상태 수집
+  const mountStates: BlockMountState[] = [];
 
   for (const block of blocks) {
     const schemaId = block.dataset['schemaId'] ?? '';
@@ -71,6 +82,7 @@ export async function mountViewers(): Promise<void> {
     } catch (err) {
       // JSON 파싱 실패: .form-js-block--error 배너 표시
       renderErrorBanner(block, err instanceof Error ? err.message : String(err));
+      mountStates.push({ schemaId, hasError: true });
       continue;
     }
 
@@ -95,9 +107,29 @@ export async function mountViewers(): Promise<void> {
           instanceMap.set(schemaId, instance);
         }
       }
+      mountStates.push({ schemaId, hasError: false });
     } catch (err) {
       // createForm / importSchema 실패: .form-js-block--error 배너 표시
       renderErrorBanner(block, err instanceof Error ? err.message : String(err));
+      mountStates.push({ schemaId, hasError: true });
+    }
+  }
+
+  // test bridge: 마운트 완료 postMessage 발송 (FORM_JS_TEST_BRIDGE=true 시에만)
+  if (typeof FORM_JS_TEST_BRIDGE !== 'undefined' && FORM_JS_TEST_BRIDGE) {
+    try {
+      const api = (
+        window as unknown as { acquireVsCodeApi?: () => { postMessage(msg: unknown): void } }
+      ).acquireVsCodeApi?.();
+      if (api) {
+        const msg: TestMountCompleteMessage = {
+          type: 'test-mount-complete',
+          blocks: mountStates,
+        };
+        api.postMessage(msg);
+      }
+    } catch {
+      // acquireVsCodeApi 실패는 무시 (비 webview 환경)
     }
   }
 }

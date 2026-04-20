@@ -15,7 +15,7 @@
 | domain | description | unit-test | e2e-test | e2e-server | e2e-url |
 |--------|-------------|-----------|----------|------------|---------|
 | backend | Extension host (Node) logic — blockLocator, formatJson, WorkspaceEdit wiring | `npm -w @form-js-designer/designer-vscode-extension run test:unit` | - | - | - |
-| frontend | Webview UI (Preact + form-js viewer/editor, preview scripts, Custom Editor webview) | `npm -w @form-js-designer/designer-vscode-extension run test:unit` | - | - | - |
+| frontend | Webview UI (Preact + form-js viewer/editor, preview scripts, Custom Editor webview) | `npm -w @form-js-designer/designer-vscode-extension run test:unit` | `npm -w @form-js-designer/designer-vscode-extension run test:e2e` | - | - |
 | fullstack | VSCode extension full path — extension host ↔ webview messaging, Custom Editor, markdown preview integration | - | `npm -w @form-js-designer/designer-vscode-extension run test:e2e` | - | - |
 | infra | Build pipeline, esbuild bundle, `.vsix` packaging, CI hooks | - | - | - | - |
 | test | Test harness, Vitest config, `@vscode/test-electron` runner | - | - | - | - |
@@ -261,7 +261,7 @@ node, vitest
 - category: infrastructure
 - domain: test
 - model: sonnet
-- status: [dd]
+- status: [im]
 - priority: high
 - assignee: -
 - schedule: 2026-04-29 ~ 2026-04-29
