@@ -589,7 +589,7 @@ node, vitest
 - category: infrastructure
 - domain: test
 - model: sonnet
-- status: [ ]
+- status: [dd]
 - priority: medium
 - assignee: -
 - schedule: 2026-05-13 ~ 2026-05-14
