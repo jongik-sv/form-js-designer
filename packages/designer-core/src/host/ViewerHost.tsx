@@ -33,11 +33,24 @@ type FormConstructor = new (opts: { container: HTMLElement; additionalModules?: 
 const FormClass = FormJsForm as unknown as FormConstructor;
 
 // ---------------------------------------------------------------------------
+// 헬퍼 — 컴포넌트 외부에 정의하여 매 렌더마다 재생성하지 않음
+// ---------------------------------------------------------------------------
+
+/** storeData + data 머지 — 런타임 data가 storeData보다 우선 */
+function mergeData(
+  sd?: Record<string, unknown>,
+  d?: Record<string, unknown>,
+): Record<string, unknown> {
+  return { ...(sd ?? {}), ...(d ?? {}) };
+}
+
+// ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 export function ViewerHost({
   schema,
   data,
+  storeData,
   locale,
   additionalModules,
   onChange,
@@ -95,7 +108,7 @@ export function ViewerHost({
           return;
         }
 
-        const result = await form.importSchema(schema, data ?? {});
+        const result = await form.importSchema(schema, mergeData(storeData, data));
         if (!destroyedRef.current) {
           onImport?.(result);
         }
@@ -125,7 +138,7 @@ export function ViewerHost({
     const form = formRef.current;
     if (!form || destroyedRef.current || schema == null) return;
 
-    form.importSchema(schema, data ?? {}).then((result) => {
+    form.importSchema(schema, mergeData(storeData, data)).then((result) => {
       if (!destroyedRef.current) {
         onImport?.(result);
       }
@@ -146,16 +159,17 @@ export function ViewerHost({
     const form = formRef.current;
     if (!form || destroyedRef.current || schema == null) return;
 
+    const merged = mergeData(storeData, data);
     if (typeof form._update === 'function') {
-      form._update({ data: data ?? {} });
+      form._update({ data: merged });
     } else {
       // _update 미존재 fallback
-      form.importSchema(schema, data ?? {}).catch((err) => {
+      form.importSchema(schema, merged).catch((err) => {
         onError?.(err);
       });
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [data]);
+  }, [data, storeData]);
 
   // -------------------------------------------------------------------------
   // Render

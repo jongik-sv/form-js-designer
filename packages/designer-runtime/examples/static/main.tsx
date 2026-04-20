@@ -22,7 +22,7 @@ import '@bpmn-io/form-js-viewer/dist/assets/form-js.css';
 import schemaJson from './page.schema.json';
 import manifestJson from './manifest.json';
 
-// ViewerHost에 주입할 additionalModules — card/stack/tabs/modal 등 커스텀 타입 지원
+// ViewerHost에 주입할 additionalModules — card/tabs/modal 등 커스텀 타입 지원
 // Button / Table 은 form-js native 컴포넌트를 그대로 사용한다.
 // LayoutHeightModule: layout.height DOM inline style 주입 (TSK-12-02)
 const VIEWER_MODULES: unknown[] = [
@@ -31,10 +31,10 @@ const VIEWER_MODULES: unknown[] = [
   LayoutHeightModule,
 ];
 
-// 간단한 테스트용 registry mock (card/textfield/button 등록)
+// 간단한 테스트용 registry mock (card/textfield/button/select 등록)
 const mockRegistry = {
   get: (type: string) => {
-    const types = ['card', 'textfield', 'button', 'stack', 'tabs', 'default'];
+    const types = ['card', 'textfield', 'button', 'tabs', 'default', 'select'];
     return types.includes(type) ? {} : undefined;
   },
 };
@@ -78,7 +78,11 @@ function App() {
 
   return (
     <div data-testid="viewer-container">
-      <ViewerHost schema={bootResult.schema} additionalModules={VIEWER_MODULES} />
+      <ViewerHost
+        schema={bootResult.schema}
+        storeData={bootResult.storeData}
+        additionalModules={VIEWER_MODULES}
+      />
     </div>
   );
 }

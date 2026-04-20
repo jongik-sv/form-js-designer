@@ -38,7 +38,7 @@ description: "form-js 호환 JSON 스키마를 생성·수정·검증하는 AI S
 packages/designer-components/src/{type}/spec.json
 ```
 
-지원 type: `card`, `stack`, `button`, `tabs`, `modal`
+지원 type: `card`, `button`, `tabs`, `modal`
 
 예시:
 ```
@@ -92,20 +92,19 @@ table은 spec.json이 없으므로 아래 인라인 스니펫을 참조한다:
 }
 ```
 
-- `type`: spec.json에 정의된 type (card / stack / button / tabs / modal / table)
+- `type`: spec.json에 정의된 type (card / button / tabs / modal / table)
 - `id` 패턴: `<type>-<6자리-timestamp>` (예: `card-1716700000`)
   - timestamp는 현재 Unix time의 마지막 6자리 (초 단위, 다른 컴포넌트와 겹치지 않도록 1씩 증가)
-- 중첩 컨테이너(card, stack, modal)는 `"components": []` 필드를 포함할 수 있다
+- 중첩 컨테이너(card, modal)는 `"components": []` 필드를 포함할 수 있다
 
 ### id 패턴 예시
 
 ```
 card-1716700001
-stack-1716700002
-button-1716700003
-tabs-1716700004
-modal-1716700005
-table-1716700006
+button-1716700002
+tabs-1716700003
+modal-1716700004
+table-1716700005
 ```
 
 ### props 기본값
@@ -169,7 +168,6 @@ schemas/drafts/<name>.schema.json Write
 | 파일 | 용도 |
 |------|------|
 | `packages/designer-components/src/card/spec.json` | card props |
-| `packages/designer-components/src/stack/spec.json` | stack props |
 | `packages/designer-components/src/button/spec.json` | button props |
 | `packages/designer-components/src/tabs/spec.json` | tabs props |
 | `packages/designer-components/src/modal/spec.json` | modal props |

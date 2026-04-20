@@ -28,7 +28,13 @@ export interface UseElementResizeReturn {
   value: number;
   setValue: (v: number) => void;
   adjust: (delta: number | 'min' | 'max') => void;
-  startDrag: (e: PointerEvent) => void;
+  /**
+   * pointerdown 핸들러.
+   * @param overrideStartValue 드래그 baseline 을 현재 state 대신 명시적으로 지정.
+   *   state 업데이트는 비동기이므로 호출자가 setValue 직후 startDrag 해도 valueRef 는
+   *   이전 값을 유지한다. 측정한 실제 크기를 delta 기준으로 쓰려면 여기에 전달한다.
+   */
+  startDrag: (e: PointerEvent, overrideStartValue?: number) => void;
 }
 
 export function clamp(value: number, min: number, max: number): number {
@@ -71,13 +77,21 @@ export function useElementResize(options: UseElementResizeOptions): UseElementRe
   );
 
   const startDrag = useCallback(
-    (e: PointerEvent) => {
+    (e: PointerEvent, overrideStartValue?: number) => {
       const target = e.currentTarget as HTMLElement | null;
       if (!target) return;
 
       const pointerId = e.pointerId;
       const startCoord = axis === 'x' ? e.clientX : e.clientY;
-      const startValue = valueRef.current;
+      const startValue =
+        typeof overrideStartValue === 'number'
+          ? clamp(overrideStartValue, min, max)
+          : valueRef.current;
+      // state 와 ref 도 baseline 으로 동기화 (드래그 중 표시 일관성)
+      if (typeof overrideStartValue === 'number' && startValue !== valueRef.current) {
+        valueRef.current = startValue;
+        setValueState(startValue);
+      }
 
       // pointer capture: 드래그 중 요소 외부로 마우스가 나가도 이벤트 수신
       try {

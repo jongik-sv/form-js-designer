@@ -775,56 +775,29 @@
    */
   .fjs-designer-component-resize {
     /* position/size set via inline style (fixed, tracks field rect) */
+    display: flex;
+    justify-content: center;
+    align-items: center;
   }
 
+  /* form-js column-width pill handle 과 동일한 룩앤필 (가로/세로만 축만 회전)
+     - 50px 길이, 6px 두께, pill radius, 흰 바탕 + blue 테두리
+     - hover / focus / drag 시 blue 바탕 */
   .fjs-designer-component-resize__handle {
     display: block;
-    width: 100%;
-    height: 100%;
-    background: #3b82f6;
-    opacity: 0.7;
+    width: 50px;
+    height: 6px;
+    background: #ffffff;
+    border: 1px solid var(--cds-border-interactive, #3b82f6);
+    border-radius: 50px;
     cursor: row-resize;
     pointer-events: all;
-    border-radius: 3px;
-    transition: opacity 0.15s;
+    transition: background 0.15s;
   }
 
   .fjs-designer-component-resize__handle:hover,
   .fjs-designer-component-resize__handle:focus {
-    opacity: 1;
-    outline: 2px solid #2563eb;
-    outline-offset: 1px;
-  }
-
-  /**
-   * TSK-12-03: RowResizeOverlay / RowResizeHandle — 행 높이 리사이즈 핸들
-   *
-   * 선택된 행(row) 하단에 배치되는 리사이즈 바.
-   * ChildrenSlot 경로: .fjs-layout-row 내부 마지막 자식.
-   * default 루트 경로: RowResizeOverlay가 fixed 포지셔닝으로 row DOM 추적.
-   */
-  .fjs-designer-row-resize {
-    /* ChildrenSlot 경로: Row 내 마지막 자식으로 렌더 */
-    width: 100%;
-    height: 4px;
-  }
-
-  .fjs-designer-row-resize__handle {
-    display: block;
-    width: 100%;
-    height: 100%;
-    background: #10b981;
-    opacity: 0.6;
-    cursor: row-resize;
-    pointer-events: all;
-    border-radius: 2px;
-    transition: opacity 0.15s;
-  }
-
-  .fjs-designer-row-resize__handle:hover,
-  .fjs-designer-row-resize__handle:focus {
-    opacity: 1;
-    outline: 2px solid #059669;
-    outline-offset: 1px;
+    background: var(--cds-border-interactive, #3b82f6);
+    outline: none;
   }
 }

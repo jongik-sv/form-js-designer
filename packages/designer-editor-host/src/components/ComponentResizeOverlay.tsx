@@ -82,11 +82,45 @@ export function ComponentResizeOverlay({ editor }: ComponentResizeOverlayProps):
   const selectedFieldRef = useRef<AnyField | null>(null);
   selectedFieldRef.current = selectedField;
 
+  // ResizeObserver tracks the selected wrapper so the handle follows real size
+  // changes. Event-driven updates race with Preact re-rendering + LayoutHeightModule
+  // rAF — the observer is authoritative and fires after the browser has laid out.
+  const resizeObserverRef = useRef<ResizeObserver | null>(null);
+  const observedElRef = useRef<HTMLElement | null>(null);
+
+  // Double rAF: first frame lets Preact commit + LayoutHeightModule's scheduled
+  // apply run; second frame measures after layout settles.
   const updatePos = useCallback((fieldId: string) => {
     if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
     rafRef.current = requestAnimationFrame(() => {
-      setHandlePos(measureHandlePos(fieldId));
+      rafRef.current = requestAnimationFrame(() => {
+        setHandlePos(measureHandlePos(fieldId));
+      });
     });
+  }, []);
+
+  // Start / stop observing the wrapper for size changes.
+  const observeTarget = useCallback((fieldId: string | null) => {
+    // Tear down previous observation
+    if (resizeObserverRef.current && observedElRef.current) {
+      resizeObserverRef.current.unobserve(observedElRef.current);
+    }
+    observedElRef.current = null;
+
+    if (!fieldId || typeof ResizeObserver === 'undefined') return;
+    const el = getFieldEl(fieldId);
+    if (!el) return;
+
+    if (!resizeObserverRef.current) {
+      resizeObserverRef.current = new ResizeObserver(() => {
+        const f = selectedFieldRef.current;
+        if (!f) return;
+        // Measure synchronously — observer fires post-layout, so rect is current.
+        setHandlePos(measureHandlePos(f.id));
+      });
+    }
+    resizeObserverRef.current.observe(el);
+    observedElRef.current = el;
   }, []);
 
   const {
@@ -115,7 +149,19 @@ export function ComponentResizeOverlay({ editor }: ComponentResizeOverlayProps):
 
   const startDrag = useCallback((e: PointerEvent) => {
     isDraggingRef.current = true;
-    startDragBase(e);
+    // 드래그 baseline 은 "실제 렌더된 높이" 여야 한다.
+    // layout.height 미설정(자연 높이) 또는 container min-height 로 인한 자동 확장으로
+    // state 값과 실측 크기가 어긋나면, delta 가 잘못된 기준에 더해져 핸들 위치가 튄다.
+    const field = selectedFieldRef.current;
+    let measured: number | undefined;
+    if (field) {
+      const el = getFieldEl(field.id);
+      if (el) {
+        const h = Math.round(el.getBoundingClientRect().height);
+        if (h > 0) measured = h;
+      }
+    }
+    startDragBase(e, measured);
   }, [startDragBase]);
 
   useEffect(() => {
@@ -147,6 +193,7 @@ export function ComponentResizeOverlay({ editor }: ComponentResizeOverlayProps):
           if (!isDraggingRef.current) {
             setSelectedField(null);
             setHandlePos(null);
+            observeTarget(null);
           }
           clearTimerRef.current = null;
         }, 200);
@@ -164,6 +211,7 @@ export function ComponentResizeOverlay({ editor }: ComponentResizeOverlayProps):
       if (!selType || !isTargetType(selType)) {
         setSelectedField(null);
         setHandlePos(null);
+        observeTarget(null);
         return;
       }
 
@@ -174,6 +222,7 @@ export function ComponentResizeOverlay({ editor }: ComponentResizeOverlayProps):
       const initH = fullField.layout?.height ?? 75;
       setHeightValue(initH);
       updatePos(selId);
+      observeTarget(selId);
     };
 
     const onElementsChanged = () => {
@@ -197,6 +246,8 @@ export function ComponentResizeOverlay({ editor }: ComponentResizeOverlayProps):
       const h = f.layout?.height ?? 75;
       setHeightValue(h);
       updatePos(id);
+      // Re-observe: Preact may have replaced the wrapper DOM node during re-render
+      observeTarget(id);
     };
 
     eventBus.on('selection.changed', onSelectionChanged);
@@ -208,8 +259,13 @@ export function ComponentResizeOverlay({ editor }: ComponentResizeOverlayProps):
       eventBus.off('commandStack.formField.edit.postExecuted', onPostExecuted);
       if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
       if (clearTimerRef.current !== null) clearTimeout(clearTimerRef.current);
+      if (resizeObserverRef.current) {
+        resizeObserverRef.current.disconnect();
+        resizeObserverRef.current = null;
+      }
+      observedElRef.current = null;
     };
-  }, [editor, setHeightValue, updatePos]);
+  }, [editor, setHeightValue, updatePos, observeTarget]);
 
   if (!selectedField) return (
     <div data-testid="component-resize-overlay-mounted" style={{ display: 'none' }} />

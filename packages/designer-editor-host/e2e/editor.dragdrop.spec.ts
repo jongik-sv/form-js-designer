@@ -3,7 +3,7 @@
  * Playwright E2E: 팔레트에서 6종 컴포넌트 캔버스 드래그·드롭
  *
  * 수락 기준: PRD §4 AC #1
- * - card / stack / tabs / modal / button / table 6종 드래그·드롭 통과
+ * - card / tabs / modal / button / table 5종 드래그·드롭 통과
  *
  * container-layout-fixes E2E 시나리오 (Bug 1, 2, 3):
  * - Card 내부에 컴포넌트 드롭 + 가로 배치 확인
@@ -18,7 +18,6 @@ import { test, expect } from '@playwright/test';
 // 드래그·드롭 대상 컴포넌트 목록
 const COMPONENTS = [
   { type: 'card', label: /card|카드/i },
-  { type: 'stack', label: /stack|스택/i },
   { type: 'tabs', label: /tabs|탭/i },
   { type: 'modal', label: /modal|모달/i },
   { type: 'button', label: /button|버튼/i },
@@ -167,7 +166,7 @@ test.describe('Editor Drag & Drop — 6 컴포넌트', () => {
 
 // ---------------------------------------------------------------------------
 // container-layout-fixes E2E 시나리오
-// Bug 1: Card/Stack 내부 드롭 + cds--col 가로배치 확인
+// Bug 1: Card 내부 드롭 + cds--col 가로배치 확인
 // Bug 2: 오버플로우 없음 확인
 // Bug 3: Tabs per-tab 드롭 확인
 // ---------------------------------------------------------------------------

@@ -6,7 +6,7 @@
  * 사용법: node scripts/rc/run-ac-matrix.mjs [--yaml <path>] [--out <path>]
  *
  * 동작:
- * 1. docs/tasks/TSK-10-01/ac-matrix.yaml 파싱
+ * 1. docs/designer/tasks/TSK-10-01/ac-matrix.yaml 파싱
  * 2. 각 spec 파일 존재 여부 확인 + 실행 (unit: vitest, e2e: playwright)
  * 3. reports/rc/ac-matrix.json 집계 기록
  * 4. totalPassed >= 120 && totalFailed === 0 → exit 0, 아니면 exit 1
@@ -23,7 +23,7 @@ import yaml from 'js-yaml';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 export const REPO_ROOT = resolve(__dirname, '../..');
-const DEFAULT_YAML = resolve(REPO_ROOT, 'docs/tasks/TSK-10-01/ac-matrix.yaml');
+const DEFAULT_YAML = resolve(REPO_ROOT, 'docs/designer/tasks/TSK-10-01/ac-matrix.yaml');
 const DEFAULT_OUT = resolve(REPO_ROOT, 'reports/rc/ac-matrix.json');
 const MIN_TOTAL_PASS = 120;
 

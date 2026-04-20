@@ -1,5 +1,5 @@
 // Verify container contract fix:
-// 1) Card/Stack placed, clickable and highlighted in properties panel
+// 1) Card placed, clickable and highlighted in properties panel
 // 2) Can drop a button INSIDE a card (schema card.components[0].type === 'button')
 // 3) Two buttons side-by-side => single fjs-layout-row with 2 cds--col
 import { chromium } from '@playwright/test';

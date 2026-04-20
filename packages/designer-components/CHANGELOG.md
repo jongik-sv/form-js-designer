@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+### Removed (BREAKING)
+
+- `Stack` 컴포넌트(`src/stack/`) 제거. `display:flex`와 form-js Carbon 그리드 렌더 파이프라인 충돌로 `direction/gap/align/justify`가 무효화되고 자식 `layout.columns` 변경 시 폭이 함께 변동하는 버그 상존. Row/Column grid + Card 조합으로 대체한다.
+- `StackComponent`, `StackSchema`, `stackPropsSchema` export 삭제.
+- `StackIcon` 팔레트 아이콘 삭제.
+
 ## [1.0.0-rc.1] - 2026-06-05
 
 ### Added

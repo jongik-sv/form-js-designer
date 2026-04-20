@@ -11,8 +11,7 @@
     {
       "type": "textfield",
       "key": "name",
-      "label": "이름",
-      "layout": { "rowHeight": 150 }
+      "label": "이름"
     }
   ]
 }

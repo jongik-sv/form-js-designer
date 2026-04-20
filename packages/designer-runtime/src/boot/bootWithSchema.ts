@@ -12,6 +12,7 @@ import { validateFormSchema } from '@form-js-designer/designer-core/validate';
 import { saveLastGood, loadLastGood } from './lastGoodSchemaStore';
 import { dispatchSchemaLoaded, dispatchSchemaError } from './events';
 import { SchemaBootError } from './bootTypes';
+import { resolveDataStores } from './resolveDataStores';
 import type { BootOptions, BootResult } from './bootTypes';
 
 const DEFAULT_KEY = 'designer.lastGood';
@@ -37,7 +38,8 @@ export async function bootWithSchema(opts: BootOptions): Promise<BootResult> {
     // 성공 경로: lastGood 저장 + 이벤트 발화
     saveLastGood(lastGoodKey, schema, undefined, storage);
     dispatchSchemaLoaded({ source: 'static' });
-    return { schema, usedFallback: false, validation };
+    const { storeData } = resolveDataStores(schema as Record<string, unknown>);
+    return { schema, usedFallback: false, validation, storeData };
   }
 
   // 실패 경로: lastGood fallback 시도
@@ -51,8 +53,10 @@ export async function bootWithSchema(opts: BootOptions): Promise<BootResult> {
       errors: validation.errors,
       usedFallback: true,
     });
-    return { schema: lastGood.schema, usedFallback: true, validation };
+    const { storeData } = resolveDataStores(lastGood.schema as Record<string, unknown>);
+    return { schema: lastGood.schema, usedFallback: true, validation, storeData };
   }
+
 
   // lastGood 없음 → 완전 실패
   const err = new SchemaBootError(validation.errors);

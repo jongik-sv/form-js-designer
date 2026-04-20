@@ -18,6 +18,13 @@
           "type": "textfield",
           "label": "Email",
           "key": "email"
+        },
+        {
+          "id": "country-field",
+          "type": "select",
+          "label": "국가",
+          "key": "country",
+          "valuesKey": "countryOptions"
         }
       ]
     },
@@ -26,6 +33,16 @@
       "type": "button",
       "label": "Submit",
       "action": "submit"
+    }
+  ],
+  "dataStores": [
+    {
+      "key": "countryOptions",
+      "source": "static",
+      "data": [
+        { "label": "대한민국", "value": "KR" },
+        { "label": "일본", "value": "JP" }
+      ]
     }
   ]
 }

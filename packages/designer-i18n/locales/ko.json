@@ -15,7 +15,6 @@
   "formjs.validation.maxInvalidNumber":    "최댓값이 유효한 숫자가 아닙니다.",
   "designer.palette.table":               "테이블",
   "designer.palette.card":                "카드",
-  "designer.palette.stack":               "스택",
   "designer.palette.tabs":                "탭",
   "designer.palette.modal":               "모달",
   "designer.palette.button":              "버튼",

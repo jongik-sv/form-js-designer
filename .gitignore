@@ -13,7 +13,7 @@ playwright-report/
 .playwright-mcp/
 packages/*/spike/*/tests/artifacts/
 
-# Root-level E2E/debug screenshots (should be saved under docs/features/*/ or test output dirs)
+# Root-level E2E/debug screenshots (should be saved under docs/designer/features/*/ or test output dirs)
 /*.png
 
 .DS_Store

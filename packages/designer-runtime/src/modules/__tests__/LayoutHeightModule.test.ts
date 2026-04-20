@@ -1,14 +1,12 @@
 /**
- * LayoutHeightModule 단위 테스트 — TSK-12-02 + TSK-12-03
+ * LayoutHeightModule 단위 테스트 — TSK-12-02
  *
  * DI spy 테스트: eventBus.on 구독 확인, 훅 발화 시 Applier 호출됨.
- * TSK-12-03: form.layoutCalculated 구독 확인, applyRowHeight spy 호출 검증.
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { LayoutHeightService } from '../LayoutHeightModule';
 import * as Applier from '../LayoutHeightApplier';
-import * as RowApplier from '../RowLayoutHeightApplier';
 
 function makeEventBus() {
   const handlers: Record<string, ((...args: unknown[]) => void)[]> = {};
@@ -33,12 +31,10 @@ function makeRegistry(fields: unknown[] = []) {
 
 describe('LayoutHeightService', () => {
   let applySpy: ReturnType<typeof vi.spyOn>;
-  let rowApplySpy: ReturnType<typeof vi.spyOn>;
 
   beforeEach(() => {
     vi.clearAllMocks();
     applySpy = vi.spyOn(Applier, 'applyLayoutHeight').mockImplementation(() => {});
-    rowApplySpy = vi.spyOn(RowApplier, 'applyRowHeight').mockImplementation(() => {});
   });
 
   // Case 1: import.done 이벤트 구독 확인
@@ -125,47 +121,15 @@ describe('LayoutHeightService', () => {
     expect(() => new LayoutHeightService(eventBus, registry)).not.toThrow();
   });
 
-  // TSK-12-03 확장 케이스
-
-  // Case 9: form.layoutCalculated 이벤트에 구독 (TSK-12-03)
-  it('9: form.layoutCalculated 이벤트에 구독 (TSK-12-03)', () => {
+  // Case 9: form.layoutCalculated 이벤트에 구독 — applyLayoutHeight 갱신 트리거
+  it('9: form.layoutCalculated 발화 시 applyLayoutHeight 호출', () => {
     const eventBus = makeEventBus();
-    const registry = makeRegistry();
-    new LayoutHeightService(eventBus, registry);
-    expect(eventBus.on).toHaveBeenCalledWith('form.layoutCalculated', expect.any(Function));
-  });
-
-  // Case 10: form.layoutCalculated 발화 시 applyRowHeight 호출 (formLayouter 주입)
-  it('10: form.layoutCalculated 발화 시 applyRowHeight 호출 (TSK-12-03)', () => {
-    const eventBus = makeEventBus();
-    const fields = [{ id: 'f1', type: 'textfield', layout: { rowHeight: 200 } }];
+    const fields = [{ id: 'f1', type: 'textfield', layout: { height: 120 } }];
     const registry = makeRegistry(fields);
-    const formLayouter = {
-      _rows: [{ formFieldId: 'root', rows: [{ id: 'R1', components: ['f1'] }] }],
-    };
-    new LayoutHeightService(eventBus, registry, formLayouter);
+    new LayoutHeightService(eventBus, registry);
 
     eventBus.fire('form.layoutCalculated');
 
-    expect(rowApplySpy).toHaveBeenCalled();
-  });
-
-  // Case 11: import.done 발화 시 applyRowHeight도 호출 (TSK-12-03)
-  it('11: import.done 발화 시 applyRowHeight도 호출됨 (TSK-12-03)', () => {
-    const eventBus = makeEventBus();
-    const fields = [{ id: 'f1', type: 'textfield', layout: { rowHeight: 150 } }];
-    const registry = makeRegistry(fields);
-    new LayoutHeightService(eventBus, registry);
-
-    eventBus.fire('import.done');
-
-    expect(rowApplySpy).toHaveBeenCalled();
-  });
-
-  // Case 12: formLayouter 없이 생성해도 에러 없음 (TSK-12-03)
-  it('12: formLayouter 없이 생성해도 에러 없음 (TSK-12-03)', () => {
-    const eventBus = makeEventBus();
-    const registry = makeRegistry();
-    expect(() => new LayoutHeightService(eventBus, registry)).not.toThrow();
+    expect(applySpy).toHaveBeenCalled();
   });
 });

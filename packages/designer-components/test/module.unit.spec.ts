@@ -2,7 +2,7 @@
  * TSK-04-01: DesignerComponentsModule 단위 테스트
  *
  * QA 체크리스트 항목:
- * - DesignerComponentsModule 등록: mock FormFieldRegistry에 register 호출 시 card/stack/tabs/modal/tabPanel 5종 등록
+ * - DesignerComponentsModule 등록: mock FormFieldRegistry에 register 호출 시 card/tabs/modal/tabPanel 4종 등록
  * - i18n 키 규칙: designer.components.{name}.* 키 형식
  * - spec.json 존재: 유효한 JSON + type/propsSchema 필드
  * - defineComponent 순수 렌더 계약: assertPureRender 경고 없이 렌더
@@ -10,11 +10,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { DesignerComponentsModule } from '../src/module';
 import { CardComponent } from '../src/card/index';
-import { StackComponent } from '../src/stack/index';
 import { cardPropsSchema } from '../src/card/propsSchema';
-import { stackPropsSchema } from '../src/stack/propsSchema';
 import cardSpec from '../src/card/spec.json';
-import stackSpec from '../src/stack/spec.json';
 
 // ---------------------------------------------------------------------------
 // Mock FormFieldRegistry (form-js didi 컨테이너 규약 흉내)
@@ -106,14 +103,6 @@ describe('DesignerComponentsModule registration', () => {
     expect(registered.config?.group).toBeDefined();
   });
 
-  it('registers "stack" component (Preact component with static .config)', () => {
-    const call = registry.register.mock.calls.find((c) => c[0] === 'stack');
-    expect(call).toBeDefined();
-    const registered = call![1] as { config?: { type?: string } };
-    expect(typeof registered).toBe('function');
-    expect(registered.config?.type).toBe('stack');
-  });
-
   it('registers "tabs" component (Preact component with static .config)', () => {
     const call = registry.register.mock.calls.find((c) => c[0] === 'tabs');
     expect(call).toBeDefined();
@@ -130,8 +119,8 @@ describe('DesignerComponentsModule registration', () => {
     expect(registered.config?.type).toBe('modal');
   });
 
-  it('registers exactly 5 components (card, stack, tabs, modal, tabPanel)', () => {
-    expect(registry.register).toHaveBeenCalledTimes(5);
+  it('registers exactly 4 components (card, tabs, modal, tabPanel)', () => {
+    expect(registry.register).toHaveBeenCalledTimes(4);
   });
 
   it('registers "tabPanel" component (Preact component with static .config)', () => {
@@ -169,25 +158,6 @@ describe('CardComponent', () => {
   });
 });
 
-describe('StackComponent', () => {
-  it('has type "stack"', () => {
-    expect(StackComponent.type).toBe('stack');
-  });
-
-  it('has a non-empty display name', () => {
-    expect(typeof StackComponent.name).toBe('string');
-    expect(StackComponent.name.length).toBeGreaterThan(0);
-  });
-
-  it('has component function', () => {
-    expect(typeof StackComponent.component).toBe('function');
-  });
-
-  it('component has static .config with type "stack"', () => {
-    expect(StackComponent.component.config.type).toBe('stack');
-  });
-});
-
 // ---------------------------------------------------------------------------
 // 4. propsSchema 검증
 // ---------------------------------------------------------------------------
@@ -204,13 +174,6 @@ describe('propsSchema', () => {
     expect(cardPropsSchema.properties).toHaveProperty('headerTag');
   });
 
-  it('stackPropsSchema has direction, gap, align, justify properties', () => {
-    expect(stackPropsSchema.properties).toHaveProperty('direction');
-    expect(stackPropsSchema.properties).toHaveProperty('gap');
-    expect(stackPropsSchema.properties).toHaveProperty('align');
-    expect(stackPropsSchema.properties).toHaveProperty('justify');
-  });
-
 });
 
 // ---------------------------------------------------------------------------
@@ -225,13 +188,6 @@ describe('spec.json', () => {
     expect((cardSpec as Record<string, unknown>)['propsSchema']).toBeDefined();
   });
 
-  it('stackSpec has type field "stack"', () => {
-    expect((stackSpec as Record<string, unknown>)['type']).toBe('stack');
-  });
-
-  it('stackSpec has propsSchema field', () => {
-    expect((stackSpec as Record<string, unknown>)['propsSchema']).toBeDefined();
-  });
 });
 
 // ---------------------------------------------------------------------------
@@ -276,7 +232,6 @@ describe('Proxy-based palette hiding (tabs-tabpanel-refactor)', () => {
   it('other components remain enumerable after Proxy', () => {
     const keys = Object.entries(ff._formFields).map(([k]) => k);
     expect(keys).toContain('card');
-    expect(keys).toContain('stack');
     expect(keys).toContain('tabs');
     expect(keys).toContain('modal');
   });

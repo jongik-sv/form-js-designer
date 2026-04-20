@@ -1364,6 +1364,64 @@ describe('OutlineModule', () => {
         );
         expect(instance._selectedIds).toEqual([]);
       });
+
+      // ----- TSK-11-04: duplicateSelectedFields batch undo 원자화 -----
+
+      it('duplicateSelectedFields wraps N duplicates in commandStack batch (outlinePanel.duplicateMultiple)', () => {
+        const root = { id: 'root', type: 'default', components: [] as unknown[] };
+        const a: InternalFormFieldLike = { id: 'a', type: 'textfield', key: 'ka', _parent: 'root' };
+        const b: InternalFormFieldLike = { id: 'b', type: 'textfield', key: 'kb', _parent: 'root' };
+        const c: InternalFormFieldLike = { id: 'c', type: 'textfield', key: 'kc', _parent: 'root' };
+        (root.components as unknown[]) = [a, b, c];
+
+        mockFormEditor = createMockFormEditor({
+          type: 'default',
+          id: 'root',
+          components: [
+            { id: 'a', type: 'textfield', key: 'ka' },
+            { id: 'b', type: 'textfield', key: 'kb' },
+            { id: 'c', type: 'textfield', key: 'kc' },
+          ],
+        });
+        mockFormFieldRegistry = createMockFormFieldRegistry({ a, b, c, root });
+
+        const mockCommandStack = {
+          register: vi.fn(),
+          execute: vi.fn(),
+        };
+
+        const [, Constructor] = OutlineModule.outlinePanel as [string, new (...args: unknown[]) => unknown];
+        const instance = new Constructor(
+          mockEventBus,
+          mockFormEditor,
+          mockFormFieldRegistry,
+          mockSelection,
+          mockModeling,
+          mockFormLayouter,
+          mockCommandStack,
+        ) as {
+          _selectedIds: string[];
+          duplicateSelectedFields: () => void;
+        };
+
+        // duplicateMultiple 복합 커맨드가 register 시점에 등록되어야 함
+        expect(mockCommandStack.register).toHaveBeenCalledWith(
+          'outlinePanel.duplicateMultiple',
+          expect.any(Object),
+        );
+
+        instance._selectedIds = ['a', 'b', 'c'];
+        instance.duplicateSelectedFields();
+
+        // N회 addFormField 대신 commandStack.execute(duplicateMultiple) 1회 호출
+        expect(mockCommandStack.execute).toHaveBeenCalledTimes(1);
+        expect(mockCommandStack.execute).toHaveBeenCalledWith(
+          'outlinePanel.duplicateMultiple',
+          expect.objectContaining({ inserts: expect.any(Array) }),
+        );
+        const insertsArg = mockCommandStack.execute.mock.calls[0]![1] as { inserts: unknown[] };
+        expect(insertsArg.inserts).toHaveLength(3);
+      });
     });
   });
 });

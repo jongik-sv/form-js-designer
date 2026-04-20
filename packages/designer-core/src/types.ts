@@ -19,8 +19,6 @@ export interface FormFieldLayout {
   columns?: number;
   /** 컴포넌트 높이 (px). 대상 타입에만 적용 — TSK-12-02 */
   height?: number;
-  /** 행 높이 (px). 행 첫 컴포넌트에 저장. layout.height와 독립적 — TSK-12-03 */
-  rowHeight?: number;
 }
 
 /** ChildrenSlot에 전달하는 컨테이너 필드 최소 구조 */

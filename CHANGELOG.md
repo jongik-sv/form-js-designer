@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed (BREAKING)
+
+- `Stack` 컨테이너 컴포넌트 제거 (`packages/designer-components/src/stack/`).
+  - 제거 사유: `display:flex` 선언과 form-js `cds--grid` 렌더 파이프라인이 충돌하여 `direction/gap/align/justify` props가 의도대로 동작하지 않았고, 자식 `layout.columns` 변경 시 Stack 폭이 함께 변하는 레이아웃 버그가 상존했다. Row/Column(form-js 기본 그리드)와 Card로 대체 가능.
+  - 마이그레이션: 기존 스키마의 `{ "type": "stack", ... }` 항목은 `{ "type": "card", ... }` 또는 자식을 상위 container의 rows로 평탄화하여 대체한다. `designer-cli validate` 가 unknown type "stack"으로 실패한다.
+  - 영향 파일: `designer-components`(export/module/icon/테스트), `designer-core`(DesignerFormLayouter·ContainerHoverGuard 커스텀 컨테이너 목록), `designer-editor-host`(OutlineModule·OutlinePanel·PropsPanelService·dragdrop E2E·LivePreviewService), `designer-runtime`(LayoutHeightApplier 대상 타입 + 예제 registry), `designer-cli`(cliRegistry·design-page fixture), `designer-i18n`(`designer.palette.stack` 키 + 테스트).
+
 ## [1.0.0-rc.1] - 2026-06-05
 
 ### Added

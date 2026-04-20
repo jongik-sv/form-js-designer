@@ -48,6 +48,8 @@ export interface FormRenderContextSlots {
 export interface ViewerHostProps {
   schema: FormSchema;
   data?: Record<string, unknown>;
+  /** dataStores 해석 결과 — bootWithSchema의 BootResult.storeData. 런타임 data prop이 우선. */
+  storeData?: Record<string, unknown>;
   locale?: { lang: string; t: LocaleT };
   viewport?: ViewportSize;
   additionalModules?: unknown[];

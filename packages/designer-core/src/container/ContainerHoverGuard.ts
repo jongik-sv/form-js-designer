@@ -1,5 +1,5 @@
 /**
- * ContainerHoverGuard — 커스텀 컨테이너(card/stack/modal/tabs/tabPanel)의
+ * ContainerHoverGuard — 커스텀 컨테이너(card/modal/tabs/tabPanel)의
  * sibling(좌우/상하 형제) 드롭 위치 전환을 드래그 시작 후 2초간 지연시키는 모듈.
  *
  * 문제: form-js dragula는 cursor가 컨테이너 가장자리(좌/우/상/하) 근처에 가면
@@ -27,7 +27,6 @@ interface FormFieldRegistry {
 
 const CUSTOM_CONTAINER_TYPES = new Set<string>([
   'card',
-  'stack',
   'modal',
   'tabs',
   'tabPanel',

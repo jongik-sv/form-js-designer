@@ -2,7 +2,7 @@
 /**
  * emit-rc-report.mjs — RC 리포트 집계기
  * TSK-10-01: ac-matrix.json + fps.json + axe.json + CI lint 4종 로그를 합쳐
- * docs/tasks/TSK-10-01/reports/rc1-summary.md를 자동 생성한다.
+ * docs/designer/tasks/TSK-10-01/reports/rc1-summary.md를 자동 생성한다.
  *
  * 사용법: node scripts/rc/emit-rc-report.mjs [--reports-dir <path>] [--out <path>]
  */
@@ -16,7 +16,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 export const REPO_ROOT = resolve(__dirname, '../..');
 
 const DEFAULT_REPORTS_DIR = resolve(REPO_ROOT, 'reports/rc');
-const DEFAULT_OUT = resolve(REPO_ROOT, 'docs/tasks/TSK-10-01/reports/rc1-summary.md');
+const DEFAULT_OUT = resolve(REPO_ROOT, 'docs/designer/tasks/TSK-10-01/reports/rc1-summary.md');
 
 /**
  * JSON 파일을 읽는다. 없으면 null 반환.

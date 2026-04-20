@@ -70,7 +70,7 @@ interface InternalFormField {
 }
 
 /** 컨테이너 타입 (inside 드롭 허용 대상 — tabs 제외) */
-const CONTAINER_TYPES = new Set(['card', 'stack', 'modal', 'tabPanel']);
+const CONTAINER_TYPES = new Set(['card', 'modal', 'tabPanel']);
 
 /** inside 드롭이 비활성화된 컨테이너 타입 (tabs: 2단계 구조 특수 케이스) */
 const DISABLED_INSIDE_TYPES = new Set(['tabs']);
@@ -138,6 +138,7 @@ class OutlinePanelService {
     if (typeof cs?.register === 'function') {
       const modelingRef = this._modeling as unknown as {
         removeFormField?: (field: unknown, parent: unknown, idx: number) => void;
+        addFormField?: (attrs: unknown, parent: unknown, idx: number) => void;
       };
       cs.register('outlinePanel.removeMultiple', {
         preExecute(context: { toRemove: Array<{ field: unknown; parent: unknown; idx: number }> }) {
@@ -148,6 +149,19 @@ class OutlinePanelService {
         },
         execute() { /* no-op: all work done in preExecute */ },
         revert() { /* no-op: sub-commands handle their own revert via formField.remove undo */ },
+      });
+
+      // outlinePanel.duplicateMultiple: 멀티 복제를 단일 undo/redo 원자로 묶는 복합 커맨드.
+      // preExecute에서 addFormField를 순회 호출하여 하위 formField.add 커맨드들이 같은 action.id 공유.
+      cs.register('outlinePanel.duplicateMultiple', {
+        preExecute(context: { inserts: Array<{ attrs: unknown; parent: unknown; insertIdx: number }> }) {
+          if (!modelingRef.addFormField) return;
+          for (const { attrs, parent, insertIdx } of context.inserts) {
+            modelingRef.addFormField(attrs, parent, insertIdx);
+          }
+        },
+        execute() { /* no-op: all work done in preExecute */ },
+        revert() { /* no-op: sub-commands handle their own revert via formField.add undo */ },
       });
     }
 
@@ -703,15 +717,28 @@ class OutlinePanelService {
     // 뒤에서부터 삽입 → 앞 필드의 삽입이 뒤 필드의 insertIdx를 밀지 않도록
     // 역순으로 처리하되 newIds는 원래 순서(오름차순 원본 idx 기준)로 수집
     const orderedByDesc = [...toProcess].reverse();
+    const inserts: Array<{ attrs: Record<string, unknown>; parent: InternalFormField; insertIdx: number }> = [];
     const newIdsReversed: string[] = [];
 
     for (const { field, parent, idx } of orderedByDesc) {
       const attrs = OutlinePanelService._stripLayoutRow(
         deepCloneWithNewIds(field as unknown as FieldSchema, existingKeys) as Record<string, unknown>,
       );
-      const insertIdx = idx + 1;
-      this._modeling.addFormField(attrs, parent, insertIdx);
+      inserts.push({ attrs, parent, insertIdx: idx + 1 });
       newIdsReversed.push((attrs as { id?: string }).id ?? '');
+    }
+
+    // outlinePanel.duplicateMultiple 복합 커맨드로 단일 undo/redo 원자 실행.
+    // 미등록(테스트 환경 등) 시 이벤트 suppression fallback으로 순차 addFormField.
+    const cs = this._commandStack as null | { execute?: (cmd: string, ctx: unknown) => void };
+    if (typeof cs?.execute === 'function') {
+      cs.execute('outlinePanel.duplicateMultiple', { inserts });
+    } else {
+      this._eventBus.off('commandStack.changed', this._boundOnChanged);
+      for (const { attrs, parent, insertIdx } of inserts) {
+        this._modeling.addFormField(attrs, parent, insertIdx);
+      }
+      this._eventBus.on('commandStack.changed', this._boundOnChanged);
     }
 
     // 원래 오름차순 순서로 복원

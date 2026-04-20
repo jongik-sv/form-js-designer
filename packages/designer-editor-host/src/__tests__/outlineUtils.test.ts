@@ -98,7 +98,7 @@ describe('deepCloneWithNewIds', () => {
       components: [
         {
           id: 'inner-1',
-          type: 'stack',
+          type: 'card',
           components: [
             { id: 'leaf-1', type: 'button', components: [] },
           ],

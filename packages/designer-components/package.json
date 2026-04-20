@@ -2,7 +2,7 @@
   "name": "@form-js-designer/designer-components",
   "version": "0.0.0",
   "private": true,
-  "description": "Card · Stack · Tabs · Modal designer components (defineComponent-based)",
+  "description": "Card · Tabs · Modal designer components (defineComponent-based)",
   "type": "module",
   "main": "src/index.ts",
   "types": "src/index.ts",

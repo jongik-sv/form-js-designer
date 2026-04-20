@@ -10,9 +10,9 @@
  *  - 팔레트 'tabPanel' 미노출.
  *
  *  스크린샷 저장:
- *  - docs/features/tabs-tabpanel-refactor/brw-test.png
- *  - docs/features/tabs-tabpanel-refactor/brw-drop-into-tab2.png
- *  - docs/features/tabs-tabpanel-refactor/brw-two-tabs-independent.png
+ *  - docs/designer/features/tabs-tabpanel-refactor/brw-test.png
+ *  - docs/designer/features/tabs-tabpanel-refactor/brw-drop-into-tab2.png
+ *  - docs/designer/features/tabs-tabpanel-refactor/brw-two-tabs-independent.png
  */
 
 import { test, expect, Page, Locator } from '@playwright/test';
@@ -108,7 +108,7 @@ test.describe('Tabs-TabPanel refactor · real drag-drop', () => {
 
     // 스크린샷
     await page.screenshot({
-      path: '../../docs/features/tabs-tabpanel-refactor/brw-test.png',
+      path: '../../docs/designer/features/tabs-tabpanel-refactor/brw-test.png',
       fullPage: false,
     });
   });
@@ -164,7 +164,7 @@ test.describe('Tabs-TabPanel refactor · real drag-drop', () => {
 
     // 스크린샷 — Tab 2 활성 상태
     await page.screenshot({
-      path: '../../docs/features/tabs-tabpanel-refactor/brw-drop-into-tab2.png',
+      path: '../../docs/designer/features/tabs-tabpanel-refactor/brw-drop-into-tab2.png',
       fullPage: false,
     });
 
@@ -197,7 +197,7 @@ test.describe('Tabs-TabPanel refactor · real drag-drop', () => {
     expect(tab1NumberCount).toBe(0);
 
     await page.screenshot({
-      path: '../../docs/features/tabs-tabpanel-refactor/brw-two-tabs-independent.png',
+      path: '../../docs/designer/features/tabs-tabpanel-refactor/brw-two-tabs-independent.png',
       fullPage: false,
     });
   });

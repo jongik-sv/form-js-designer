@@ -35,7 +35,7 @@ beforeEach(async () => {
 
 describe('loadMatrix()', () => {
   it('유효한 ac-matrix.yaml을 파싱하여 AcMatrix를 반환한다', async () => {
-    const yamlPath = path.join(__dirname, '../../../docs/tasks/TSK-10-01/ac-matrix.yaml');
+    const yamlPath = path.join(__dirname, '../../../docs/designer/tasks/TSK-10-01/ac-matrix.yaml');
     const matrix = await loadMatrix(yamlPath);
     expect(matrix).toBeDefined();
     expect(Array.isArray(matrix.entries)).toBe(true);
@@ -43,7 +43,7 @@ describe('loadMatrix()', () => {
   });
 
   it('각 엔트리는 ac, specs 필드를 가진다', async () => {
-    const yamlPath = path.join(__dirname, '../../../docs/tasks/TSK-10-01/ac-matrix.yaml');
+    const yamlPath = path.join(__dirname, '../../../docs/designer/tasks/TSK-10-01/ac-matrix.yaml');
     const matrix = await loadMatrix(yamlPath);
     for (const entry of matrix.entries) {
       // ac는 number 또는 string(예: "4-1") 모두 허용
@@ -54,7 +54,7 @@ describe('loadMatrix()', () => {
   });
 
   it('각 spec은 path, kind(unit|e2e), expectedCases 필드를 가진다', async () => {
-    const yamlPath = path.join(__dirname, '../../../docs/tasks/TSK-10-01/ac-matrix.yaml');
+    const yamlPath = path.join(__dirname, '../../../docs/designer/tasks/TSK-10-01/ac-matrix.yaml');
     const matrix = await loadMatrix(yamlPath);
     for (const entry of matrix.entries) {
       for (const spec of entry.specs) {

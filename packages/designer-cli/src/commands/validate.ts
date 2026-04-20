@@ -20,6 +20,9 @@ export interface ValidateOptions {
   locale?: string;
 }
 
+/** Phase 1에서 허용하는 dataStore source 목록 */
+const SUPPORTED_DATASTORE_SOURCES = ['static'] as const;
+
 /** 폼 컴포넌트 최소 구조 스키마 */
 const COMPONENT_SCHEMA = {
   type: 'object',
@@ -31,6 +34,18 @@ const COMPONENT_SCHEMA = {
   additionalProperties: true,
 };
 
+/** dataStore 엔트리 스키마 */
+const DATA_STORE_ENTRY_SCHEMA = {
+  type: 'object',
+  properties: {
+    key: { type: 'string' },
+    source: { type: 'string' },
+    data: {},
+  },
+  required: ['key', 'source'],
+  additionalProperties: true,
+};
+
 /** form-js FormSchema 최소 구조 (schemaVersion=19) */
 const FORM_SCHEMA_DEF = {
   type: 'object',
@@ -39,6 +54,10 @@ const FORM_SCHEMA_DEF = {
     components: {
       type: 'array',
       items: COMPONENT_SCHEMA,
+    },
+    dataStores: {
+      type: 'array',
+      items: DATA_STORE_ENTRY_SCHEMA,
     },
   },
   required: ['schemaVersion', 'components'],
@@ -55,7 +74,14 @@ interface ValidationResult {
 
 /** 코드 기반 에러 — AI Skill fixture 테스트 계약 (TSK-09-01 AC #2). */
 export interface ValidateError {
-  code: 'INVALID_SCHEMA_VERSION' | 'MISSING_COMPONENTS' | 'UNKNOWN_COMPONENT_TYPE' | 'STRUCTURE_ERROR';
+  code:
+    | 'INVALID_SCHEMA_VERSION'
+    | 'MISSING_COMPONENTS'
+    | 'UNKNOWN_COMPONENT_TYPE'
+    | 'STRUCTURE_ERROR'
+    | 'DATASTORE_DUPLICATE_KEY'
+    | 'DATASTORE_KEY_COLLISION'
+    | 'DATASTORE_UNSUPPORTED_SOURCE';
   message: string;
   path?: string;
 }
@@ -105,6 +131,10 @@ export function validate({ schema }: { schema: unknown }): ValidatePureResult {
   };
   walk(s['components'] as unknown[], 'components');
 
+  // dataStores 의미론적 검증
+  const dsErrors = validateDataStores(s as unknown as FormSchema);
+  errors.push(...dsErrors);
+
   return { ok: errors.length === 0, errors };
 }
 
@@ -117,6 +147,67 @@ function formatAjvErrors(errors: ErrorObject[] | null | undefined): string[] {
     const prefix = e.instancePath ? `at ${e.instancePath}: ` : '';
     return `${prefix}${e.message ?? 'validation error'}`;
   });
+}
+
+/**
+ * dataStores 의미론적 검증 — AJV 구조 통과 이후 호출:
+ * 1. key 유일성 (DATASTORE_DUPLICATE_KEY)
+ * 2. form 컴포넌트 key와 충돌 (DATASTORE_KEY_COLLISION)
+ * 3. source 화이트리스트 (DATASTORE_UNSUPPORTED_SOURCE)
+ */
+function validateDataStores(schema: FormSchema): ValidateError[] {
+  const errors: ValidateError[] = [];
+  const dataStores = (schema as Record<string, unknown>)['dataStores'];
+  if (!Array.isArray(dataStores)) return errors;
+
+  // form 컴포넌트 key 수집 (재귀)
+  const componentKeys = new Set<string>();
+  const walkComponents = (comps: unknown[]): void => {
+    for (const c of comps) {
+      const comp = c as Record<string, unknown>;
+      if (typeof comp['key'] === 'string') componentKeys.add(comp['key'] as string);
+      if (Array.isArray(comp['components'])) {
+        walkComponents(comp['components'] as unknown[]);
+      }
+    }
+  };
+  walkComponents((schema.components ?? []) as unknown[]);
+
+  const seenKeys = new Set<string>();
+  for (const entry of dataStores as Array<Record<string, unknown>>) {
+    const key = entry['key'] as string;
+    const source = entry['source'] as string;
+
+    // key 유일성
+    if (seenKeys.has(key)) {
+      errors.push({
+        code: 'DATASTORE_DUPLICATE_KEY',
+        message: `Duplicate dataStore key: "${key}"`,
+        path: `dataStores[key=${key}]`,
+      });
+    }
+    seenKeys.add(key);
+
+    // form 컴포넌트 key 충돌
+    if (componentKeys.has(key)) {
+      errors.push({
+        code: 'DATASTORE_KEY_COLLISION',
+        message: `dataStore key "${key}" collides with a form component key`,
+        path: `dataStores[key=${key}]`,
+      });
+    }
+
+    // source 화이트리스트
+    if (!SUPPORTED_DATASTORE_SOURCES.includes(source)) {
+      errors.push({
+        code: 'DATASTORE_UNSUPPORTED_SOURCE',
+        message: `Unsupported dataStore source "${source}" for key "${key}". Supported: ${JSON.stringify(SUPPORTED_DATASTORE_SOURCES)}`,
+        path: `dataStores[key=${key}].source`,
+      });
+    }
+  }
+
+  return errors;
 }
 
 /**
@@ -181,7 +272,17 @@ export async function runValidate(filePath: string, opts: ValidateOptions): Prom
     return 1;
   }
 
-  // 4. i18n 누락 검사 (stub: 항상 pass)
+  // 4. dataStores 의미론적 검증 (구조 검증 이후 별도 스텝)
+  const dsErrors = validateDataStores(schema);
+  if (dsErrors.length > 0) {
+    process.stderr.write(`Validation failed (dataStores):\n`);
+    for (const e of dsErrors) {
+      process.stderr.write(`  - [${e.code}] ${e.message}\n`);
+    }
+    return 1;
+  }
+
+  // 5. i18n 누락 검사 (stub: 항상 pass)
   const i18nResult = checkI18n(schema, { locale: opts.locale ?? 'en' });
   if (i18nResult.missing.length > 0) {
     process.stdout.write(`i18n missing keys (${i18nResult.missing.length}):\n`);

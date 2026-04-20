@@ -1,7 +1,7 @@
 # Phase 1 — 1차 릴리스 본체 구현 계획
 
 > **문서 지위**: 초안 (draft). PRD §4 Acceptance Criteria 10항목 전수 충족을 목표로 한 Phase 1 (TRD §12 기준 4~6주) 구현 계획서.
-> **상위 문서**: [`docs/PRD.md`](../PRD.md), [`docs/TRD.md`](../TRD.md), [`docs/adr/0001-single-render-pipeline.md`](../adr/0001-single-render-pipeline.md)
+> **상위 문서**: [`docs/designer/PRD.md`](./PRD.md), [`docs/designer/TRD.md`](./TRD.md), [`docs/designer/adr/0001-single-render-pipeline.md`](./adr/0001-single-render-pipeline.md)
 > **선행 커밋**: `2e36d6a` (spike 검증: unit 56/56, e2e 5/5, pixel diff 0/786432), `c56697d` (ADR-0001 Accepted 승격)
 > **작성일**: 2026-04-17
 
