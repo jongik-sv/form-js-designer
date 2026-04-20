@@ -1,10 +1,9 @@
 /**
- * VSCode API mock for Vitest unit tests.
- * The `vscode` module is not available in Node test environment,
- * so we provide minimal stubs for Position and Range.
+ * vscode module mock implementation.
+ * Aliased via vitest.config.ts: resolve.alias.vscode → this file.
  */
 
-class Position {
+export class Position {
   constructor(
     public readonly line: number,
     public readonly character: number
@@ -31,7 +30,7 @@ class Position {
   }
 }
 
-class Range {
+export class Range {
   public readonly start: Position;
   public readonly end: Position;
 
@@ -63,11 +62,3 @@ class Range {
     return !positionOrRange.isBefore(this.start) && !positionOrRange.isAfter(this.end);
   }
 }
-
-// Provide vscode mock globally via module mock
-import { vi } from 'vitest';
-
-vi.mock('vscode', () => ({
-  Position,
-  Range,
-}));

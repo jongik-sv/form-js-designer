@@ -56,7 +56,7 @@ export function formJsMarkdownPlugin(md: MarkdownIt): void {
   md.renderer.rules.fence = (
     tokens: Token[],
     idx: number,
-    options: MarkdownIt.Options,
+    options: import('markdown-it').Options,
     env: unknown,
     self: Renderer
   ): string => {
