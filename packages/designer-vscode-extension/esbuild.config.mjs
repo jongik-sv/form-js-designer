@@ -45,9 +45,30 @@ const webviewBundle = build({
   target: 'es2020',
   external: [],
   define: {
-    'process.env.NODE_ENV': isProd ? '"production"' : '"development"',
+    // VS Code 웹뷰는 CSP에 `unsafe-eval`이 없어 Ajv 등 new Function() 기반 JIT가
+    // 금지된다. defineComponent의 dev-only 검사(assertPureRender, validatePropsSchema)가
+    // 웹뷰에서 돌지 않도록 NODE_ENV를 항상 'production'으로 박는다.
+    // (extension host 번들은 위의 isProd 변수를 그대로 따른다.)
+    'process.env.NODE_ENV': '"production"',
     global: 'globalThis',
     FORM_JS_TEST_BRIDGE: isTestMode ? 'true' : 'false',
+  },
+  // designer-core의 isProductionEnv()는 `typeof process !== "undefined"` 가드를
+  // 통해서만 NODE_ENV를 본다. 순수 브라우저 웹뷰에는 process가 없어 가드를
+  // 통과 못 하고 dev 분기로 떨어지면서 Ajv(new Function)가 CSP에 막혀 크래시한다.
+  // IIFE 상단에 최소 process 폴리필을 박아 가드를 통과시킨다.
+  banner: {
+    js: 'if (typeof globalThis.process === "undefined") { globalThis.process = { env: { NODE_ENV: "production" } }; }',
+  },
+  // Radix UI 등 React 전용 컴포넌트가 웹뷰 번들에 섞여 들어온다(designer-components의
+  // TabsRenderer가 @radix-ui/react-tabs 사용). Radix는 forwardRef/context 등 React
+  // 전용 구조를 쓰는데 pure Preact의 h()는 { $$typeof, render } 객체를 tagName 문자열로
+  // 오해하고 `createElementNS('[object Object]', ...)`로 크래시한다. react → preact/compat
+  // 별칭으로 React API를 동일 Preact 인스턴스 위로 라우팅하여 해결.
+  alias: {
+    react: 'preact/compat',
+    'react-dom': 'preact/compat',
+    'react/jsx-runtime': 'preact/jsx-runtime',
   },
   minify: isProd,
 });

@@ -22,6 +22,10 @@ import {
 import type { BlockMountState, TestMountCompleteMessage } from '../shared/messages';
 // TSK-05-01: 커스텀 컴포넌트 모듈 주입 (Card/Tabs/Modal/TabPanel registry)
 import { customComponentsModule } from '../components';
+// ChildrenSlot이 tabPanel/card 등 custom container의 자식 row를 얻으려면
+// form-js 기본 formLayouter를 DesignerFormLayouter로 교체해야 한다.
+// DesignerContainerModule이 이를 담당.
+import { DesignerContainerModule } from '@form-js-designer/designer-core';
 
 declare const FORM_JS_TEST_BRIDGE: boolean;
 
@@ -81,7 +85,7 @@ export async function mountViewers(): Promise<void> {
         const instance = await createForm({
           container: block,
           schema,
-          additionalModules: [customComponentsModule],
+          additionalModules: [DesignerContainerModule, customComponentsModule],
           properties: { readOnly: true },
         });
         if (schemaId) {

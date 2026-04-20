@@ -146,6 +146,15 @@
   cursor: not-allowed;
 }
 
+/* ── 좁은 프리뷰 패널에서 그리드 레이아웃 유지 ──────── */
+/* form-js.css의 @media(max-width:66rem) 규칙이 cds--col을 full-width로
+   만들어 필드가 세로로 쌓이는 것을 방지. form-js-block 스코프만 대상. */
+@media (max-width: 66rem) {
+  .form-js-block .fjs-container .cds--col {
+    flex-basis: 0 !important;
+  }
+}
+
 /* High Contrast 모드: opacity 대신 visibility로 표시/숨김 */
 @media (forced-colors: active) {
   .fjs-edit-btn {

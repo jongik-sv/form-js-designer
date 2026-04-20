@@ -6,15 +6,25 @@
  * - 반환: { ok: boolean, errors: string[] }
  * - dev-only 호출용 (defineComponent에서 !isProductionEnv() 조건 하에 호출)
  */
-import Ajv from 'ajv';
+import Ajv, { type ValidateFunction } from 'ajv';
 import metaSchema from './propsSchema.meta.json';
 import type { WidgetValidationResult } from './types';
 
-// Ajv 인스턴스는 모듈 로드 시 1회만 생성 (성능 최적화)
-const ajv = new Ajv({ allErrors: true, strict: false });
+// Ajv는 `new Function(...)`으로 검증기를 JIT 컴파일한다. VS Code 웹뷰 CSP는
+// `unsafe-eval`이 없어 Ajv 생성/compile 시점에 EvalError가 터진다. 모듈 import
+// 시점에 즉시 실행되지 않도록 lazy-init으로 바꿨다. 호출자가 실제로
+// validatePropsSchema를 부를 때만 인스턴스를 만들고 compile한다.
+// (CSP-제한 환경에서는 validatePropsSchema 호출 자체를 피해야 한다 — 예:
+// 프로덕션 번들에서 dev-only 검사 skip.)
+let _validateFn: ValidateFunction | null = null;
 
-// meta.json compile
-const validateFn = ajv.compile(metaSchema);
+function getValidator(): ValidateFunction {
+  if (_validateFn === null) {
+    const ajv = new Ajv({ allErrors: true, strict: false });
+    _validateFn = ajv.compile(metaSchema);
+  }
+  return _validateFn;
+}
 
 /**
  * PropsSchema 선언 자체를 meta-schema로 검증한다.
@@ -24,6 +34,7 @@ const validateFn = ajv.compile(metaSchema);
  * @returns { ok, errors }
  */
 export function validatePropsSchema(schema: unknown): WidgetValidationResult {
+  const validateFn = getValidator();
   const valid = validateFn(schema);
   if (valid) {
     return { ok: true, errors: [] };

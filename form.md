@@ -19,9 +19,6 @@
       "type": "tabs",
       "components": [
         {
-          "id": "tabPanel_83fe6de4-3e11-4cd2-b87a-7ac04c2d869c",
-          "type": "tabPanel",
-          "label": "Tab 1",
           "components": [
             {
               "subtype": "date",
@@ -81,7 +78,9 @@
                 "columns": null
               },
               "label": "Table",
+              "dataSource": "=Field_1vnrbns",
               "rowCount": 10,
+              "id": "Field_1vnrbns",
               "columns": [
                 {
                   "label": "ID",
@@ -95,19 +94,179 @@
                   "label": "Date",
                   "key": "date"
                 }
-              ],
-              "id": "Field_1vnrbns",
-              "dataSource": "=Field_1vnrbns"
+              ]
             }
           ],
+          "id": "tabPanel_83fe6de4-3e11-4cd2-b87a-7ac04c2d869c",
+          "type": "tabPanel",
+          "label": "Tab 1",
           "layout": {
             "row": "Row_14s9htc"
           }
         },
         {
-          "id": "tabPanel_46096571-dc11-4da6-902a-9a3046463c02",
+          "components": [
+            {
+              "subtype": "date",
+              "dateLabel": "Date",
+              "type": "datetime",
+              "layout": {
+                "row": "Row_0mkqsgy",
+                "columns": null
+              },
+              "id": "datetime-8bc05e71",
+              "key": "datetime_alt2k6_copy"
+            },
+            {
+              "label": "Text field",
+              "type": "textfield",
+              "layout": {
+                "row": "Row_0mkqsgy",
+                "columns": null
+              },
+              "id": "textfield-57a85ebc",
+              "key": "textfield_gx0xf8_copy_2"
+            },
+            {
+              "label": "Text field",
+              "type": "textfield",
+              "layout": {
+                "row": "Row_0mkqsgy",
+                "columns": null
+              },
+              "id": "textfield-1f138361",
+              "key": "textfield_gx0xf8_copy_copy"
+            },
+            {
+              "label": "Button",
+              "action": "submit",
+              "type": "button",
+              "layout": {
+                "row": "Row_0mkqsgy",
+                "columns": null
+              },
+              "id": "button-0615b6a7"
+            },
+            {
+              "label": "Button",
+              "action": "submit",
+              "type": "button",
+              "layout": {
+                "row": "Row_0mkqsgy",
+                "columns": null
+              },
+              "id": "button-2d530f84"
+            },
+            {
+              "type": "table",
+              "layout": {
+                "row": "Row_1tu08i4",
+                "columns": null
+              },
+              "label": "Table",
+              "dataSource": "=Field_1vnrbns",
+              "rowCount": 10,
+              "id": "table-eed9f390",
+              "columns": [
+                {
+                  "label": "ID",
+                  "key": "id"
+                },
+                {
+                  "label": "Name",
+                  "key": "name"
+                },
+                {
+                  "label": "Date",
+                  "key": "date"
+                }
+              ]
+            },
+            {
+              "type": "card",
+              "padding": "md",
+              "elevation": 1,
+              "components": [
+                {
+                  "label": "Checkbox group",
+                  "values": [
+                    {
+                      "label": "Value",
+                      "value": "value"
+                    },
+                    {
+                      "label": "Value 2",
+                      "value": "value2"
+                    },
+                    {
+                      "label": "Value 3",
+                      "value": "value3"
+                    },
+                    {
+                      "label": "Value 4",
+                      "value": "value4"
+                    },
+                    {
+                      "label": "Value 5",
+                      "value": "value5"
+                    }
+                  ],
+                  "type": "checklist",
+                  "layout": {
+                    "row": "Row_1f3vuox",
+                    "columns": null
+                  },
+                  "id": "Field_0qq1160",
+                  "key": "checklist_0wjtu6"
+                },
+                {
+                  "label": "Radio group",
+                  "values": [
+                    {
+                      "label": "Value",
+                      "value": "value"
+                    },
+                    {
+                      "label": "Value 2",
+                      "value": "value2"
+                    },
+                    {
+                      "label": "Value 3",
+                      "value": "value3"
+                    },
+                    {
+                      "label": "Value 4",
+                      "value": "value4"
+                    },
+                    {
+                      "label": "Value 5",
+                      "value": "value5"
+                    }
+                  ],
+                  "type": "radio",
+                  "layout": {
+                    "row": "Row_1f3vuox",
+                    "columns": null
+                  },
+                  "id": "Field_1k7uf9r",
+                  "key": "radio_4bzf2"
+                }
+              ],
+              "layout": {
+                "row": "Row_07mjesz",
+                "columns": null
+              },
+              "id": "Field_1a0wbm0"
+            }
+          ],
+          "id": "tabPanel-2890f3df",
           "type": "tabPanel",
-          "label": "Tab 2",
+          "label": "Tab 1",
+          "layout": {
+            "row": "Row_0v4yrm3"
+          }
+        },
+        {
           "components": [
             {
               "type": "table",
@@ -116,7 +275,9 @@
                 "columns": null
               },
               "label": "Table",
+              "dataSource": "=Field_0olb0ek",
               "rowCount": 10,
+              "id": "Field_0olb0ek",
               "columns": [
                 {
                   "label": "ID",
@@ -130,9 +291,7 @@
                   "label": "Date",
                   "key": "date"
                 }
-              ],
-              "id": "Field_0olb0ek",
-              "dataSource": "=Field_0olb0ek"
+              ]
             },
             {
               "type": "table",
@@ -141,7 +300,9 @@
                 "columns": null
               },
               "label": "Table",
+              "dataSource": "=Field_0ohpphd",
               "rowCount": 10,
+              "id": "Field_0ohpphd",
               "columns": [
                 {
                   "label": "ID",
@@ -155,11 +316,12 @@
                   "label": "Date",
                   "key": "date"
                 }
-              ],
-              "id": "Field_0ohpphd",
-              "dataSource": "=Field_0ohpphd"
+              ]
             }
           ],
+          "id": "tabPanel_46096571-dc11-4da6-902a-9a3046463c02",
+          "type": "tabPanel",
+          "label": "Tab 2",
           "layout": {
             "row": "Row_179bmf2",
             "height": 482.73046875

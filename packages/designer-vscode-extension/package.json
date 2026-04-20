@@ -24,18 +24,17 @@
     "onCustomEditor:form-js.block-editor"
   ],
   "contributes": {
-    "markdown": {
-      "markdownItPlugins": true,
-      "previewScripts": [
-        "./dist/webview/preview.js"
-      ],
-      "previewStyles": [
-        "./media/form-js.css",
-        "./media/form-js-base.css",
-        "./media/form-js-block.css",
-        "./media/form-js-components.css"
-      ]
-    },
+    "markdown.markdownItPlugins": true,
+    "markdown.previewScripts": [
+      "./dist/webview/preview.js"
+    ],
+    "markdown.previewStyles": [
+      "./media/form-js.css",
+      "./media/form-js-base.css",
+      "./media/form-js-block.css",
+      "./media/form-js-components.css",
+      "./dist/webview/preview.css"
+    ],
     "commands": [
       {
         "command": "formJs.openBlockEditor",
