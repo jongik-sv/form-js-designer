@@ -1,0 +1,121 @@
+/**
+ * TSK-05-02: tabs.css
+ *
+ * .fj-tabs-* 네임스페이스 — VSCode webview 전용 탭 스타일.
+ *
+ * 설계 결정 (design.md 확정):
+ * - 헤더 레이아웃: scrollable (overflow-x: auto)
+ *   sticky는 webview 폭이 좁아 콘텐츠 영역 잠식 → 채택 안 함.
+ * - 색상: VSCode 테마 토큰 기반 (--vscode-* 변수).
+ * - 활성 탭 indicator: border-bottom 2px solid.
+ * - 비활성 패널: [hidden] CSS display:none 명시 (브라우저 기본 hidden 동작 보강).
+ *
+ * contributes.markdown.previewStyles를 통해 webview에 주입된다.
+ */
+
+/* ── 탭 컨테이너 ─────────────────────────────────────────── */
+.fj-tabs {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* ── 탭 헤더 — scrollable ────────────────────────────────── */
+.fj-tabs-header {
+  display: flex;
+  flex-direction: row;
+  overflow-x: auto;
+  /* 스크롤바 숨김 (webkit) — 키보드 포커스 시 scrollIntoView로 탐색 */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  border-bottom: 1px solid var(--vscode-panel-border, var(--vscode-editorGroup-border, #ccc));
+  background: var(--vscode-tab-inactiveBackground, var(--vscode-editor-background, #f3f3f3));
+  flex-shrink: 0;
+}
+
+.fj-tabs-header::-webkit-scrollbar {
+  display: none;
+}
+
+/* ── 탭 버튼 ─────────────────────────────────────────────── */
+.fj-tabs-tab {
+  /* button reset */
+  appearance: none;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px; /* 헤더 border-bottom과 겹쳐 indicator가 연결되도록 */
+  padding: 6px 14px;
+  font-size: inherit;
+  font-family: inherit;
+  font-weight: normal;
+  color: var(--vscode-tab-inactiveForeground, var(--vscode-foreground, #616161));
+  cursor: pointer;
+  white-space: nowrap;
+  outline: none;
+  transition: color 120ms ease, border-color 120ms ease, background-color 120ms ease;
+  flex-shrink: 0;
+}
+
+/* 호버 */
+.fj-tabs-tab:hover {
+  background-color: var(--vscode-list-hoverBackground, rgba(0, 0, 0, 0.06));
+  color: var(--vscode-tab-activeForeground, var(--vscode-foreground, #333));
+}
+
+/* 포커스 (키보드) */
+.fj-tabs-tab:focus-visible {
+  outline: 1px solid var(--vscode-focusBorder, #0078d4);
+  outline-offset: -1px;
+}
+
+/* 활성 탭 — 굵게 + 밑줄 indicator 2px */
+.fj-tabs-tab--active,
+.fj-tabs-tab[aria-selected="true"] {
+  font-weight: 600;
+  color: var(--vscode-tab-activeForeground, var(--vscode-foreground, #333));
+  border-bottom-color: var(--vscode-focusBorder, var(--vscode-editor-foreground, #0078d4));
+}
+
+/* ── 패널 영역 ────────────────────────────────────────────── */
+.fj-tabs-body {
+  position: relative;
+}
+
+/* ── 개별 패널 ────────────────────────────────────────────── */
+.fj-tabs-panel {
+  padding: 8px 0;
+  outline: none;
+}
+
+.fj-tabs-panel:focus-visible {
+  outline: 1px solid var(--vscode-focusBorder, #0078d4);
+  outline-offset: -1px;
+}
+
+/* 비활성 패널: hidden 속성 명시적 display:none */
+.fj-tabs-panel[hidden] {
+  display: none;
+}
+
+/* ── High Contrast 테마 대응 ─────────────────────────────── */
+@media (forced-colors: active) {
+  .fj-tabs-tab--active,
+  .fj-tabs-tab[aria-selected="true"] {
+    border-bottom-color: Highlight;
+    color: Highlight;
+    forced-color-adjust: auto;
+  }
+
+  .fj-tabs-tab:focus-visible {
+    outline-color: Highlight;
+  }
+}
+
+/* ── 모션 감소 ────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .fj-tabs-tab {
+    transition: none;
+  }
+}

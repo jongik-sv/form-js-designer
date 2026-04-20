@@ -31,3 +31,9 @@ export function createCustomComponentsModule(): typeof DesignerComponentsModule 
 export { defineComponent } from './defineComponent';
 export type { ExtensionComponentDef } from './defineComponent';
 export type { ComponentDefinition, FieldSchema } from '@form-js-designer/designer-core';
+
+// TSK-05-02: VSCode webview 전용 Tabs/TabPanel 렌더러
+export { TabsRenderer } from './TabsRenderer';
+export type { TabsField, TabsRendererProps } from './TabsRenderer';
+export { TabPanelRenderer } from './TabPanelRenderer';
+export type { TabPanelField, TabPanelRendererProps } from './TabPanelRenderer';
