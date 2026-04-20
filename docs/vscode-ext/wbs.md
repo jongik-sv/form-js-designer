@@ -39,7 +39,7 @@ node, vitest
 
 ---
 
-## WP-00: 프로젝트 초기화
+## WP-00: 프로젝트 초기화 ✅
 - schedule: 2026-04-20 ~ 2026-04-22
 - description: `packages/designer-vscode-extension/` 패키지 스캐폴드, esbuild 이중 타깃(extension host + webview) 빌드, 공유 유틸·타입, CI smoke.
 
