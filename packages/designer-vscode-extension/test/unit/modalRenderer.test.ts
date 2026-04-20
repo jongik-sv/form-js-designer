@@ -84,7 +84,7 @@ describe('ModalRendererComponent: trigger 버튼 렌더', () => {
         field: { id: 'modal-1', type: 'modal', trigger: { label: '열기', variant: 'primary' }, components: [] },
         domId: 'modal-1',
         errors: [],
-      }),
+      } as unknown as Parameters<typeof h>[1]),
       container,
     );
     const trigger = container.querySelector('.fjs-modal-trigger') as HTMLElement | null;
@@ -100,7 +100,7 @@ describe('ModalRendererComponent: trigger 버튼 렌더', () => {
         field: { id: 'modal-2', type: 'modal', trigger: { label: '모달 열기', variant: 'default' }, components: [] },
         domId: 'modal-2',
         errors: [],
-      }),
+      } as unknown as Parameters<typeof h>[1]),
       container,
     );
     const trigger = container.querySelector('.fjs-modal-trigger');
@@ -115,7 +115,7 @@ describe('ModalRendererComponent: trigger 버튼 렌더', () => {
         field: { id: 'modal-3', type: 'modal', trigger: { label: '열기', variant: 'primary' }, components: [] },
         domId: 'modal-3',
         errors: [],
-      }),
+      } as unknown as Parameters<typeof h>[1]),
       container,
     );
     const trigger = container.querySelector('.fjs-modal-trigger') as HTMLButtonElement | null;
@@ -152,7 +152,7 @@ describe('ModalRendererComponent: scroll lock 없음', () => {
         field: { id: 'modal-scroll', type: 'modal', trigger: { label: '열기', variant: 'primary' }, components: [] },
         domId: 'modal-scroll',
         errors: [],
-      }),
+      } as unknown as Parameters<typeof h>[1]),
       container,
     );
     expect(document.body.style.overflowY).toBe(beforeOverflow);

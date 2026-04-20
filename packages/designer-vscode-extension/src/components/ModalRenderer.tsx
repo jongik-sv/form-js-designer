@@ -14,7 +14,7 @@ import { h } from 'preact';
 import { useState, useRef, useEffect } from 'preact/hooks';
 import { createPortal } from 'preact/compat';
 import { defineComponent, ChildrenSlot } from '@form-js-designer/designer-core';
-import type { PureRenderProps, ContainerField, FieldSchema } from '@form-js-designer/designer-core';
+import type { PureRenderProps, ContainerField, FieldSchema, PropsSchema } from '@form-js-designer/designer-core';
 import { getPortalRoot } from './portalRoot';
 
 void h;
@@ -32,10 +32,10 @@ export interface ModalRendererSchema extends FieldSchema {
 }
 
 // ── props 스키마 ─────────────────────────────────────────
-const modalRendererPropsSchema = {
+const modalRendererPropsSchema: PropsSchema = {
   properties: {
     trigger: {
-      type: 'object',
+      type: 'string',
       label: 'Trigger',
       default: { label: 'Open', variant: 'primary' },
     },

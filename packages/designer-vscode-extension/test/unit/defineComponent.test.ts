@@ -119,7 +119,7 @@ describe('defineComponent: 필수 필드 누락 (dev 빌드 throw)', () => {
       create: () => ({ type: 'card', id: '' }),
       render: (_props: unknown) => h('div', null),
     };
-    expect(() => defineComponent(defWithoutType as Parameters<typeof defineComponent>[0])).toThrow(
+    expect(() => defineComponent(defWithoutType as unknown as Parameters<typeof defineComponent>[0])).toThrow(
       /type/i
     );
   });
@@ -132,7 +132,7 @@ describe('defineComponent: 필수 필드 누락 (dev 빌드 throw)', () => {
       propsSchema: validPropsSchema,
       create: () => ({ type: 'card', id: '' }),
     };
-    expect(() => defineComponent(defWithoutRender as Parameters<typeof defineComponent>[0])).toThrow(
+    expect(() => defineComponent(defWithoutRender as unknown as Parameters<typeof defineComponent>[0])).toThrow(
       /render/i
     );
   });
@@ -145,7 +145,7 @@ describe('defineComponent: 필수 필드 누락 (dev 빌드 throw)', () => {
       create: () => ({ type: 'card', id: '' }),
       render: (_props: unknown) => h('div', null),
     };
-    expect(() => defineComponent(defWithoutPropsSchema as Parameters<typeof defineComponent>[0])).toThrow();
+    expect(() => defineComponent(defWithoutPropsSchema as unknown as Parameters<typeof defineComponent>[0])).toThrow();
   });
 
   it('propsSchema가 배열이면 Error가 throw된다', () => {
@@ -174,7 +174,7 @@ describe('defineComponent: prod 빌드 graceful degrade', () => {
     };
 
     expect(() =>
-      defineComponent(defWithoutType as Parameters<typeof defineComponent>[0])
+      defineComponent(defWithoutType as unknown as Parameters<typeof defineComponent>[0])
     ).not.toThrow();
     expect(warnSpy).toHaveBeenCalled();
   });

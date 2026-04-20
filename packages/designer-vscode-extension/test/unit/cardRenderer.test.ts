@@ -83,7 +83,7 @@ describe('CardRendererComponent: label 렌더', () => {
         field: { id: 'card-1', type: 'card', label: '카드 제목', components: [] },
         domId: 'card-1',
         errors: [],
-      }),
+      } as unknown as Parameters<typeof h>[1]),
       container,
     );
     const header = container.querySelector('.fjs-card__header');
@@ -99,7 +99,7 @@ describe('CardRendererComponent: label 렌더', () => {
         field: { id: 'card-2', type: 'card', components: [] },
         domId: 'card-2',
         errors: [],
-      }),
+      } as unknown as Parameters<typeof h>[1]),
       container,
     );
     const header = container.querySelector('.fjs-card__header');
@@ -120,7 +120,7 @@ describe('CardRendererComponent: label 렌더', () => {
         },
         domId: 'card-3',
         errors: [],
-      }),
+      } as unknown as Parameters<typeof h>[1]),
       container,
     );
     const footer = container.querySelector('.fjs-card__footer');
@@ -135,7 +135,7 @@ describe('CardRendererComponent: label 렌더', () => {
         field: { id: 'card-4', type: 'card', label: '카드', components: [] },
         domId: 'card-4',
         errors: [],
-      }),
+      } as unknown as Parameters<typeof h>[1]),
       container,
     );
     const footer = container.querySelector('.fjs-card__footer');

@@ -11,7 +11,7 @@
  */
 import { h } from 'preact';
 import { defineComponent, ChildrenSlot } from '@form-js-designer/designer-core';
-import type { PureRenderProps, ContainerField, FieldSchema } from '@form-js-designer/designer-core';
+import type { PureRenderProps, ContainerField, FieldSchema, PropsSchema } from '@form-js-designer/designer-core';
 
 void h;
 
@@ -29,7 +29,7 @@ export interface CardRendererSchema extends FieldSchema {
 }
 
 // ── props 스키마 ─────────────────────────────────────────
-const cardRendererPropsSchema = {
+const cardRendererPropsSchema: PropsSchema = {
   properties: {
     label: {
       type: 'string',

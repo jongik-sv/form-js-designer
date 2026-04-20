@@ -3,7 +3,7 @@
   "started_at": "2026-04-20T06:47:19Z",
   "last": {
     "event": "test.fail",
-    "at": "2026-04-20T07:39:20Z"
+    "at": "2026-04-20T11:47:19Z"
   },
   "phase_history": [
     {
@@ -26,7 +26,14 @@
       "to": "[im]",
       "at": "2026-04-20T07:39:20Z",
       "elapsed_seconds": 135
+    },
+    {
+      "event": "test.fail",
+      "from": "[im]",
+      "to": "[im]",
+      "at": "2026-04-20T11:47:19Z",
+      "elapsed_seconds": 14879
     }
   ],
-  "updated": "2026-04-20T07:39:20Z"
+  "updated": "2026-04-20T11:47:19Z"
 }

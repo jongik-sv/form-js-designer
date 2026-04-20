@@ -83,7 +83,7 @@ describe('StackRendererComponent: flex 스타일 렌더', () => {
         field: { id: 'stack-1', type: 'stack', direction: 'horizontal', gap: 8, components: [] },
         domId: 'stack-1',
         errors: [],
-      }),
+      } as unknown as Parameters<typeof h>[1]),
       container,
     );
     const el = container.querySelector('.fjs-stack') as HTMLElement | null;
@@ -99,7 +99,7 @@ describe('StackRendererComponent: flex 스타일 렌더', () => {
         field: { id: 'stack-2', type: 'stack', direction: 'vertical', gap: 8, components: [] },
         domId: 'stack-2',
         errors: [],
-      }),
+      } as unknown as Parameters<typeof h>[1]),
       container,
     );
     const el = container.querySelector('.fjs-stack') as HTMLElement | null;
@@ -115,7 +115,7 @@ describe('StackRendererComponent: flex 스타일 렌더', () => {
         field: { id: 'stack-3', type: 'stack', direction: 'horizontal', gap: 16, components: [] },
         domId: 'stack-3',
         errors: [],
-      }),
+      } as unknown as Parameters<typeof h>[1]),
       container,
     );
     const el = container.querySelector('.fjs-stack') as HTMLElement | null;
@@ -138,7 +138,7 @@ describe('StackRendererComponent: flex 스타일 렌더', () => {
         },
         domId: 'stack-4',
         errors: [],
-      }),
+      } as unknown as Parameters<typeof h>[1]),
       container,
     );
     const el = container.querySelector('.fjs-stack') as HTMLElement | null;
@@ -154,7 +154,7 @@ describe('StackRendererComponent: flex 스타일 렌더', () => {
         field: { id: 'stack-5', type: 'stack', direction: 'vertical', gap: 0, components: [] },
         domId: 'stack-5',
         errors: [],
-      }),
+      } as unknown as Parameters<typeof h>[1]),
       container,
     );
     const el = container.querySelector('.fjs-stack') as HTMLElement | null;
@@ -170,7 +170,7 @@ describe('StackRendererComponent: flex 스타일 렌더', () => {
         field: { id: 'stack-6', type: 'stack', direction: 'horizontal', gap: 24, components: [] },
         domId: 'stack-6',
         errors: [],
-      }),
+      } as unknown as Parameters<typeof h>[1]),
       container,
     );
     const el = container.querySelector('.fjs-stack') as HTMLElement | null;

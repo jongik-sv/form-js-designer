@@ -12,7 +12,7 @@
  */
 import { h } from 'preact';
 import { defineComponent, ChildrenSlot } from '@form-js-designer/designer-core';
-import type { PureRenderProps, ContainerField, FieldSchema } from '@form-js-designer/designer-core';
+import type { PureRenderProps, ContainerField, FieldSchema, PropsSchema } from '@form-js-designer/designer-core';
 
 void h;
 
@@ -26,7 +26,7 @@ export interface StackRendererSchema extends FieldSchema {
 }
 
 // ── props 스키마 ─────────────────────────────────────────
-const stackRendererPropsSchema = {
+const stackRendererPropsSchema: PropsSchema = {
   properties: {
     direction: {
       type: 'string',

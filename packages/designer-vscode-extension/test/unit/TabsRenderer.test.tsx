@@ -32,28 +32,14 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, fireEvent } from '@testing-library/preact';
 import { h } from 'preact';
 import { useEffect } from 'preact/hooks';
-import { TabsRenderer } from '../../src/components/TabsRenderer';
-import { TabPanelRenderer } from '../../src/components/TabPanelRenderer';
+import { TabsRenderer, type TabsField } from '../../src/components/TabsRenderer';
+import { TabPanelRenderer, type TabPanelField } from '../../src/components/TabPanelRenderer';
 
 void h;
 
 // ──────────────────────────────────────────────────────
 // 픽스처 헬퍼
 // ──────────────────────────────────────────────────────
-
-interface TabPanelField {
-  id: string;
-  type: 'tabPanel';
-  label: string;
-  components: Array<{ id: string; type: string; label?: string; key?: string }>;
-}
-
-interface TabsField {
-  id: string;
-  type: 'tabs';
-  activeTab?: string;
-  components: TabPanelField[];
-}
 
 function makeTabsField(
   panels: Array<{ id: string; label: string; components?: TabPanelField['components'] }>,
@@ -84,8 +70,8 @@ const threePanelField = makeTabsField([
 const MockChildrenRenderer = ({ field }: { field: TabPanelField }) => (
   <div data-testid={`children-${field.id}`}>
     {field.components.map((c) => (
-      <div key={c.id} data-testid={`child-${c.id}`}>
-        {c.label}
+      <div key={c.id as string} data-testid={`child-${c.id as string}`}>
+        {c['label'] as string}
       </div>
     ))}
   </div>
@@ -101,9 +87,9 @@ describe('TabsRenderer: 정상 케이스', () => {
     );
     const tabs = getAllByRole('tab');
     expect(tabs).toHaveLength(3);
-    expect(tabs[0].getAttribute('aria-selected')).toBe('true');
-    expect(tabs[1].getAttribute('aria-selected')).toBe('false');
-    expect(tabs[2].getAttribute('aria-selected')).toBe('false');
+    expect(tabs[0]!.getAttribute('aria-selected')).toBe('true');
+    expect(tabs[1]!.getAttribute('aria-selected')).toBe('false');
+    expect(tabs[2]!.getAttribute('aria-selected')).toBe('false');
   });
 
   it('첫 번째 탭의 패널이 visible, 나머지는 hidden이다', () => {
@@ -112,9 +98,9 @@ describe('TabsRenderer: 정상 케이스', () => {
     );
     const panels = getAllByRole('tabpanel', { hidden: true });
     expect(panels).toHaveLength(3);
-    expect(panels[0].hidden).toBe(false);
-    expect(panels[1].hidden).toBe(true);
-    expect(panels[2].hidden).toBe(true);
+    expect(panels[0]!.hidden).toBe(false);
+    expect(panels[1]!.hidden).toBe(true);
+    expect(panels[2]!.hidden).toBe(true);
   });
 
   it('activeTab 속성으로 두 번째 탭이 초기 활성화된다', () => {
@@ -130,9 +116,9 @@ describe('TabsRenderer: 정상 케이스', () => {
       <TabsRenderer field={field} ChildrenRenderer={MockChildrenRenderer} />,
     );
     const tabs = getAllByRole('tab');
-    expect(tabs[0].getAttribute('aria-selected')).toBe('false');
-    expect(tabs[1].getAttribute('aria-selected')).toBe('true');
-    expect(tabs[2].getAttribute('aria-selected')).toBe('false');
+    expect(tabs[0]!.getAttribute('aria-selected')).toBe('false');
+    expect(tabs[1]!.getAttribute('aria-selected')).toBe('true');
+    expect(tabs[2]!.getAttribute('aria-selected')).toBe('false');
   });
 
   it('탭 버튼 클릭 시 해당 패널이 visible, 나머지는 hidden 처리된다', () => {
@@ -140,13 +126,13 @@ describe('TabsRenderer: 정상 케이스', () => {
       <TabsRenderer field={threePanelField} ChildrenRenderer={MockChildrenRenderer} />,
     );
     const tabs = getAllByRole('tab');
-    fireEvent.click(tabs[1]);
+    fireEvent.click(tabs[1]!);
 
     const panels = getAllByRole('tabpanel', { hidden: true });
-    expect(panels[0].hidden).toBe(true);
-    expect(panels[1].hidden).toBe(false);
-    expect(panels[2].hidden).toBe(true);
-    expect(tabs[1].getAttribute('aria-selected')).toBe('true');
+    expect(panels[0]!.hidden).toBe(true);
+    expect(panels[1]!.hidden).toBe(false);
+    expect(panels[2]!.hidden).toBe(true);
+    expect(tabs[1]!.getAttribute('aria-selected')).toBe('true');
   });
 
   it('inactive 패널의 자식 컴포넌트가 DOM에 마운트되어 있다 (hidden이지만 unmount 아님)', () => {
@@ -168,10 +154,10 @@ describe('TabsRenderer: 키보드 탐색', () => {
       <TabsRenderer field={threePanelField} ChildrenRenderer={MockChildrenRenderer} />,
     );
     const tabs = getAllByRole('tab');
-    tabs[0].focus();
-    fireEvent.keyDown(tabs[0], { key: 'ArrowRight' });
+    tabs[0]!.focus();
+    fireEvent.keyDown(tabs[0]!, { key: 'ArrowRight' });
 
-    expect(tabs[1].getAttribute('aria-selected')).toBe('true');
+    expect(tabs[1]!.getAttribute('aria-selected')).toBe('true');
   });
 
   it('마지막 탭에서 ArrowRight: 첫 번째 탭으로 wrap-around', () => {
@@ -180,11 +166,11 @@ describe('TabsRenderer: 키보드 탐색', () => {
     );
     const tabs = getAllByRole('tab');
     // 마지막 탭 활성화
-    fireEvent.click(tabs[2]);
-    tabs[2].focus();
-    fireEvent.keyDown(tabs[2], { key: 'ArrowRight' });
+    fireEvent.click(tabs[2]!);
+    tabs[2]!.focus();
+    fireEvent.keyDown(tabs[2]!, { key: 'ArrowRight' });
 
-    expect(tabs[0].getAttribute('aria-selected')).toBe('true');
+    expect(tabs[0]!.getAttribute('aria-selected')).toBe('true');
   });
 
   it('ArrowLeft: 두 번째 탭에서 첫 번째 탭으로 이동', () => {
@@ -192,11 +178,11 @@ describe('TabsRenderer: 키보드 탐색', () => {
       <TabsRenderer field={threePanelField} ChildrenRenderer={MockChildrenRenderer} />,
     );
     const tabs = getAllByRole('tab');
-    fireEvent.click(tabs[1]);
-    tabs[1].focus();
-    fireEvent.keyDown(tabs[1], { key: 'ArrowLeft' });
+    fireEvent.click(tabs[1]!);
+    tabs[1]!.focus();
+    fireEvent.keyDown(tabs[1]!, { key: 'ArrowLeft' });
 
-    expect(tabs[0].getAttribute('aria-selected')).toBe('true');
+    expect(tabs[0]!.getAttribute('aria-selected')).toBe('true');
   });
 
   it('첫 번째 탭에서 ArrowLeft: 마지막 탭으로 wrap-around', () => {
@@ -204,10 +190,10 @@ describe('TabsRenderer: 키보드 탐색', () => {
       <TabsRenderer field={threePanelField} ChildrenRenderer={MockChildrenRenderer} />,
     );
     const tabs = getAllByRole('tab');
-    tabs[0].focus();
-    fireEvent.keyDown(tabs[0], { key: 'ArrowLeft' });
+    tabs[0]!.focus();
+    fireEvent.keyDown(tabs[0]!, { key: 'ArrowLeft' });
 
-    expect(tabs[2].getAttribute('aria-selected')).toBe('true');
+    expect(tabs[2]!.getAttribute('aria-selected')).toBe('true');
   });
 
   it('Home: 첫 번째 탭으로 이동', () => {
@@ -215,11 +201,11 @@ describe('TabsRenderer: 키보드 탐색', () => {
       <TabsRenderer field={threePanelField} ChildrenRenderer={MockChildrenRenderer} />,
     );
     const tabs = getAllByRole('tab');
-    fireEvent.click(tabs[2]);
-    tabs[2].focus();
-    fireEvent.keyDown(tabs[2], { key: 'Home' });
+    fireEvent.click(tabs[2]!);
+    tabs[2]!.focus();
+    fireEvent.keyDown(tabs[2]!, { key: 'Home' });
 
-    expect(tabs[0].getAttribute('aria-selected')).toBe('true');
+    expect(tabs[0]!.getAttribute('aria-selected')).toBe('true');
   });
 
   it('End: 마지막 탭으로 이동', () => {
@@ -227,10 +213,10 @@ describe('TabsRenderer: 키보드 탐색', () => {
       <TabsRenderer field={threePanelField} ChildrenRenderer={MockChildrenRenderer} />,
     );
     const tabs = getAllByRole('tab');
-    tabs[0].focus();
-    fireEvent.keyDown(tabs[0], { key: 'End' });
+    tabs[0]!.focus();
+    fireEvent.keyDown(tabs[0]!, { key: 'End' });
 
-    expect(tabs[2].getAttribute('aria-selected')).toBe('true');
+    expect(tabs[2]!.getAttribute('aria-selected')).toBe('true');
   });
 });
 
@@ -276,8 +262,8 @@ describe('TabsRenderer: ARIA', () => {
     const panels = getAllByRole('tabpanel', { hidden: true });
 
     for (let i = 0; i < tabs.length; i++) {
-      const controlsId = tabs[i].getAttribute('aria-controls');
-      expect(panels[i].id).toBe(controlsId);
+      const controlsId = tabs[i]!.getAttribute('aria-controls');
+      expect(panels[i]!.id).toBe(controlsId);
     }
   });
 
@@ -289,8 +275,8 @@ describe('TabsRenderer: ARIA', () => {
     const panels = getAllByRole('tabpanel', { hidden: true });
 
     for (let i = 0; i < panels.length; i++) {
-      const labelledby = panels[i].getAttribute('aria-labelledby');
-      expect(tabs[i].id).toBe(labelledby);
+      const labelledby = panels[i]!.getAttribute('aria-labelledby');
+      expect(tabs[i]!.id).toBe(labelledby);
     }
   });
 });
@@ -319,7 +305,7 @@ describe('TabsRenderer: 엣지 케이스', () => {
       <TabsRenderer field={field} ChildrenRenderer={MockChildrenRenderer} />,
     );
     const tabs = getAllByRole('tab');
-    expect(tabs[0].getAttribute('aria-selected')).toBe('true');
+    expect(tabs[0]!.getAttribute('aria-selected')).toBe('true');
   });
 
   it('탭 1개짜리 스키마에서 단일 패널이 렌더된다', () => {
@@ -329,7 +315,7 @@ describe('TabsRenderer: 엣지 케이스', () => {
     );
     const tabs = getAllByRole('tab');
     expect(tabs).toHaveLength(1);
-    expect(tabs[0].getAttribute('aria-selected')).toBe('true');
+    expect(tabs[0]!.getAttribute('aria-selected')).toBe('true');
   });
 });
 
