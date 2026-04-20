@@ -47,7 +47,7 @@ node, vitest
 - category: infrastructure
 - domain: infra
 - model: sonnet
-- status: [ ]
+- status: [dd]
 - priority: critical
 - assignee: -
 - schedule: 2026-04-20 ~ 2026-04-20
