@@ -243,4 +243,39 @@ describe('applyLayoutHeight', () => {
     expect(fieldA.style.height).toBe('');
     expect(fieldA.style.minHeight).toBe('');
   });
+
+  // Case 13: viewer fallback — data-id 가 없어도 prefixId-id 로 .fjs-element 를 찾아 적용
+  it('13: viewer DOM (data-id 없음) 에서 fjs-form-<formId>-<fieldId> id 로 매칭', () => {
+    // viewer 구조 재현: <div class="fjs-element"><div class="dc-tabs-container" id="fjs-form-myform-tabs1"/></div>
+    const wrapper = document.createElement('div');
+    wrapper.className = 'fjs-element';
+    const inner = document.createElement('div');
+    inner.className = 'dc-tabs-container';
+    inner.id = 'fjs-form-myform-tabs1';
+    wrapper.appendChild(inner);
+    root.appendChild(wrapper);
+
+    const fields: TestField[] = [{ id: 'tabs1', type: 'tabs', layout: { height: 500 } }];
+    applyLayoutHeight(root, fields, 'myform');
+
+    // tabs 는 container → min-height 적용
+    expect(wrapper.style.minHeight).toBe('500px');
+    expect(wrapper.style.height).toBe('');
+  });
+
+  // Case 14: formId 미제공 시 viewer fallback 을 시도하지 않는다 (data-id 만 사용)
+  it('14: formId 없이 호출되면 data-id 매칭만 시도한다 (viewer fallback off)', () => {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'fjs-element';
+    const inner = document.createElement('div');
+    inner.id = 'fjs-form-any-f1';
+    wrapper.appendChild(inner);
+    root.appendChild(wrapper);
+
+    const fields: TestField[] = [{ id: 'f1', type: 'group', layout: { height: 250 } }];
+    applyLayoutHeight(root, fields); // no formId
+
+    expect(wrapper.style.minHeight).toBe('');
+    expect(wrapper.style.height).toBe('');
+  });
 });

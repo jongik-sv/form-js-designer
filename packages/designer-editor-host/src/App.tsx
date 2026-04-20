@@ -307,7 +307,7 @@ export function App(): h.JSX.Element {
           <div class="props-panel-stack" data-testid="props-stack">
             {/* 기본 form-js 속성 (General/Condition/Layout/Validation/Custom) */}
             <div ref={nativePropsPanelRef} class="props-panel-native" data-testid="props-native" />
-            {/* designer-components 전용 속성 (padding, tabHeight, ...) */}
+            {/* designer-components 전용 속성 (padding, orientation, ...) */}
             <PropsPanelContainer
               propsPanelService={services.propsPanel}
               eventBus={services.eventBus}

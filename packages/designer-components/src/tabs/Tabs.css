@@ -8,7 +8,10 @@
     border: 1px solid #e2e8f0;
     border-radius: 8px;
     box-sizing: border-box;
-    overflow: hidden;
+    /* overflow 는 visible 로 둔다. datetime/select 같은 컴포넌트의 팝업(flatpickr
+       캘린더, dropdown 등)이 컨테이너 밖으로 나갈 수 있어야 한다. Group/Card 와
+       동일한 동작. border-radius 클리핑은 손실되지만 popup 가시성이 우선. */
+    overflow: visible;
     /* wrapper(.fjs-element) 의 min-height 를 상속받아 외곽 박스와 선택 영역을 일치시킴 */
     min-height: inherit;
   }

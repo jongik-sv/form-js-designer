@@ -19,12 +19,6 @@
         "label": "designer.components.tabs.orientation",
         "default": "horizontal",
         "enum": ["horizontal", "vertical"]
-      },
-      "tabHeight": {
-        "type": "number",
-        "label": "designer.components.tabs.tabHeight",
-        "min": 0,
-        "max": 4096
       }
     }
   }

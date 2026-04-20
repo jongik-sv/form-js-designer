@@ -25,6 +25,33 @@ interface LegacyTabsNode extends Record<string, unknown> {
   tabs?: LegacyTabItem[];
   components?: Array<{ id: string } & Record<string, unknown>>;
   defaultValue?: string;
+  /** Legacy tabs-specific height — migrated to layout.height. */
+  tabHeight?: number;
+  layout?: { height?: number; [key: string]: unknown };
+}
+
+/**
+ * tabHeight 는 tabs 컴포넌트 전용 구 필드. 통합 height 시스템(layout.height)로 옮기고
+ * 원본에서 제거한다. tabHeight 가 양수이고 layout.height 가 비어있으면 흡수한다.
+ * 0(legacy "부모 꽉 채움") 이나 음수/NaN 은 드롭한다 — 현재 layout 시스템에는
+ * 1:1 대응이 없으므로 사용자가 재설정하게 둔다.
+ */
+function absorbLegacyTabHeight(node: LegacyTabsNode): LegacyTabsNode {
+  if (!('tabHeight' in node)) return node;
+  const { tabHeight, ...rest } = node;
+  const existingHeight = rest.layout?.height;
+  const shouldAbsorb =
+    typeof tabHeight === 'number' &&
+    Number.isFinite(tabHeight) &&
+    tabHeight > 0 &&
+    existingHeight === undefined;
+  if (shouldAbsorb) {
+    return {
+      ...rest,
+      layout: { ...(rest.layout ?? {}), height: tabHeight },
+    };
+  }
+  return rest as LegacyTabsNode;
 }
 
 function isNewTabsFormat(node: LegacyTabsNode): boolean {
@@ -43,13 +70,16 @@ function isNewTabsFormat(node: LegacyTabsNode): boolean {
   return false;
 }
 
-function convertTabsNode(node: LegacyTabsNode): LegacyTabsNode {
+function convertTabsNode(input: LegacyTabsNode): LegacyTabsNode {
+  // 1단계: tabHeight → layout.height 흡수 및 tabHeight 제거 (신/구 포맷 공통)
+  const node = absorbLegacyTabHeight(input);
+
   if (isNewTabsFormat(node)) {
     // 재귀는 여전히 필요 (자식 components 안의 중첩 tabs)
     const newComponents = Array.isArray(node.components)
       ? node.components.map((c) => migrateNode(c as Record<string, unknown>))
       : [];
-    if (newComponents === node.components) return node;
+    if (node === input && newComponents === input.components) return input;
     return { ...node, components: newComponents as Array<{ id: string } & Record<string, unknown>> };
   }
 

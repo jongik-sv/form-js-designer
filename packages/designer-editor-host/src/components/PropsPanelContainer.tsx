@@ -10,7 +10,7 @@ import { useState, useEffect } from 'preact/hooks';
 import type { PropsGroup } from '../modules/PropsPanelService';
 
 /**
- * i18n 키("designer.components.tabs.tabHeight") 또는 camelCase 식별자를
+ * i18n 키("designer.components.tabs.orientation") 또는 camelCase 식별자를
  * 사람이 읽는 라벨로 변환. LocaleProvider 통합 전 임시 fallback.
  */
 function humanizeLabel(label: string | undefined, fallbackKey: string): string {
