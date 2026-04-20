@@ -15,13 +15,22 @@
   "contributes": {
     "markdown": {
       "markdownItPlugins": true,
-      "previewStyles": []
+      "previewScripts": [
+        "./dist/webview/preview.js"
+      ],
+      "previewStyles": [
+        "./media/form-js.css",
+        "./media/form-js-base.css",
+        "./media/form-js-block.css"
+      ]
     }
   },
   "type": "commonjs",
   "main": "./dist/extension.cjs",
   "scripts": {
-    "build": "echo 'TODO: esbuild'",
+    "build": "node scripts/copy-css.mjs && node esbuild.config.mjs",
+    "build:copy-css": "node scripts/copy-css.mjs",
+    "build:bundle": "node esbuild.config.mjs",
     "typecheck": "tsc --noEmit",
     "test:unit": "../../node_modules/.bin/vitest run --config vitest.config.ts",
     "test:unit:watch": "../../node_modules/.bin/vitest --config vitest.config.ts",

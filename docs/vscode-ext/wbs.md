@@ -191,7 +191,7 @@ node, vitest
 - category: development
 - domain: frontend
 - model: sonnet
-- status: [dd]
+- status: [im]
 - priority: critical
 - assignee: -
 - schedule: 2026-04-24 ~ 2026-04-27
