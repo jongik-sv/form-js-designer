@@ -15,6 +15,10 @@
 import { createForm } from '@bpmn-io/form-js-viewer';
 import { LRUCache } from './lruCache';
 import { renderErrorBanner } from './errorBanner';
+import {
+  mountEditButton as mountEditButtonOverlay,
+  unlockAllButtons,
+} from './editButton';
 import type { BlockMountState, TestMountCompleteMessage } from '../shared/messages';
 
 declare const FORM_JS_TEST_BRIDGE: boolean;
@@ -154,80 +158,19 @@ function startThemeObserver(): void {
   });
 }
 
-// ── TSK-02-01: ✏️ 편집 버튼 + edit-opened/edit-closed 핸들링 ────────────
+// ── TSK-02-03: ✏️ 편집 버튼 오버레이 + single-editor lock + 메시지 송신 ──
 
 /**
- * `.form-js-block` 우상단에 ✏️ 편집 버튼(anchor)을 삽입한다.
+ * extension → preview 방향 메시지(`edit-closed`)를 처리한다.
  *
- * 버튼은 `command:formJs.openBlockEditor?<URI-encoded JSON>` 링크로
- * extension host의 `formJs.openBlockEditor` 커맨드를 활성화한다.
- *
- * @param block - `.form-js-block` DOM 요소
+ * - `edit-closed`: 모든 ✏️ 버튼을 재활성화 (unlockAllButtons 위임)
  */
-export function mountEditButton(block: HTMLElement): void {
-  // 이미 버튼이 있으면 중복 삽입 방지
-  if (block.querySelector('.form-js-edit-button')) return;
-
-  const schema = block.dataset['schema'] ?? '';
-  const mdStart = block.dataset['mdStart'] ?? '0';
-  const mdEnd = block.dataset['mdEnd'] ?? '0';
-  const docUri = block.dataset['docUri'] ?? '';
-
-  const args = JSON.stringify({
-    uri: docUri,
-    mdStart: Number(mdStart),
-    mdEnd: Number(mdEnd),
-    schema,
-  });
-
-  const encodedArgs = encodeURIComponent(args);
-  const href = `command:formJs.openBlockEditor?${encodedArgs}`;
-
-  const btn = document.createElement('a');
-  btn.className = 'form-js-edit-button';
-  btn.href = href;
-  btn.title = 'form-js 블록 편집';
-  btn.setAttribute('aria-label', 'form-js 블록 편집');
-  btn.textContent = '✏️';
-
-  block.appendChild(btn);
-}
-
-/**
- * extension → preview 방향 메시지(`edit-opened`, `edit-closed`)를 처리한다.
- *
- * - `edit-opened`: 해당 블록의 ✏️ 버튼을 비활성(aria-disabled)
- * - `edit-closed`: 해당 블록의 ✏️ 버튼을 재활성
- */
-export function handleEditMessage(
-  event: MessageEvent,
-  getBlocks: () => HTMLElement[] = getFormBlocks
-): void {
-  const data = event.data as { type?: string; mdStart?: number; mdEnd?: number };
+function handleEditMessage(event: MessageEvent): void {
+  const data = event.data as { type?: string };
   if (!data?.type) return;
 
-  if (data.type === 'edit-opened' || data.type === 'edit-closed') {
-    const isOpened = data.type === 'edit-opened';
-    const blocks = getBlocks();
-    for (const block of blocks) {
-      const blockStart = Number(block.dataset['mdStart'] ?? '-1');
-      const blockEnd = Number(block.dataset['mdEnd'] ?? '-1');
-
-      if (blockStart === data.mdStart && blockEnd === data.mdEnd) {
-        const btn = block.querySelector<HTMLElement>('.form-js-edit-button');
-        if (!btn) continue;
-
-        if (isOpened) {
-          btn.setAttribute('aria-disabled', 'true');
-          btn.style.pointerEvents = 'none';
-          btn.style.opacity = '0.4';
-        } else {
-          btn.removeAttribute('aria-disabled');
-          btn.style.pointerEvents = '';
-          btn.style.opacity = '';
-        }
-      }
-    }
+  if (data.type === 'edit-closed') {
+    unlockAllButtons();
   }
 }
 
@@ -240,11 +183,13 @@ function init(): void {
   });
   startThemeObserver();
 
-  // TSK-02-01: 각 블록에 ✏️ 버튼 삽입 + edit 메시지 리스너 등록
+  // TSK-02-03: 각 블록에 ✏️ 오버레이 버튼 삽입 + edit-closed 메시지 리스너 등록
   for (const block of getFormBlocks()) {
-    mountEditButton(block);
+    const mdStart = Number(block.dataset['mdStart'] ?? '0');
+    const mdEnd = Number(block.dataset['mdEnd'] ?? '0');
+    mountEditButtonOverlay(block, mdStart, mdEnd);
   }
-  window.addEventListener('message', (event) => handleEditMessage(event));
+  window.addEventListener('message', handleEditMessage);
 }
 
 if (typeof document !== 'undefined' && typeof window !== 'undefined') {
