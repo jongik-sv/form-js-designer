@@ -23,10 +23,6 @@
 
 import { createHash } from 'node:crypto';
 
-/**
- * 객체를 재귀적으로 키 정렬하여 반환한다.
- * 배열은 요소 순서를 보존하되, 각 요소가 객체이면 재귀 정렬한다.
- */
 function sortKeysDeep(value: unknown): unknown {
   if (Array.isArray(value)) {
     return value.map(sortKeysDeep);

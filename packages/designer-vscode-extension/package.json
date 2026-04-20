@@ -1,5 +1,5 @@
 {
-  "name": "designer-vscode-extension",
+  "name": "@form-js-designer/designer-vscode-extension",
   "displayName": "Form.js Designer",
   "version": "0.1.0",
   "private": true,
@@ -10,46 +10,62 @@
     "url": "https://github.com/bpmn-io/form-js-designer"
   },
   "engines": {
-    "vscode": "^1.90.0",
+    "vscode": "^1.85.0",
     "node": ">=20"
   },
   "categories": ["Other"],
+  "type": "commonjs",
   "main": "./dist/extension.cjs",
-  "activationEvents": ["onLanguage:markdown"],
+  "activationEvents": [
+    "onLanguage:markdown",
+    "onStartupFinished"
+  ],
   "contributes": {
     "markdown": {
       "markdownItPlugins": true,
       "previewScripts": ["./dist/webview/preview.js"],
-      "previewStyles": ["./media/form-js.css", "./media/form-js-base.css"]
+      "previewStyles": [
+        "./media/form-js.css",
+        "./media/form-js-base.css",
+        "./media/form-js-block.css"
+      ]
     },
     "customEditors": [
       {
         "viewType": "formJsDesigner.formEditor",
         "displayName": "Form.js Designer",
         "selector": [
-          {
-            "filenamePattern": "*.form.json"
-          }
+          { "filenamePattern": "*.form.json" }
         ],
         "priority": "option"
       }
     ]
   },
   "scripts": {
-    "build": "node esbuild.config.mjs && node scripts/copy-media.mjs",
-    "build:prod": "NODE_ENV=production node esbuild.config.mjs && node scripts/copy-media.mjs",
+    "build": "node scripts/copy-media.mjs && node esbuild.config.mjs",
+    "build:prod": "NODE_ENV=production node scripts/copy-media.mjs && node esbuild.config.mjs",
+    "build:copy-css": "node scripts/copy-media.mjs",
+    "build:bundle": "node esbuild.config.mjs",
     "typecheck": "tsc --noEmit",
     "lint": "echo 'lint: not yet configured'",
-    "test:unit": "vitest run",
-    "test:coverage": "vitest run --coverage"
+    "test:unit": "../../node_modules/.bin/vitest run --config vitest.config.ts",
+    "test:unit:watch": "../../node_modules/.bin/vitest --config vitest.config.ts",
+    "test:coverage": "../../node_modules/.bin/vitest run --config vitest.config.ts --coverage",
+    "test:e2e": "FORM_JS_TEST_MODE=1 node esbuild.config.mjs && FORM_JS_TEST_MODE=1 node dist/test/integration/runTests.js"
   },
   "devDependencies": {
+    "@types/markdown-it": "^14.1.2",
+    "@types/mocha": "^10.0.10",
     "@types/node": "^20.16.10",
-    "@types/vscode": "^1.90.0",
-    "@vitest/coverage-v8": "^2.1.2",
+    "@types/vscode": "^1.85.0",
+    "@vitest/coverage-v8": "^4.1.4",
+    "@vscode/test-electron": "^2.4.1",
     "esbuild": "^0.24.0",
+    "glob": "^11.0.0",
+    "markdown-it": "^14.1.0",
+    "mocha": "^11.1.0",
     "typescript": "^5.6.0",
-    "vitest": "^2.1.2"
+    "vitest": "^4.1.4"
   },
   "dependencies": {
     "@bpmn-io/form-js-editor": "^1.21.2",

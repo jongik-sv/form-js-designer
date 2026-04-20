@@ -31,3 +31,4 @@ packages/*/spike/*/tests/artifacts/
 # Claude Code runtime artifacts
 .claude/scheduled_tasks.lock
 .claude/worktrees/
+**/.vscode-test/
