@@ -16,6 +16,7 @@ import { createPortal } from 'preact/compat';
 import { defineComponent, ChildrenSlot } from '@form-js-designer/designer-core';
 import type { PureRenderProps, ContainerField, FieldSchema, PropsSchema } from '@form-js-designer/designer-core';
 import { getPortalRoot } from './portalRoot';
+import { t } from './i18n';
 
 void h;
 
@@ -157,7 +158,7 @@ function ModalRendererRender(props: PureRenderProps<ModalRendererSchema>) {
         type="button"
         class="fjs-modal-dialog__close"
         onClick={closeModal}
-        aria-label="닫기"
+        aria-label={t('components.modal.closeLabel')}
       >
         ×
       </button>

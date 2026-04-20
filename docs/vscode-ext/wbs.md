@@ -846,7 +846,7 @@ node, vitest
 - category: development
 - domain: fullstack
 - model: sonnet
-- status: [dd]
+- status: [xx]
 - priority: high
 - assignee: -
 - schedule: 2026-05-15 ~ 2026-05-16
