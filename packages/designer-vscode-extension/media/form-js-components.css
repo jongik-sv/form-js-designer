@@ -67,6 +67,110 @@
   border-top: none;
 }
 
+/* ── TSK-05-03: fjs-card ─────────────────────────────────── */
+.form-js-block .fjs-card {
+  border: 1px solid var(--vscode-panel-border, var(--vscode-editorGroup-border, #ccc));
+  border-radius: 4px;
+  padding: 12px;
+  box-sizing: border-box;
+  color: var(--vscode-editor-foreground);
+  background: var(--vscode-editor-background);
+}
+
+.form-js-block .fjs-card__header {
+  font-weight: 600;
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--vscode-panel-border, #ccc);
+}
+
+.form-js-block .fjs-card__body {
+  flex: 1;
+}
+
+.form-js-block .fjs-card__footer {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--vscode-panel-border, #ccc);
+}
+
+.form-js-block .fjs-card__action {
+  padding: 4px 12px;
+  border: 1px solid var(--vscode-button-border, transparent);
+  border-radius: 2px;
+  cursor: pointer;
+  background: var(--vscode-button-secondaryBackground, transparent);
+  color: var(--vscode-button-secondaryForeground, inherit);
+}
+
+.form-js-block .fjs-card__action--primary {
+  background: var(--vscode-button-background, #007acc);
+  color: var(--vscode-button-foreground, #fff);
+  border-color: transparent;
+}
+
+/* ── TSK-05-03: fjs-stack ────────────────────────────────── */
+/* Stack flex 속성은 StackRenderer 인라인 스타일로 제어됨 */
+.form-js-block .fjs-stack {
+  box-sizing: border-box;
+}
+
+/* ── TSK-05-03: fjs-modal ────────────────────────────────── */
+.form-js-block .fjs-modal {
+  display: inline-block;
+}
+
+.form-js-block .fjs-modal-trigger {
+  padding: 4px 12px;
+  border: 1px solid var(--vscode-button-border, transparent);
+  border-radius: 2px;
+  cursor: pointer;
+  background: var(--vscode-button-secondaryBackground, transparent);
+  color: var(--vscode-button-secondaryForeground, inherit);
+}
+
+.form-js-block .fjs-modal-trigger--primary {
+  background: var(--vscode-button-background, #007acc);
+  color: var(--vscode-button-foreground, #fff);
+  border-color: transparent;
+}
+
+.form-js-block .fjs-portal-root {
+  position: static;
+}
+
+.form-js-block .fjs-portal-root dialog.fjs-modal-dialog {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  max-width: 640px;
+  width: 90vw;
+  border: 1px solid var(--vscode-panel-border, #ccc);
+  border-radius: 4px;
+  padding: 16px;
+  background: var(--vscode-editor-background);
+  color: var(--vscode-editor-foreground);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.form-js-block .fjs-portal-root dialog.fjs-modal-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.form-js-block .fjs-modal-dialog__close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-size: 1.2em;
+  color: var(--vscode-editor-foreground);
+}
+
 /* ── High Contrast 테마 대응 ─────────────────────────────── */
 .form-js-block.theme-high-contrast .dc-card,
 .form-js-block.theme-high-contrast .dc-tabs,
@@ -78,4 +182,21 @@
 .form-js-block.theme-high-contrast-light .dc-tab-panel {
   border-color: var(--vscode-contrastBorder, ButtonText);
   forced-color-adjust: auto;
+}
+
+/* TSK-05-03: fjs-card / fjs-modal HC 대응 */
+.form-js-block.theme-high-contrast .fjs-card,
+.form-js-block.theme-high-contrast .fjs-portal-root dialog.fjs-modal-dialog,
+.form-js-block.theme-high-contrast-light .fjs-card,
+.form-js-block.theme-high-contrast-light .fjs-portal-root dialog.fjs-modal-dialog {
+  border-color: var(--vscode-contrastBorder, ButtonText);
+  forced-color-adjust: auto;
+}
+
+@media (forced-colors: active) {
+  .form-js-block .fjs-card,
+  .form-js-block .fjs-portal-root dialog.fjs-modal-dialog {
+    border: 1px solid ButtonText;
+    forced-color-adjust: auto;
+  }
 }
