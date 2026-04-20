@@ -207,6 +207,7 @@ export function handleEditMessage(
   if (!data?.type) return;
 
   if (data.type === 'edit-opened' || data.type === 'edit-closed') {
+    const isOpened = data.type === 'edit-opened';
     const blocks = getBlocks();
     for (const block of blocks) {
       const blockStart = Number(block.dataset['mdStart'] ?? '-1');
@@ -216,7 +217,7 @@ export function handleEditMessage(
         const btn = block.querySelector<HTMLElement>('.form-js-edit-button');
         if (!btn) continue;
 
-        if (data.type === 'edit-opened') {
+        if (isOpened) {
           btn.setAttribute('aria-disabled', 'true');
           btn.style.pointerEvents = 'none';
           btn.style.opacity = '0.4';

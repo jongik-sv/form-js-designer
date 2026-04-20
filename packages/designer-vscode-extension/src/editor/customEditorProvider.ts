@@ -51,9 +51,9 @@ export class FormJsBlockEditorProvider {
   ): Promise<void> {
     const uri = document.uri.toString();
 
-    // schema stash consume (openBlockEditorCommand가 설정한 스키마를 읽음)
+    // schema stash consume (openBlockEditorCommand가 설정한 스키마를 읽고 즉시 제거)
     const pending = pendingEditSchemas.get(uri);
-    // stash는 지우지 않음 — openBlockEditorCommand의 finally 또는 다음 호출에서 정리됨
+    pendingEditSchemas.delete(uri);
 
     const schema = pending?.schema ?? '{"type":"default","components":[]}';
     const mdStart = pending?.mdStart ?? 0;
@@ -102,8 +102,9 @@ export class FormJsBlockEditorProvider {
       return;
     }
 
-    // beginSession 성공 후에도 opening 상태를 유지한다.
-    // onDidDispose에서만 clearPendingOpen을 호출하여 세션이 끝날 때까지 유지
+    // beginSession 성공: sessions 맵에 추가되었으므로 openingURIs에서 즉시 제거한다.
+    // 이후 두 번째 커맨드는 getActive(uri) 체크에서 차단된다.
+    clearPendingOpen(uri);
 
     // edit-opened 메시지 송신
     // resolveCustomTextEditor 반환 후 webview HTML이 설정되므로 setImmediate로 지연

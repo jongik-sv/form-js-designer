@@ -55,7 +55,8 @@ export async function openBlockEditorCommand(
       // panel 객체가 reveal 메서드를 가지고 있으면 호출
       const panel = existing.panel as { reveal?: (col?: number) => void; dispose(): void };
       if (typeof panel.reveal === 'function') {
-        panel.reveal(vscode.ViewColumn.Beside);
+        // column을 지정하지 않으면 현재 column에서 reveal하여 새 탭이 생기지 않는다
+        panel.reveal();
       }
     } catch {
       // reveal 실패는 무시
@@ -64,25 +65,10 @@ export async function openBlockEditorCommand(
   }
 
   // 현재 opening이거나 active인 경우: 무시
+  // (supportsMultipleEditorsPerDocument: false 로 등록되어 있어 VSCode도 중복을 차단하지만
+  //  openWith 호출 전 단계에서 early return하여 불필요한 openWith 호출을 방지한다)
   if (editSessionRegistry.isOpeningOrActive(uri)) {
     return;
-  }
-
-  // tabGroups에서 이미 열린 Custom Editor 탭이 있는지 확인
-  // (resolveCustomTextEditor가 호출 중이거나 완료되었지만 beginSession이 아직 호출되지 않은 경우)
-  if (vscode.window.tabGroups) {
-    for (const group of vscode.window.tabGroups.all) {
-      for (const tab of group.tabs) {
-        const input = tab.input as { viewType?: string } | undefined;
-        if (input?.viewType === 'form-js.block-editor') {
-          // 이 URI에 대한 Custom Editor가 이미 열려 있는지 확인
-          // CustomEditorInput.uri를 직접 비교하기는 어려우므로, 탭이 있다는 것만으로 충분
-          // 같은 문서에 여러 Custom Editor가 열릴 수 없으므로 (supportsMultipleEditorsPerDocument: false)
-          // viewType만 확인해도 된다.
-          return;
-        }
-      }
-    }
   }
 
   // schema stash: provider가 resolveCustomTextEditor에서 consume

@@ -303,7 +303,7 @@ node, vitest
 - category: development
 - domain: fullstack
 - model: opus
-- status: [im]
+- status: [xx]
 - priority: critical
 - assignee: -
 - schedule: 2026-04-30 ~ 2026-05-01
