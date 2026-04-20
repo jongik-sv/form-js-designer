@@ -115,7 +115,7 @@ describe('EditSessionRegistry', () => {
   // ── onSessionChange 이벤트 ────────────────────────
 
   it('beginSession 시 "began" 이벤트가 발행된다', () => {
-    const listener = vi.fn<[SessionEvent], void>();
+    const listener = vi.fn<(event: SessionEvent) => void>();
     registry.onSessionChange(listener);
     const session = makeSession();
     registry.beginSession(session);
@@ -126,7 +126,7 @@ describe('EditSessionRegistry', () => {
   it('endSession 시 "ended" 이벤트가 발행된다', () => {
     const session = makeSession();
     registry.beginSession(session);
-    const listener = vi.fn<[SessionEvent], void>();
+    const listener = vi.fn<(event: SessionEvent) => void>();
     registry.onSessionChange(listener);
     registry.endSession(session.uri);
     expect(listener).toHaveBeenCalledOnce();

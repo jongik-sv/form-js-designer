@@ -3,8 +3,29 @@ import { buildHtml, generateNonce, FormJsBlockEditorProvider } from '../../../sr
 import { editSessionRegistry } from '../../../src/editor/editSession';
 import { pendingEditSchemas } from '../../../src/editor/openBlockEditorCommand';
 
-// vscode mock은 vitest.config.ts의 alias로 자동 주입됨
-import { Uri } from 'vscode';
+// customEditorProvider.ts 내부에서 require('vscode')를 동적으로 호출하므로
+// vi.mock으로 CommonJS require도 가로채야 한다.
+vi.mock('vscode', () => ({
+  Uri: {
+    file: (s: string) => ({
+      toString: () => `file://${s}`,
+      fsPath: s,
+    }),
+    joinPath: (base: { fsPath: string }, ...segs: string[]) => ({
+      toString: () => `file://${base.fsPath}/${segs.join('/')}`,
+      fsPath: `${base.fsPath}/${segs.join('/')}`,
+    }),
+    parse: (s: string) => ({ toString: () => s, fsPath: s }),
+  },
+  ViewColumn: { Beside: 2 },
+  window: { registerCustomEditorProvider: vi.fn() },
+  commands: { registerCommand: vi.fn(), executeCommand: vi.fn() },
+}));
+
+// Uri 팩토리는 vi.mock 내부 정의와 동일하게 인라인으로 사용
+function makeUri(path: string) {
+  return { toString: () => `file://${path}`, fsPath: path };
+}
 
 describe('generateNonce', () => {
   it('32자 alphanumeric 문자열을 반환한다', () => {
@@ -112,7 +133,7 @@ describe('FormJsBlockEditorProvider', () => {
   }
 
   it('resolveCustomTextEditor: webview.html에 CSP nonce가 포함된다', async () => {
-    const extensionUri = Uri.file('/ext');
+    const extensionUri = makeUri('/ext') as never;
     const provider = new FormJsBlockEditorProvider(extensionUri);
     const panel = makeWebviewPanel();
     const doc = makeDocument();
@@ -131,7 +152,7 @@ describe('FormJsBlockEditorProvider', () => {
     const uri = 'file:///test.md';
     pendingEditSchemas.set(uri, { mdStart: 5, mdEnd: 15, schema: '{"type":"default"}' });
 
-    const extensionUri = Uri.file('/ext');
+    const extensionUri = makeUri('/ext') as never;
     const provider = new FormJsBlockEditorProvider(extensionUri);
     const panel = makeWebviewPanel();
     const doc = makeDocument(uri);
@@ -143,7 +164,7 @@ describe('FormJsBlockEditorProvider', () => {
 
   it('resolveCustomTextEditor: EditSessionRegistry에 lock을 등록한다', async () => {
     const uri = 'file:///test.md';
-    const extensionUri = Uri.file('/ext');
+    const extensionUri = makeUri('/ext') as never;
     const provider = new FormJsBlockEditorProvider(extensionUri);
     const panel = makeWebviewPanel();
     const doc = makeDocument(uri);
@@ -157,7 +178,7 @@ describe('FormJsBlockEditorProvider', () => {
     const uri = 'file:///test.md';
     editSessionRegistry.beginSession({ uri, mdStart: 0, mdEnd: 5, panel: { dispose: vi.fn() } });
 
-    const extensionUri = Uri.file('/ext');
+    const extensionUri = makeUri('/ext') as never;
     const provider = new FormJsBlockEditorProvider(extensionUri);
     const panel = makeWebviewPanel();
     const doc = makeDocument(uri);
@@ -169,7 +190,7 @@ describe('FormJsBlockEditorProvider', () => {
 
   it('dispose 시 editSessionRegistry.endSession이 호출되어 lock이 해제된다', async () => {
     const uri = 'file:///test.md';
-    const extensionUri = Uri.file('/ext');
+    const extensionUri = makeUri('/ext') as never;
     const provider = new FormJsBlockEditorProvider(extensionUri);
     const panel = makeWebviewPanel();
     const doc = makeDocument(uri);
@@ -186,7 +207,7 @@ describe('FormJsBlockEditorProvider', () => {
     const broadcastFn = vi.fn();
     pendingEditSchemas.set(uri, { mdStart: 3, mdEnd: 7, schema: '{}' });
 
-    const extensionUri = Uri.file('/ext');
+    const extensionUri = makeUri('/ext') as never;
     const provider = new FormJsBlockEditorProvider(extensionUri, broadcastFn);
     const panel = makeWebviewPanel();
     const doc = makeDocument(uri);

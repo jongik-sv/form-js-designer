@@ -1,12 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { editSessionRegistry } from '../../../src/editor/editSession';
 import { pendingEditSchemas } from '../../../src/editor/openBlockEditorCommand';
+import * as vscode from 'vscode';
 
-// openBlockEditorCommand는 내부에서 require('vscode')를 동적으로 호출한다.
-// vi.mock으로 vscode를 모킹하여 executeCommand 호출을 추적한다.
-const executeCommandMock = vi.fn().mockResolvedValue(undefined);
-const revealMock = vi.fn();
-
+// openBlockEditorCommand는 내부에서 import * as vscode from 'vscode'를 사용한다.
+// vi.mock 팩토리는 호이스팅되므로 외부 변수 참조 금지 — vi.fn()을 직접 사용한다.
 vi.mock('vscode', () => ({
   ViewColumn: { Beside: 2 },
   Uri: {
@@ -14,20 +12,27 @@ vi.mock('vscode', () => ({
     file: (s: string) => ({ toString: () => `file://${s}`, fsPath: s }),
   },
   commands: {
-    executeCommand: executeCommandMock,
+    executeCommand: vi.fn().mockResolvedValue(undefined),
   },
   window: {
     registerCustomEditorProvider: vi.fn(),
   },
 }));
 
+// 모킹된 vscode.commands.executeCommand 참조
+function getExecuteCommandMock() {
+  return vi.mocked(vscode.commands.executeCommand);
+}
+
 describe('openBlockEditorCommand', () => {
+  let revealMock: ReturnType<typeof vi.fn>;
+
   beforeEach(() => {
     editSessionRegistry.disposeAll();
     pendingEditSchemas.clear();
-    executeCommandMock.mockClear();
-    revealMock.mockClear();
-    executeCommandMock.mockResolvedValue(undefined);
+    revealMock = vi.fn();
+    getExecuteCommandMock().mockClear();
+    getExecuteCommandMock().mockResolvedValue(undefined);
   });
 
   async function importCmd() {
@@ -55,7 +60,7 @@ describe('openBlockEditorCommand', () => {
   it('세션이 없을 때 vscode.openWith를 form-js.block-editor viewType으로 호출한다', async () => {
     const cmd = await importCmd();
     await cmd(baseArgs);
-    expect(executeCommandMock).toHaveBeenCalledWith(
+    expect(getExecuteCommandMock()).toHaveBeenCalledWith(
       'vscode.openWith',
       expect.anything(),
       'form-js.block-editor',
@@ -66,7 +71,7 @@ describe('openBlockEditorCommand', () => {
   it('viewColumn은 반드시 ViewColumn.Beside(2)이다', async () => {
     const cmd = await importCmd();
     await cmd(baseArgs);
-    const callArgs = executeCommandMock.mock.calls[0];
+    const callArgs = getExecuteCommandMock().mock.calls[0];
     expect(callArgs?.[3]).toBe(2);
   });
 
@@ -82,7 +87,7 @@ describe('openBlockEditorCommand', () => {
     const cmd = await importCmd();
     await cmd(baseArgs);
 
-    expect(executeCommandMock).not.toHaveBeenCalled();
+    expect(getExecuteCommandMock()).not.toHaveBeenCalled();
   });
 
   it('이미 활성 세션이 있으면 panel.reveal()을 호출하여 기존 패널로 포커스한다', async () => {
@@ -101,7 +106,7 @@ describe('openBlockEditorCommand', () => {
   });
 
   it('openWith 실패 시 pendingEditSchemas stash를 rollback한다', async () => {
-    executeCommandMock.mockRejectedValueOnce(new Error('open failed'));
+    getExecuteCommandMock().mockRejectedValueOnce(new Error('open failed'));
 
     const cmd = await importCmd();
     await expect(cmd(baseArgs)).rejects.toThrow('open failed');

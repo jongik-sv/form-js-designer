@@ -42,6 +42,8 @@ type SessionListener = (event: SessionEvent) => void;
 export class EditSessionRegistry {
   private readonly sessions = new Map<string, EditSession>();
   private readonly listeners: SessionListener[] = [];
+  /** openWith 호출 중인 URI들 (resolveCustomTextEditor가 호출될 때까지) */
+  private readonly openingURIs = new Set<string>();
 
   /**
    * 새 편집 세션을 시작한다.
@@ -113,6 +115,31 @@ export class EditSessionRegistry {
     }
     this.sessions.clear();
     this.listeners.length = 0;
+    this.openingURIs.clear();
+  }
+
+  /**
+   * openBlockEditorCommand에서 vscode.openWith 호출 시 opening 상태를 등록한다.
+   * @internal
+   */
+  markOpening(uri: string): void {
+    this.openingURIs.add(uri);
+  }
+
+  /**
+   * 이미 opening 또는 active 상태인지 확인한다.
+   * @internal
+   */
+  isOpeningOrActive(uri: string): boolean {
+    return this.openingURIs.has(uri) || this.sessions.has(uri);
+  }
+
+  /**
+   * resolveCustomTextEditor에서 beginSession 후 opening 상태를 해제한다.
+   * @internal
+   */
+  unmarkOpening(uri: string): void {
+    this.openingURIs.delete(uri);
   }
 
   private emit(event: SessionEvent): void {

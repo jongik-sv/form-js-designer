@@ -13,9 +13,9 @@
  * - dispose 시 lock 해제 + preview webviews에 `edit-closed` 브로드캐스트
  */
 
-import type * as vscodeType from 'vscode';
+import * as vscode from 'vscode';
 import { editSessionRegistry } from './editSession';
-import { pendingEditSchemas } from './openBlockEditorCommand';
+import { pendingEditSchemas, clearPendingOpen } from './openBlockEditorCommand';
 import type { EditOpenedMessage, EditClosedMessage } from '../shared/messages';
 
 /** preview webview panel 참조를 외부에서 주입하기 위한 콜백 타입 */
@@ -35,7 +35,7 @@ export class FormJsBlockEditorProvider {
    * @param broadcastFn - edit-closed를 모든 preview webview에 전파하는 콜백
    */
   constructor(
-    private readonly extensionUri: vscodeType.Uri,
+    private readonly extensionUri: vscode.Uri,
     private readonly broadcastFn: BroadcastFn = () => { /* no-op */ }
   ) {}
 
@@ -45,18 +45,15 @@ export class FormJsBlockEditorProvider {
    * `edit-opened` 메시지를 송신한다.
    */
   async resolveCustomTextEditor(
-    document: vscodeType.TextDocument,
-    webviewPanel: vscodeType.WebviewPanel,
-    _token: vscodeType.CancellationToken
+    document: vscode.TextDocument,
+    webviewPanel: vscode.WebviewPanel,
+    _token: vscode.CancellationToken
   ): Promise<void> {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const vscode = require('vscode') as typeof vscodeType;
-
     const uri = document.uri.toString();
 
-    // schema stash consume
+    // schema stash consume (openBlockEditorCommand가 설정한 스키마를 읽음)
     const pending = pendingEditSchemas.get(uri);
-    pendingEditSchemas.delete(uri);
+    // stash는 지우지 않음 — openBlockEditorCommand의 finally 또는 다음 호출에서 정리됨
 
     const schema = pending?.schema ?? '{"type":"default","components":[]}';
     const mdStart = pending?.mdStart ?? 0;
@@ -100,9 +97,13 @@ export class FormJsBlockEditorProvider {
 
     if (!sessionRegistered) {
       // 이미 세션이 있는 경우 (경쟁 상태) — 패널 닫기
+      clearPendingOpen(uri);  // opening 상태 해제
       webviewPanel.dispose();
       return;
     }
+
+    // beginSession 성공 후에도 opening 상태를 유지한다.
+    // onDidDispose에서만 clearPendingOpen을 호출하여 세션이 끝날 때까지 유지
 
     // edit-opened 메시지 송신
     // resolveCustomTextEditor 반환 후 webview HTML이 설정되므로 setImmediate로 지연
@@ -124,6 +125,9 @@ export class FormJsBlockEditorProvider {
     // dispose 훅: lock 해제 + preview broadcast
     webviewPanel.onDidDispose(() => {
       const ended = editSessionRegistry.endSession(uri);
+      // opening 상태 해제 (두 번째 openBlockEditorCommand가 이미 opening 상태로 보고 무시했다면 효과 없음)
+      // 대신 세션이 끝나면 다시 opening할 수 있도록 정리
+      clearPendingOpen(uri);
       if (ended) {
         const editClosedMsg: EditClosedMessage = {
           type: 'edit-closed',

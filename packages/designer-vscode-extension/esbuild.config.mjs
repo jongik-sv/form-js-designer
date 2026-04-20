@@ -60,6 +60,9 @@ if (isTestMode) {
     { in: 'test/integration/suite/preview.test.ts', out: 'dist/test/integration/suite/preview.test.js', external: ['vscode', 'mocha', 'assert', 'path'] },
     { in: 'test/integration/helpers/waitForElement.ts', out: 'dist/test/integration/helpers/waitForElement.js', external: [] },
     { in: 'test/integration/helpers/openPreview.ts', out: 'dist/test/integration/helpers/openPreview.js', external: ['vscode'] },
+    // TSK-02-01: Custom Editor 통합 테스트
+    { in: 'test/integration/suite/customEditor.test.ts', out: 'dist/test/integration/suite/customEditor.test.js', external: ['vscode', 'mocha', 'assert', 'path'] },
+    { in: 'test/integration/helpers/waitForCustomEditor.ts', out: 'dist/test/integration/helpers/waitForCustomEditor.js', external: ['vscode'] },
   ];
   for (const { in: entry, out, external } of testEntries) {
     testBundles.push(build({
