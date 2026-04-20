@@ -148,7 +148,7 @@ node, vitest
 
 ---
 
-## WP-01: Markdown 미리보기 렌더 (M1 MVP)
+## WP-01: Markdown 미리보기 렌더 (M1 MVP) ✅
 - schedule: 2026-04-23 ~ 2026-04-29
 - description: ` ```form-js ` 코드블록을 VSCode Markdown 미리보기에서 form-js-viewer로 렌더. read-only, submit no-op.
 
