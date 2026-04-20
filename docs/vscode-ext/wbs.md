@@ -340,7 +340,7 @@ node, vitest
 - category: development
 - domain: backend
 - model: sonnet
-- status: [ts]
+- status: [xx]
 - priority: high
 - assignee: -
 - schedule: 2026-05-01 ~ 2026-05-01

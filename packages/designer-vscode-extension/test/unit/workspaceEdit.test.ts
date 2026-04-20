@@ -167,14 +167,7 @@ describe('detectIndent with startPos', () => {
   });
 
   it('startPos 지역에서 2-space가 우세하면 2를 반환한다', () => {
-    // 지역(0~9번 줄)은 2-space 압도적, 전체는 4-space 압도적
-    const lines: string[] = [];
-    for (let i = 0; i < 10; i++) lines.push('  "key": 1,');  // 2-space x10
-    for (let i = 0; i < 100; i++) lines.push('    "key": 1,'); // 4-space x100
-    const doc = makeDoc(lines);
-    // startPos=5, 범위 [0, 25]: 2-space 10개 + 4-space 16개 → 4 우세
-    // 전체: 2-space 10 + 4-space 100 → 4
-    // 실제로 지역 범위에서 2-space만 있는 극단적 케이스를 테스트
+    // 5줄짜리 전체 2-space 문서 — startPos=2, 범위 [0, 4] 모두 2-space
     const smallLines = [...Array(5)].map(() => '  "x": 1');  // 2-space only
     const smallDoc = makeDoc(smallLines);
     const result = detectIndent(smallDoc as any, { line: 2 });
@@ -193,12 +186,12 @@ describe('detectIndent with startPos', () => {
   });
 
   it('startPos 지역 범위 판정 불가(들여쓰기 없음) 시 전체 문서 폴백으로 결과를 반환한다', () => {
-    // 지역(0~9): 들여쓰기 없음, 전체: 4-space 있음
+    // 0~4: 들여쓰기 없음(flat JSON), 5~9: 4-space
     const lines: string[] = [];
     for (let i = 0; i < 5; i++) lines.push('{"flat":"json"}'); // 들여쓰기 없음
     for (let i = 0; i < 5; i++) lines.push('    "deep": 1,');  // 4-space
     const doc = makeDoc(lines);
-    // startPos=2 → 범위 [0, 22] → 4-space 5개 → 4 반환
+    // startPos=2 → 지역 범위 [0, 9] (문서 전체) → 4-space 5개 → 4 반환
     const result = detectIndent(doc as any, { line: 2 });
     expect(result === 2 || result === 4).toBe(true);
   });
