@@ -59,12 +59,13 @@ function buildRangeFromOpen(doc: TextDocumentLike, openLine: number): Range | nu
     const text = doc.lineAt(i).text;
     if (isFenceClose(text)) {
       const bodyStart = openLine + 1;
-      const bodyEnd = i - 1;
-      if (bodyStart > bodyEnd) {
-        // 빈 펜스 — empty range (start == end at bodyStart)
+      const closeLine = i;
+      if (bodyStart >= closeLine) {
+        // 빈 펜스: 여는 줄 바로 다음이 닫는 줄 — empty range (start === end at bodyStart)
         const pos = new Position(bodyStart, 0);
         return new Range(pos, pos);
       }
+      const bodyEnd = closeLine - 1;
       const endLineText = doc.lineAt(bodyEnd).text;
       return new Range(
         new Position(bodyStart, 0),
@@ -97,16 +98,22 @@ function scanFullDocument(doc: TextDocumentLike): Range | null {
  * 탐색 순서:
  *   1. `mdStart` 힌트 위치를 먼저 확인한다.
  *   2. 힌트 위치에 form-js 펜스가 없으면 전체 문서를 선형 탐색(폴백)한다.
- *      (`mdEnd`는 힌트 검증 후 폴백으로 전환 시 더 이상 사용하지 않는다.)
+ *      (`mdEnd`는 PRD 계약 시그니처이며 향후 힌트 범위 검증에 사용될 수 있다.)
  *   3. 어디서도 찾지 못하면 `FenceNotFoundError`를 throw한다.
  *
  * @param doc - 탐색 대상 TextDocument (또는 호환 stub).
  * @param mdStart - 펜스 여는 줄 번호 힌트 (0-based).
- * @param _mdEnd - 펜스 닫는 줄 번호 힌트 (0-based). 현재는 폴백 전환 시 미사용 (향후 확장 여지).
+ * @param mdEnd - 펜스 닫는 줄 번호 힌트 (0-based). mdEnd is reserved for future hint-range validation.
  * @returns 펜스 본문의 `Range` (여는 ``` 다음 줄 ~ 닫는 ``` 직전 줄).
  * @throws {FenceNotFoundError} form-js 펜스 블록을 찾을 수 없는 경우.
  */
-export function locateFenceBody(doc: TextDocumentLike, mdStart: number, _mdEnd: number): Range {
+export function locateFenceBody(
+  doc: TextDocumentLike,
+  mdStart: number,
+  mdEnd: number
+): Range {
+  void mdEnd; // mdEnd is reserved for future hint-range validation
+
   // 1. 힌트 위치 확인
   if (mdStart >= 0 && mdStart < doc.lineCount) {
     const hintLine = doc.lineAt(mdStart).text;
@@ -127,3 +134,12 @@ export function locateFenceBody(doc: TextDocumentLike, mdStart: number, _mdEnd: 
   // 3. 못 찾으면 에러 throw
   throw new FenceNotFoundError();
 }
+
+/**
+ * `blockLocator` 네임스페이스 객체.
+ * `blockLocator.locateFenceBody(doc, mdStart, mdEnd)` 형태의 호출을 지원한다.
+ * named export `locateFenceBody`와 동일한 함수 참조 (하위 호환 유지).
+ */
+export const blockLocator = {
+  locateFenceBody,
+} as const;

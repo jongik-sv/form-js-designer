@@ -61,6 +61,18 @@ if (isTestMode) {
     { in: 'test/integration/suite/customComponents.test.ts', out: 'dist/test/integration/suite/customComponents.test.js', external: ['vscode', 'mocha', 'assert', 'path', 'fs'] },
     { in: 'test/integration/helpers/waitForElement.ts', out: 'dist/test/integration/helpers/waitForElement.js', external: [] },
     { in: 'test/integration/helpers/openPreview.ts', out: 'dist/test/integration/helpers/openPreview.js', external: ['vscode'] },
+    // TSK-02-01: Custom Editor 통합 테스트
+    { in: 'test/integration/suite/customEditor.test.ts', out: 'dist/test/integration/suite/customEditor.test.js', external: ['vscode', 'mocha', 'assert', 'path'] },
+    { in: 'test/integration/helpers/waitForCustomEditor.ts', out: 'dist/test/integration/helpers/waitForCustomEditor.js', external: ['vscode'] },
+    // TSK-02-03: 편집 버튼 통합 테스트
+    { in: 'test/integration/suite/editButton.test.ts', out: 'dist/test/integration/suite/editButton.test.js', external: ['vscode', 'mocha', 'assert', 'path', 'fs', 'markdown-it'] },
+    // TSK-02-04: 저장 & 충돌 통합 테스트
+    { in: 'test/integration/suite/saveAndConflict.test.ts', out: 'dist/test/integration/suite/saveAndConflict.test.js', external: ['vscode', 'mocha', 'assert', 'path', 'fs'] },
+    // TSK-02-05: 편집 시나리오 통합 테스트 및 헬퍼
+    { in: 'test/integration/suite/editScenarios.test.ts', out: 'dist/test/integration/suite/editScenarios.test.js', external: ['vscode', 'mocha', 'assert', 'path', 'fs'] },
+    { in: 'test/integration/helpers/openCustomEditor.ts', out: 'dist/test/integration/helpers/openCustomEditor.js', external: ['vscode'] },
+    { in: 'test/integration/helpers/waitForMessage.ts', out: 'dist/test/integration/helpers/waitForMessage.js', external: [] },
+    { in: 'test/integration/helpers/byteCompareFence.ts', out: 'dist/test/integration/helpers/byteCompareFence.js', external: [] },
   ];
   for (const { in: entry, out, external } of testEntries) {
     testBundles.push(build({

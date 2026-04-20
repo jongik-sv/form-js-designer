@@ -15,6 +15,10 @@
 import { createForm } from '@bpmn-io/form-js-viewer';
 import { LRUCache } from './lruCache';
 import { renderErrorBanner } from './errorBanner';
+import {
+  mountEditButton as mountEditButtonOverlay,
+  unlockAllButtons,
+} from './editButton';
 import type { BlockMountState, TestMountCompleteMessage } from '../shared/messages';
 // TSK-05-01: 커스텀 컴포넌트 모듈 주입 (Card/Tabs/Modal/TabPanel registry)
 import { customComponentsModule } from '../components';
@@ -157,6 +161,22 @@ function startThemeObserver(): void {
   });
 }
 
+// ── TSK-02-03: ✏️ 편집 버튼 오버레이 + single-editor lock + 메시지 송신 ──
+
+/**
+ * extension → preview 방향 메시지(`edit-closed`)를 처리한다.
+ *
+ * - `edit-closed`: 모든 ✏️ 버튼을 재활성화 (unlockAllButtons 위임)
+ */
+function handleEditMessage(event: MessageEvent): void {
+  const data = event.data as { type?: string };
+  if (!data?.type) return;
+
+  if (data.type === 'edit-closed') {
+    unlockAllButtons();
+  }
+}
+
 function init(): void {
   // DIAG: webview 진입 + DOM 스냅샷
   const blockCount = document.querySelectorAll('.form-js-block').length;
@@ -177,6 +197,14 @@ function init(): void {
       console.error('[form-js preview] mountViewers 실패:', err);
     });
   startThemeObserver();
+
+  // TSK-02-03: 각 블록에 ✏️ 오버레이 버튼 삽입 + edit-closed 메시지 리스너 등록
+  for (const block of getFormBlocks()) {
+    const mdStart = Number(block.dataset['mdStart'] ?? '0');
+    const mdEnd = Number(block.dataset['mdEnd'] ?? '0');
+    mountEditButtonOverlay(block, mdStart, mdEnd);
+  }
+  window.addEventListener('message', handleEditMessage);
 }
 
 if (typeof document !== 'undefined' && typeof window !== 'undefined') {

@@ -101,3 +101,64 @@
   background-color: transparent;
   border-left-color: currentColor;
 }
+
+/* ── TSK-02-03: ✏️ 편집 버튼 오버레이 스타일 (VSCode 테마 토큰) ─────── */
+
+.fjs-edit-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: 4px;
+  border: 1px solid var(--vscode-button-border, transparent);
+  background-color: var(--vscode-button-secondaryBackground, rgba(0, 0, 0, 0.15));
+  color: var(--vscode-button-secondaryForeground, inherit);
+  opacity: 0;
+  z-index: 10;
+  transition: opacity 0.15s ease;
+}
+
+.form-js-block:hover .fjs-edit-btn,
+.fjs-edit-btn:focus {
+  opacity: 1;
+}
+
+.fjs-edit-btn:hover {
+  background-color: var(--vscode-button-secondaryHoverBackground, rgba(0, 0, 0, 0.3));
+}
+
+.fjs-edit-btn:focus-visible {
+  outline: 2px solid var(--vscode-focusBorder, #007fd4);
+  outline-offset: 1px;
+}
+
+.fjs-edit-btn[aria-disabled="true"] {
+  opacity: 0.3;
+  pointer-events: none;
+  cursor: not-allowed;
+}
+
+/* High Contrast 모드: opacity 대신 visibility로 표시/숨김 */
+@media (forced-colors: active) {
+  .fjs-edit-btn {
+    opacity: 1;
+    visibility: hidden;
+  }
+
+  .form-js-block:hover .fjs-edit-btn,
+  .fjs-edit-btn:focus {
+    visibility: visible;
+  }
+
+  .fjs-edit-btn[aria-disabled="true"] {
+    visibility: hidden;
+  }
+}

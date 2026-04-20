@@ -12,6 +12,7 @@
  *
  * extension → webview:
  *   - `edit-opened`: 편집 모드 진입 시 초기 스키마 전달
+ *   - `edit-closed`: 편집 세션 종료 시 preview ✏️ 재활성화 신호 (TSK-02-01)
  *   - `save-result`: 저장 완료/실패 결과 전달
  *   - `source-updated`: 소스 파일이 외부에서 변경되어 스키마가 갱신됨
  */
@@ -20,18 +21,37 @@ export interface RequestEditMessage {
   type: 'request-edit';
   mdStart: number;
   mdEnd: number;
+  schema?: string;
+}
+
+/** extension → all preview webviews: 편집 세션 종료 시 ✏️ 재활성화 신호 (TSK-02-01) */
+export interface EditClosedMessage {
+  type: 'edit-closed';
+  mdStart: number;
+  mdEnd: number;
 }
 
 export interface EditOpenedMessage {
   type: 'edit-opened';
   schema: string;
+  uri: string;
   mdStart: number;
   mdEnd: number;
+  docVersion: number;
 }
 
 export interface SaveSchemaMessage {
   type: 'save-schema';
+  /** 대상 Markdown 파일 URI 문자열 */
+  uri: string;
+  /** 펜스 블록 시작 라인 (0-based) */
+  mdStart: number;
+  /** 펜스 블록 종료 라인 (0-based) */
+  mdEnd: number;
+  /** 직렬화된 스키마 JSON 문자열 */
   schema: string;
+  /** webview가 본 마지막 TextDocument.version */
+  docVersion: number;
 }
 
 export interface SaveResultMessage {
@@ -42,7 +62,10 @@ export interface SaveResultMessage {
 
 export interface SourceUpdatedMessage {
   type: 'source-updated';
-  schema: string;
+  /** 변경된 Markdown 파일 URI 문자열 */
+  uri: string;
+  /** 변경 후 TextDocument.version */
+  version: number;
 }
 
 /** preview.ts가 각 .form-js-block의 마운트 결과를 보고한다. */
@@ -64,6 +87,7 @@ export interface TestMountCompleteMessage {
 export type FormJsMessage =
   | RequestEditMessage
   | EditOpenedMessage
+  | EditClosedMessage
   | SaveSchemaMessage
   | SaveResultMessage
   | SourceUpdatedMessage
