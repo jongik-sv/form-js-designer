@@ -155,16 +155,29 @@ function startThemeObserver(): void {
 }
 
 function init(): void {
+  // DIAG: webview 진입 + DOM 스냅샷
+  const blockCount = document.querySelectorAll('.form-js-block').length;
+  const preCount = document.querySelectorAll('pre.form-js-source').length;
+  const fallbackCount = document.querySelectorAll('code.language-form-js').length;
+  console.log('[form-js DIAG preview] init running, readyState=', document.readyState,
+    'form-js-block=', blockCount,
+    'form-js-source pre=', preCount,
+    'fallback language-form-js=', fallbackCount);
   disposeAll();
   const themeKind = document.body.getAttribute('data-vscode-theme-kind') ?? '';
   applyTheme(themeKind);
-  mountViewers().catch((err) => {
-    console.error('[form-js preview] mountViewers 실패:', err);
-  });
+  mountViewers()
+    .then(() => {
+      console.log('[form-js DIAG preview] mountViewers resolved');
+    })
+    .catch((err) => {
+      console.error('[form-js preview] mountViewers 실패:', err);
+    });
   startThemeObserver();
 }
 
 if (typeof document !== 'undefined' && typeof window !== 'undefined') {
+  console.log('[form-js DIAG preview] script loaded in webview');
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
   } else {

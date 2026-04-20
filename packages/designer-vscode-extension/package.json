@@ -21,15 +21,13 @@
     "onStartupFinished"
   ],
   "contributes": {
-    "markdown": {
-      "markdownItPlugins": true,
-      "previewScripts": ["./dist/webview/preview.js"],
-      "previewStyles": [
-        "./media/form-js.css",
-        "./media/form-js-base.css",
-        "./media/form-js-block.css"
-      ]
-    },
+    "markdown.markdownItPlugins": true,
+    "markdown.previewScripts": ["./dist/webview/preview.js"],
+    "markdown.previewStyles": [
+      "./media/form-js.css",
+      "./media/form-js-base.css",
+      "./media/form-js-block.css"
+    ],
     "customEditors": [
       {
         "viewType": "formJsDesigner.formEditor",

@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "jq -e '(.tool_input.file_path // .tool_input.command // \"\") | test(\"\\\\.claire\")' >/dev/null 2>&1 && printf '{\"hookSpecificOutput\":{\"hookEventName\":\"PreToolUse\",\"permissionDecision\":\"deny\",\"permissionDecisionReason\":\"`.claire`는 `.claude`의 오타로 추정됩니다 — 경로를 다시 확인하세요.\"}}\\n' || true"
+          }
+        ]
+      }
+    ]
+  }
+}
