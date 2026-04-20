@@ -48,6 +48,16 @@ const schemaNoComponents: FormSchema = {
   id: 'no-comp',
 } as unknown as FormSchema;
 
+// dataStores를 포함하는 스키마 (data-store Feature 테스트용)
+const schemaWithDataStores: FormSchema = {
+  type: 'default',
+  id: 'store-test',
+  components: [{ id: 'f1', type: 'textfield', label: 'Name' }],
+  dataStores: [
+    { key: 'countryOptions', source: 'static', data: [{ label: 'KR', value: 'KR' }] },
+  ],
+} as unknown as FormSchema;
+
 describe('bootWithSchema', () => {
   let storage: MemoryStorage;
 
@@ -197,6 +207,60 @@ describe('bootWithSchema', () => {
 
     expect(result.usedFallback).toBe(true);
     expect(result.schema).toEqual(validSchema);
+  });
+
+  // -------------------------------------------------------------------------
+  // data-store Feature — storeData 케이스 3건
+  // -------------------------------------------------------------------------
+
+  it('(data-store 정상) dataStores 있는 schema → storeData에 해석 결과 포함', async () => {
+    const result = await bootWithSchema({
+      schema: schemaWithDataStores,
+      registry: mockRegistry,
+      storage,
+    });
+    expect(result.usedFallback).toBe(false);
+    expect(result.storeData).toEqual({
+      countryOptions: [{ label: 'KR', value: 'KR' }],
+    });
+  });
+
+  it('(data-store 필드 없음) dataStores 없는 schema → storeData {}이고 기존 3개 필드 유지', async () => {
+    const result = await bootWithSchema({
+      schema: validSchema,
+      registry: mockRegistry,
+      storage,
+    });
+    expect(result.storeData).toEqual({});
+    // 기존 필드 회귀 없음
+    expect(result.usedFallback).toBe(false);
+    expect(result.schema).toBe(validSchema);
+    expect(result.validation.ok).toBe(true);
+  });
+
+  it('(data-store fallback) validate 실패 + lastGood(dataStores 포함) → storeData는 lastGood의 dataStores에서 계산', async () => {
+    const lastGoodKey = 'designer.lastGood.storetest';
+    const lastGoodSchema: FormSchema = {
+      type: 'default',
+      components: [],
+      id: 'last-good-store',
+      dataStores: [
+        { key: 'savedOptions', source: 'static', data: [{ label: 'Saved', value: 'S' }] },
+      ],
+    } as unknown as FormSchema;
+    storage.setItem(lastGoodKey, JSON.stringify({ schema: lastGoodSchema, savedAt: Date.now() }));
+
+    const result = await bootWithSchema({
+      schema: schemaNoComponents,
+      registry: mockRegistry,
+      storage,
+      lastGoodKey,
+    });
+
+    expect(result.usedFallback).toBe(true);
+    expect(result.storeData).toEqual({
+      savedOptions: [{ label: 'Saved', value: 'S' }],
+    });
   });
 
   it('(엣지) SSR 환경(window undefined)에서 이벤트 발화가 no-op으로 처리된다', async () => {

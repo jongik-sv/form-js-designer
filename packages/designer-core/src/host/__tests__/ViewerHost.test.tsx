@@ -309,6 +309,62 @@ describe('ViewerHost', () => {
     });
   });
 
+  // -------------------------------------------------------------------------
+  // data-store Feature — storeData 머지 케이스 3건
+  // -------------------------------------------------------------------------
+
+  // 15. storeData + data 머지 → importSchema에 { ...storeData, ...data }로 전달
+  it('merges storeData and data when calling importSchema on mount', async () => {
+    const storeData = { countryOptions: [{ label: '대한민국', value: 'KR' }] };
+    const data = { country: 'KR' };
+
+    mountViewer({ schema: BASE_SCHEMA, data, storeData }, container);
+
+    await vi.waitFor(() => {
+      expect(lastFormInstance!.importSchema).toHaveBeenCalledWith(
+        BASE_SCHEMA,
+        { countryOptions: [{ label: '대한민국', value: 'KR' }], country: 'KR' },
+      );
+    });
+  });
+
+  // 16. 런타임 data가 storeData 동일 key보다 우선한다
+  it('runtime data wins over storeData for same key', async () => {
+    const storeData = { countryOptions: [{ label: '대한민국', value: 'KR' }] };
+    const data = { countryOptions: 'runtime-wins' };
+
+    mountViewer({ schema: BASE_SCHEMA, data, storeData }, container);
+
+    await vi.waitFor(() => {
+      const callArg = lastFormInstance!.importSchema.mock.calls[0]?.[1] as Record<string, unknown>;
+      expect(callArg['countryOptions']).toBe('runtime-wins');
+    });
+  });
+
+  // 17. data 변경 시 _update에도 merged data가 전달된다 ([data, storeData] dep)
+  it('calls _update with merged storeData+data when data prop changes', async () => {
+    const storeData = { countryOptions: [{ label: '대한민국', value: 'KR' }] };
+    mountViewer({ schema: BASE_SCHEMA, data: BASE_DATA, storeData }, container);
+
+    await vi.waitFor(() => {
+      expect(lastFormInstance!.importSchema).toHaveBeenCalledTimes(1);
+    });
+
+    const newData = { name: 'Bob' };
+    act(() => {
+      render(
+        <ViewerHost schema={BASE_SCHEMA} data={newData} storeData={storeData} />,
+        container,
+      );
+    });
+
+    await vi.waitFor(() => {
+      expect(lastFormInstance!._update).toHaveBeenCalledWith({
+        data: { countryOptions: [{ label: '대한민국', value: 'KR' }], name: 'Bob' },
+      });
+    });
+  });
+
   // 14. 에러 후 destroy 중복 호출 없음
   it('does not call destroy after onError if Form was never created successfully', async () => {
     const onError = vi.fn();

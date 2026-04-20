@@ -4,6 +4,7 @@
 
 import type { FormSchema, StorageLike } from '../transport/types';
 import type { ValidationResult } from '@form-js-designer/designer-core/validate';
+export type { DataStoreEntry, DataStoreError } from './resolveDataStores';
 
 // ---------------------------------------------------------------------------
 // ComponentRegistry — validateFormSchema duck-type
@@ -19,6 +20,8 @@ export interface BootResult {
   schema: FormSchema;
   usedFallback: boolean;
   validation: ValidationResult;
+  /** dataStores 해석 결과 — { [key]: data }. dataStores 없으면 {}. */
+  storeData: Record<string, unknown>;
 }
 
 // ---------------------------------------------------------------------------
