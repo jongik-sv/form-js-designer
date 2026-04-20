@@ -74,30 +74,30 @@
   border: 2px solid var(--fjs-border-color);
 }
 
-/* ── 마운트 오류 배너 ────────────────────────────────── */
+/* ── 스키마 오류 배너 — TSK-01-03 ────────────────────── */
 
-.form-js-mount-error {
+.form-js-block--error {
   display: flex;
   align-items: center;
   padding: 8px 12px;
   min-height: 40px;
-  background-color: rgba(255, 0, 0, 0.08);
-  border-left: 3px solid #f85149;
-  color: #f85149;
+  background-color: rgba(255, 170, 0, 0.10);
+  border-left: 3px solid #e6a817;
+  color: #b8860b;
   font-size: 12px;
   font-family: var(--vscode-font-family, monospace);
   border-radius: 0 4px 4px 0;
   word-break: break-word;
 }
 
-.form-js-block.theme-dark .form-js-mount-error {
-  background-color: rgba(248, 81, 73, 0.12);
-  color: #ff7b72;
-  border-left-color: #ff7b72;
+.form-js-block.theme-dark .form-js-block--error {
+  background-color: rgba(230, 168, 23, 0.12);
+  color: #f0c040;
+  border-left-color: #f0c040;
 }
 
-.form-js-block.theme-high-contrast .form-js-mount-error,
-.form-js-block.theme-high-contrast-light .form-js-mount-error {
+.form-js-block.theme-high-contrast .form-js-block--error,
+.form-js-block.theme-high-contrast-light .form-js-block--error {
   background-color: transparent;
   border-left-color: currentColor;
 }

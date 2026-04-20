@@ -11,12 +11,14 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 // ──────────────────────────────────────────────────────
 // vi.hoisted를 사용하여 호이스팅 안전한 mock 변수 선언
 // ──────────────────────────────────────────────────────
-const { mockDestroy, mockCreateForm } = vi.hoisted(() => {
+const { mockDestroy, mockImportSchema, mockCreateForm } = vi.hoisted(() => {
   const mockDestroy = vi.fn();
+  const mockImportSchema = vi.fn();
   const mockCreateForm = vi.fn(async (_options: unknown) => ({
     destroy: mockDestroy,
+    importSchema: mockImportSchema,
   }));
-  return { mockDestroy, mockCreateForm };
+  return { mockDestroy, mockImportSchema, mockCreateForm };
 });
 
 vi.mock('@bpmn-io/form-js-viewer', () => ({
@@ -28,6 +30,7 @@ import {
   disposeAll,
   applyTheme,
   instanceMap,
+  viewerCache,
 } from '../../src/markdown/preview';
 
 // ──────────────────────────────────────────────────────
@@ -70,11 +73,14 @@ beforeEach(() => {
   document.body.innerHTML = '';
   document.body.removeAttribute('data-vscode-theme-kind');
   instanceMap.clear();
+  viewerCache.clear();
   mockCreateForm.mockClear();
   mockDestroy.mockClear();
+  mockImportSchema.mockClear();
   // 기본 resolve 동작 복원
   mockCreateForm.mockImplementation(async (_options: unknown) => ({
     destroy: mockDestroy,
+    importSchema: mockImportSchema,
   }));
 });
 
@@ -169,7 +175,7 @@ describe('mountViewers: 엣지 케이스', () => {
     expect(mockCreateForm).toHaveBeenCalledTimes(1);
 
     // 오류 블록에 오류 배너가 렌더됨
-    const errorBanners = document.querySelectorAll('.form-js-mount-error');
+    const errorBanners = document.querySelectorAll('.form-js-block--error');
     expect(errorBanners.length).toBeGreaterThanOrEqual(1);
   });
 
@@ -181,7 +187,7 @@ describe('mountViewers: 엣지 케이스', () => {
 
     // 유효한 블록만 createForm 호출
     expect(mockCreateForm).toHaveBeenCalledTimes(1);
-    const errorBanners = document.querySelectorAll('.form-js-mount-error');
+    const errorBanners = document.querySelectorAll('.form-js-block--error');
     expect(errorBanners.length).toBeGreaterThanOrEqual(1);
   });
 
@@ -352,7 +358,7 @@ describe('mountViewers: createForm 오류 격리', () => {
     // 두 블록 모두 createForm 시도
     expect(mockCreateForm).toHaveBeenCalledTimes(2);
     // 오류 배너가 렌더됨
-    const errorBanners = document.querySelectorAll('.form-js-mount-error');
+    const errorBanners = document.querySelectorAll('.form-js-block--error');
     expect(errorBanners.length).toBeGreaterThanOrEqual(1);
   });
 
@@ -361,14 +367,14 @@ describe('mountViewers: createForm 오류 격리', () => {
     createBlockWithRawText('bad json', 'badId');
     await mountViewers();
 
-    const firstBanners = document.querySelectorAll('.form-js-mount-error');
+    const firstBanners = document.querySelectorAll('.form-js-block--error');
     expect(firstBanners.length).toBe(1);
 
     // 두 번째: 같은 블록에 다시 오류 발생 (mountViewers 재호출)
     await mountViewers();
 
     // 오류 배너가 중복되지 않고 1개여야 함
-    const secondBanners = document.querySelectorAll('.form-js-mount-error');
+    const secondBanners = document.querySelectorAll('.form-js-block--error');
     expect(secondBanners.length).toBe(1);
   });
 });
