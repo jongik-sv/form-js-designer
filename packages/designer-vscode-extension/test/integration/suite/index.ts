@@ -12,7 +12,7 @@ export async function run(): Promise<void> {
   const mocha = new Mocha({
     ui: 'tdd',
     color: true,
-    timeout: 30000, // 개별 테스트 타임아웃 30s
+    timeout: 60000, // TSK-02-05: 편집 시나리오 통합 테스트 대응 — 60s로 상향
   });
 
   const testsRoot = path.resolve(__dirname, '.');

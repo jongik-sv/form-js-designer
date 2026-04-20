@@ -34,7 +34,7 @@ export function extendMarkdownIt(md: MarkdownIt): MarkdownIt {
  */
 export function activate(
   context?: import('vscode').ExtensionContext
-): void {
+): { editSessionRegistry: typeof editSessionRegistry } {
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const vscode = require('vscode') as typeof import('vscode');
@@ -128,6 +128,10 @@ export function activate(
 
   // TSK-01-04: test bridge
   if (process.env['FORM_JS_TEST_MODE'] === '1') {
+    // TSK-02-05: globalThis에 editSessionRegistry 등록 (ext.exports 타이밍 우회)
+    // extension host와 테스트 번들이 동일 Node.js process를 공유하므로 globalThis를 통해 공유 가능
+    (globalThis as Record<string, unknown>)['__formJsEditSessionRegistry'] = editSessionRegistry;
+
     try {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       const vscode = require('vscode') as typeof import('vscode');
@@ -150,7 +154,17 @@ export function activate(
       // extension host 환경이 아닌 경우 무시
     }
   }
+
+  // TSK-02-05: ext.exports로 editSessionRegistry 싱글톤을 공유 (테스트 번들 분리 문제 해결)
+  return { editSessionRegistry };
 }
+
+/**
+ * TSK-02-05: 통합 테스트에서 extension host의 editSessionRegistry 싱글톤에 접근할 수 있도록
+ * re-export한다. 테스트 번들은 별도 인스턴스를 가지므로 ext.exports.editSessionRegistry를
+ * 통해 공유 인스턴스에 접근해야 한다.
+ */
+export { editSessionRegistry };
 
 export function deactivate(): void {
   // TSK-02-04: sourceWatcher 구독 해제
