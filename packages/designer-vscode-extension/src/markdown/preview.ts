@@ -26,6 +26,11 @@ const THEME_CLASS_MAP: Record<string, string> = {
 /** 모든 테마 클래스 목록 */
 const ALL_THEME_CLASSES = Object.values(THEME_CLASS_MAP);
 
+/** 현재 문서의 모든 .form-js-block 요소를 배열로 반환한다 */
+function getFormBlocks(): HTMLElement[] {
+  return Array.from(document.querySelectorAll<HTMLElement>('.form-js-block'));
+}
+
 /**
  * 모든 .form-js-block 요소에 viewer를 마운트한다.
  *
@@ -34,9 +39,7 @@ const ALL_THEME_CLASSES = Object.values(THEME_CLASS_MAP);
  * - 인스턴스를 instanceMap에 data-schema-id 키로 등록
  */
 export async function mountViewers(): Promise<void> {
-  const blocks = Array.from(
-    document.querySelectorAll<HTMLElement>('.form-js-block')
-  );
+  const blocks = getFormBlocks();
 
   for (const block of blocks) {
     const schemaId = block.dataset['schemaId'] ?? '';
@@ -97,9 +100,7 @@ export function disposeAll(): void {
  */
 export function applyTheme(themeKind: string): void {
   const targetClass = THEME_CLASS_MAP[themeKind];
-  const blocks = Array.from(
-    document.querySelectorAll<HTMLElement>('.form-js-block')
-  );
+  const blocks = getFormBlocks();
 
   for (const block of blocks) {
     // 기존 테마 클래스 모두 제거
