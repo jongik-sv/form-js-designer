@@ -44,22 +44,21 @@ export function activate(
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     const vscode = require('vscode') as typeof import('vscode');
-    const { updateMountState, getMountStateForUri } = require('./testBridge') as typeof import('./testBridge');
+    const { getMountStateForUri, clearMountState } = require('./testBridge') as typeof import('./testBridge');
 
-    const disposable = vscode.commands.registerCommand(
+    const getMountStateCmd = vscode.commands.registerCommand(
       'form-js._test.getMountState',
-      (uri: string) => {
-        return getMountStateForUri(uri);
-      }
+      (uri: string) => getMountStateForUri(uri)
+    );
+
+    const clearMountStateCmd = vscode.commands.registerCommand(
+      'form-js._test.clearMountState',
+      (uri?: string) => clearMountState(uri)
     );
 
     if (context) {
-      context.subscriptions.push(disposable);
+      context.subscriptions.push(getMountStateCmd, clearMountStateCmd);
     }
-
-    // updateMountState를 전역으로 노출하여 webview 메시지 핸들러에서 사용 가능하게 함
-    // (실제 패널 메시지 수신 핸들러는 향후 Custom Editor 구현 시 추가)
-    (globalThis as Record<string, unknown>)['__formJsUpdateMountState'] = updateMountState;
   } catch {
     // extension host 환경이 아닌 경우 무시
   }

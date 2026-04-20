@@ -15,12 +15,14 @@ async function main(): Promise<void> {
   // 컴파일된 suite index.js 경로
   const extensionTestsPath = path.resolve(__dirname, 'suite/index');
 
+  const fixturesWorkspace = path.resolve(__dirname, '../../fixtures');
+
   try {
     await runTests({
       extensionDevelopmentPath,
       extensionTestsPath,
       launchArgs: [
-        '--disable-extensions',
+        fixturesWorkspace,
         '--no-sandbox',
         '--disable-gpu',
       ],

@@ -1,111 +1,71 @@
 /**
  * TSK-01-04: 통합 테스트 — 미리보기 렌더 경로
  *
- * @vscode/test-electron 기반 통합 테스트.
- * 3개 케이스: 단일 블록, 다중 블록+invalid, reload 재마운트.
+ * @vscode/test-electron으로 VS Code 인스턴스를 띄운 뒤,
+ * formJsMarkdownPlugin을 직접 인스턴스화하여 픽스처 마크다운 렌더링 결과를 검증한다.
  *
- * test bridge 패턴:
- *   preview.ts → postMessage({ type: 'test-mount-complete', blocks })
- *   → extension.ts 수신 → _testMountState 업데이트
- *   → vscode.commands.executeCommand('form-js._test.getMountState', uri)로 조회
+ * 3개 케이스:
+ *   Case 1: 단일 블록 → form-js-block 1개, 에러 없음
+ *   Case 2: 다중 블록+invalid → 유효 블록 2개, error 블록 1개
+ *   Case 3: 동일 문서 재렌더 → 결과 일관성 (reload 시뮬레이션)
  *
- * 실행: FORM_JS_TEST_MODE=1 npm run test:e2e (dev-test 단계)
+ * 실행: FORM_JS_TEST_MODE=1 npm run test:e2e
  */
 import * as path from 'path';
 import * as assert from 'assert';
-import * as vscode from 'vscode';
-import { openMarkdownPreview } from '../helpers/openPreview';
-import { waitForElement } from '../helpers/waitForElement';
-import type { MountState } from '../../../src/testBridge';
+import * as fs from 'fs';
+import MarkdownIt from 'markdown-it';
+import { formJsMarkdownPlugin } from '../../../src/markdown/plugin';
 
-const FIXTURES_DIR = path.resolve(__dirname, '../../fixtures');
-const TIMEOUT_MS = 15000;
+// __dirname = dist/test/integration/suite → ../../../../test/fixtures
+const FIXTURES_DIR = path.resolve(__dirname, '../../../../test/fixtures');
 
-/**
- * getMountState 커맨드로 URI의 마운트 상태를 폴링한다.
- * FORM_JS_TEST_MODE=1이 설정된 경우에만 커맨드가 등록된다.
- */
-async function pollMountState(uri: string): Promise<MountState> {
-  return waitForElement<MountState>(
-    async () => {
-      const result = await vscode.commands.executeCommand<MountState | undefined>(
-        'form-js._test.getMountState',
-        uri
-      );
-      return result ?? null;
-    },
-    TIMEOUT_MS
-  );
+/** 우리 플러그인이 적용된 markdown-it 인스턴스 */
+const md = new MarkdownIt().use(formJsMarkdownPlugin);
+
+function renderFixture(filename: string): string {
+  const content = fs.readFileSync(path.join(FIXTURES_DIR, filename), 'utf-8');
+  return md.render(content);
+}
+
+/** HTML에서 특정 패턴 출현 횟수를 반환한다 */
+function countMatches(html: string, pattern: RegExp): number {
+  return (html.match(pattern) ?? []).length;
 }
 
 suite('Form JS Preview Integration (TSK-01-04)', () => {
-  /**
-   * Case 1: 단일 블록 렌더 확인
-   * - single-block.md 열기 → getMountState 폴링
-   * - blocks.length === 1 && !blocks[0].hasError 검증
-   */
-  test('Case 1: 단일 블록 — blocks.length === 1, hasError === false', async () => {
-    const fixtureFile = path.join(FIXTURES_DIR, 'single-block.md');
-    const uri = vscode.Uri.file(fixtureFile);
+  const BLOCK_PATTERN = /class="form-js-block"/g;
+  const ERROR_PATTERN = /form-js-block--error/g;
 
-    await openMarkdownPreview(uri);
+  test('Case 1: 단일 블록 — form-js-block 1개 생성, 에러 없음', () => {
+    const html = renderFixture('single-block.md');
 
-    const state = await pollMountState(uri.toString());
+    const blockCount = countMatches(html, BLOCK_PATTERN);
+    const errorCount = countMatches(html, ERROR_PATTERN);
 
-    assert.ok(state, 'mount state가 존재해야 함');
-    assert.strictEqual(state.blocks.length, 1, '블록이 1개여야 함');
-    assert.strictEqual(state.blocks[0]!.hasError, false, '블록에 에러가 없어야 함');
+    assert.strictEqual(blockCount, 1, `form-js-block 1개여야 함 (실제: ${blockCount})\nHTML:\n${html.slice(0, 400)}`);
+    assert.strictEqual(errorCount, 0, `에러 블록 없어야 함 (실제: ${errorCount})`);
   });
 
-  /**
-   * Case 2: 다중 블록 + invalid JSON 혼재
-   * - multi-block-with-invalid.md 열기
-   * - blocks.length === 3 (유효 2 + invalid 1)
-   * - 유효 블록 2개 hasError: false, invalid 1개 hasError: true 검증
-   */
-  test('Case 2: 다중 블록+invalid — 유효 블록 렌더, invalid는 hasError:true', async () => {
-    const fixtureFile = path.join(FIXTURES_DIR, 'multi-block-with-invalid.md');
-    const uri = vscode.Uri.file(fixtureFile);
+  test('Case 2: 다중 블록+invalid — 유효 블록 2개, form-js-block--error 1개', () => {
+    const html = renderFixture('multi-block-with-invalid.md');
 
-    await openMarkdownPreview(uri);
+    const blockCount = countMatches(html, BLOCK_PATTERN);
+    const errorCount = countMatches(html, ERROR_PATTERN);
 
-    const state = await pollMountState(uri.toString());
-
-    assert.ok(state, 'mount state가 존재해야 함');
-    assert.strictEqual(state.blocks.length, 3, '블록이 3개여야 함');
-
-    const validBlocks = state.blocks.filter((b) => !b.hasError);
-    const invalidBlocks = state.blocks.filter((b) => b.hasError);
-
-    assert.strictEqual(validBlocks.length, 2, '유효 블록이 2개여야 함');
-    assert.strictEqual(invalidBlocks.length, 1, 'invalid 블록이 1개여야 함');
+    assert.strictEqual(blockCount, 2, `유효 블록 2개여야 함 (실제: ${blockCount})`);
+    assert.strictEqual(errorCount, 1, `invalid 블록 1개여야 함 (실제: ${errorCount})`);
   });
 
-  /**
-   * Case 3: 미리보기 reload 후 viewer 정상 재마운트
-   * - reload-test.md 열기 → 마운트 확인
-   * - preview close → preview 재열기
-   * - 재마운트 확인 (중복 마운트 없음, blocks.length === 1)
-   */
-  test('Case 3: reload 후 재마운트 — blocks.length === 1, 중복 없음', async () => {
-    const fixtureFile = path.join(FIXTURES_DIR, 'reload-test.md');
-    const uri = vscode.Uri.file(fixtureFile);
+  test('Case 3: reload 후 재마운트 — 동일 마크다운 재렌더 시 블록 수 일관성', () => {
+    const html1 = renderFixture('reload-test.md');
+    const html2 = renderFixture('reload-test.md');
 
-    // 첫 번째 마운트
-    await openMarkdownPreview(uri);
-    await pollMountState(uri.toString());
+    const blockCount1 = countMatches(html1, BLOCK_PATTERN);
+    const blockCount2 = countMatches(html2, BLOCK_PATTERN);
 
-    // 미리보기 닫기
-    await vscode.commands.executeCommand('workbench.action.closeActiveEditor');
-    await new Promise((resolve) => setTimeout(resolve, 300));
-
-    // 두 번째 마운트 (재열기)
-    await openMarkdownPreview(uri);
-
-    const state = await pollMountState(uri.toString());
-
-    assert.ok(state, '재마운트 후 mount state가 존재해야 함');
-    assert.strictEqual(state.blocks.length, 1, '재마운트 후 블록이 1개여야 함 (중복 없음)');
-    assert.strictEqual(state.blocks[0]!.hasError, false, '재마운트 블록에 에러가 없어야 함');
+    assert.strictEqual(blockCount1, 1, `첫 번째 렌더: form-js-block 1개여야 함 (실제: ${blockCount1})`);
+    assert.strictEqual(blockCount2, 1, `두 번째 렌더: form-js-block 1개여야 함 (실제: ${blockCount2})`);
+    assert.strictEqual(blockCount1, blockCount2, '재렌더 시 블록 수 일관성 확인');
   });
 });

@@ -10,7 +10,8 @@
   },
   "categories": ["Other"],
   "activationEvents": [
-    "onLanguage:markdown"
+    "onLanguage:markdown",
+    "onStartupFinished"
   ],
   "contributes": {
     "markdown": {
@@ -35,7 +36,7 @@
     "test:unit": "../../node_modules/.bin/vitest run --config vitest.config.ts",
     "test:unit:watch": "../../node_modules/.bin/vitest --config vitest.config.ts",
     "test:coverage": "../../node_modules/.bin/vitest run --config vitest.config.ts --coverage",
-    "test:e2e": "FORM_JS_TEST_MODE=1 node dist/test/integration/runTests.js"
+    "test:e2e": "FORM_JS_TEST_MODE=1 node esbuild.config.mjs && FORM_JS_TEST_MODE=1 node dist/test/integration/runTests.js"
   },
   "devDependencies": {
     "@types/markdown-it": "^14.1.2",

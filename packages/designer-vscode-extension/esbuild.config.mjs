@@ -24,6 +24,23 @@ const commonOptions = {
   logLevel: 'info',
 };
 
+/**
+ * watch 모드용 onRebuild 핸들러를 생성한다.
+ * @param {string} label 로그 식별 레이블
+ * @returns {{ onRebuild: function }}
+ */
+function makeWatchHandler(label) {
+  return {
+    onRebuild(error) {
+      if (error) {
+        console.error(`[esbuild] ${label} 재빌드 실패:`, error);
+      } else {
+        console.log(`[esbuild] ${label} 재빌드 완료`);
+      }
+    },
+  };
+}
+
 /** 1. Webview preview script — browser IIFE */
 const previewOptions = {
   ...commonOptions,
@@ -46,15 +63,7 @@ const previewOptions = {
 };
 
 if (isWatch) {
-  previewOptions.watch = {
-    onRebuild(error) {
-      if (error) {
-        console.error('[esbuild] preview 번들 재빌드 실패:', error);
-      } else {
-        console.log('[esbuild] preview 번들 재빌드 완료');
-      }
-    },
-  };
+  previewOptions.watch = makeWatchHandler('preview 번들');
 }
 
 const previewBundle = build(previewOptions);
@@ -72,15 +81,7 @@ const extensionOptions = {
 };
 
 if (isWatch) {
-  extensionOptions.watch = {
-    onRebuild(error) {
-      if (error) {
-        console.error('[esbuild] extension 번들 재빌드 실패:', error);
-      } else {
-        console.log('[esbuild] extension 번들 재빌드 완료');
-      }
-    },
-  };
+  extensionOptions.watch = makeWatchHandler('extension 번들');
 }
 
 const extensionBundle = build(extensionOptions);
@@ -100,15 +101,7 @@ if (process.env['FORM_JS_TEST_MODE'] === '1') {
   };
 
   if (isWatch) {
-    testRunnerOptions.watch = {
-      onRebuild(error) {
-        if (error) {
-          console.error('[esbuild] test runner 재빌드 실패:', error);
-        } else {
-          console.log('[esbuild] test runner 재빌드 완료');
-        }
-      },
-    };
+    testRunnerOptions.watch = makeWatchHandler('test runner');
   }
 
   testBundles.push(build(testRunnerOptions));
@@ -125,15 +118,7 @@ if (process.env['FORM_JS_TEST_MODE'] === '1') {
   };
 
   if (isWatch) {
-    testSuiteOptions.watch = {
-      onRebuild(error) {
-        if (error) {
-          console.error('[esbuild] test suite 재빌드 실패:', error);
-        } else {
-          console.log('[esbuild] test suite 재빌드 완료');
-        }
-      },
-    };
+    testSuiteOptions.watch = makeWatchHandler('test suite');
   }
 
   testBundles.push(build(testSuiteOptions));
@@ -150,15 +135,7 @@ if (process.env['FORM_JS_TEST_MODE'] === '1') {
   };
 
   if (isWatch) {
-    previewTestOptions.watch = {
-      onRebuild(error) {
-        if (error) {
-          console.error('[esbuild] preview.test 재빌드 실패:', error);
-        } else {
-          console.log('[esbuild] preview.test 재빌드 완료');
-        }
-      },
-    };
+    previewTestOptions.watch = makeWatchHandler('preview.test');
   }
 
   testBundles.push(build(previewTestOptions));
@@ -175,15 +152,7 @@ if (process.env['FORM_JS_TEST_MODE'] === '1') {
   };
 
   if (isWatch) {
-    waitForElementOptions.watch = {
-      onRebuild(error) {
-        if (error) {
-          console.error('[esbuild] waitForElement 재빌드 실패:', error);
-        } else {
-          console.log('[esbuild] waitForElement 재빌드 완료');
-        }
-      },
-    };
+    waitForElementOptions.watch = makeWatchHandler('waitForElement');
   }
 
   testBundles.push(build(waitForElementOptions));
@@ -199,15 +168,7 @@ if (process.env['FORM_JS_TEST_MODE'] === '1') {
   };
 
   if (isWatch) {
-    openPreviewOptions.watch = {
-      onRebuild(error) {
-        if (error) {
-          console.error('[esbuild] openPreview 재빌드 실패:', error);
-        } else {
-          console.log('[esbuild] openPreview 재빌드 완료');
-        }
-      },
-    };
+    openPreviewOptions.watch = makeWatchHandler('openPreview');
   }
 
   testBundles.push(build(openPreviewOptions));

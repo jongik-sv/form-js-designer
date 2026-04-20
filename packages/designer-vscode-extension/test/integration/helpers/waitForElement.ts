@@ -15,7 +15,8 @@
 
 const POLL_INTERVAL_MS = 50;
 
-type MaybeFalsy<T> = T | undefined | null | false | Promise<T | undefined | null | false>;
+/** 폴링 조건 함수의 반환 타입: 동기 또는 비동기 falsy/truthy 값 */
+type ConditionFn<T> = () => T | null | undefined | false | Promise<T | null | undefined | false>;
 
 /**
  * fn()이 truthy를 반환할 때까지 폴링 대기한다.
@@ -27,7 +28,7 @@ type MaybeFalsy<T> = T | undefined | null | false | Promise<T | undefined | null
  * @throws 타임아웃 초과 시 `waitForElement timed out after ${timeoutMs}ms`
  */
 export function waitForElement<T>(
-  fn: () => MaybeFalsy<T>,
+  fn: ConditionFn<T>,
   timeoutMs: number = 15000
 ): Promise<T> {
   return new Promise<T>((resolve, reject) => {

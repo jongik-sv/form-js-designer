@@ -34,7 +34,7 @@ export function createTestMountState(blocks: BlockMountState[]): MountState {
  * @param blocks 마운트된 블록 목록
  */
 export function updateMountState(uri: string, blocks: BlockMountState[]): void {
-  _testMountState.set(uri, createTestMountState(blocks));
+  _testMountState.set(uri, { blocks });
 }
 
 /**

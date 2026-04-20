@@ -15,6 +15,8 @@ const PREVIEW_OPEN_DELAY_MS = 200;
  * @param uri 열 문서의 URI
  */
 export async function openMarkdownPreview(uri: vscode.Uri): Promise<void> {
+  const doc = await vscode.workspace.openTextDocument(uri);
+  await vscode.window.showTextDocument(doc, { preview: false });
   await vscode.commands.executeCommand('markdown.showPreview', uri);
   // preview panel이 등록될 때까지 짧은 딜레이
   await delay(PREVIEW_OPEN_DELAY_MS);
