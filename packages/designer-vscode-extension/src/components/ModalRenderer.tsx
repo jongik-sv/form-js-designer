@@ -11,7 +11,7 @@
  * 제약: 외부 다이얼로그 라이브러리 금지 — Preact createPortal + native <dialog> 사용
  */
 import { h } from 'preact';
-import { useState, useRef, useEffect } from 'preact/hooks';
+import { useState, useRef, useEffect, useCallback } from 'preact/hooks';
 import { createPortal } from 'preact/compat';
 import { defineComponent, ChildrenSlot } from '@form-js-designer/designer-core';
 import type { PureRenderProps, ContainerField, FieldSchema, PropsSchema } from '@form-js-designer/designer-core';
@@ -76,13 +76,14 @@ function ModalRendererRender(props: PureRenderProps<ModalRendererSchema>) {
   const [isOpen, setIsOpen] = useState(false);
   const dialogRef = useRef<HTMLDialogElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
+  const portalContainerRef = useRef<HTMLElement | null>(null);
 
-  const openModal = () => setIsOpen(true);
+  const openModal = useCallback(() => setIsOpen(true), []);
 
-  const closeModal = () => {
+  const closeModal = useCallback(() => {
     setIsOpen(false);
     triggerRef.current?.focus();
-  };
+  }, []);
 
   // isOpen 변화에 따라 showModal / close 호출
   useEffect(() => {
@@ -106,6 +107,12 @@ function ModalRendererRender(props: PureRenderProps<ModalRendererSchema>) {
     }
   }, [isOpen]);
 
+  // portal root — .form-js-block 내부 노드 (마운트 시 1회 결정)
+  useEffect(() => {
+    const hostEl = triggerRef.current?.closest('.form-js-block') ?? null;
+    portalContainerRef.current = getPortalRoot(hostEl);
+  }, []);
+
   // focus trap 핸들러 등록
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -116,31 +123,23 @@ function ModalRendererRender(props: PureRenderProps<ModalRendererSchema>) {
   }, []);
 
   // backdrop mousedown → 닫기
-  const handleDialogMouseDown = (e: MouseEvent) => {
+  const handleDialogMouseDown = useCallback((e: MouseEvent) => {
     const dialog = dialogRef.current;
     if (!dialog) return;
     const rect = dialog.getBoundingClientRect();
-    const outside =
+    const isOutside =
       e.clientX < rect.left ||
       e.clientX > rect.right ||
       e.clientY < rect.top ||
       e.clientY > rect.bottom;
-    if (outside) closeModal();
-  };
+    if (isOutside) closeModal();
+  }, [closeModal]);
 
   // native dialog cancel 이벤트(Esc) → 닫기
-  const handleCancel = (e: Event) => {
+  const handleCancel = useCallback((e: Event) => {
     e.preventDefault();
     closeModal();
-  };
-
-  // portal root — .form-js-block 내부 노드
-  const hostEl =
-    typeof document !== 'undefined'
-      ? (triggerRef.current?.closest('.form-js-block') ?? null)
-      : null;
-  const portalContainer =
-    typeof document !== 'undefined' ? getPortalRoot(hostEl) : null;
+  }, [closeModal]);
 
   const dialogContent = (
     <dialog
@@ -175,7 +174,9 @@ function ModalRendererRender(props: PureRenderProps<ModalRendererSchema>) {
       >
         {trigger.label}
       </button>
-      {portalContainer ? createPortal(dialogContent, portalContainer) : dialogContent}
+      {portalContainerRef.current
+        ? createPortal(dialogContent, portalContainerRef.current)
+        : dialogContent}
     </div>
   );
 }
