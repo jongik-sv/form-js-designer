@@ -12,12 +12,21 @@
  *
  * extension → webview:
  *   - `edit-opened`: 편집 모드 진입 시 초기 스키마 전달
+ *   - `edit-closed`: 편집 세션 종료 시 preview ✏️ 재활성화 신호 (TSK-02-01)
  *   - `save-result`: 저장 완료/실패 결과 전달
  *   - `source-updated`: 소스 파일이 외부에서 변경되어 스키마가 갱신됨
  */
 
 export interface RequestEditMessage {
   type: 'request-edit';
+  mdStart: number;
+  mdEnd: number;
+  schema?: string;
+}
+
+/** extension → all preview webviews: 편집 세션 종료 시 ✏️ 재활성화 신호 (TSK-02-01) */
+export interface EditClosedMessage {
+  type: 'edit-closed';
   mdStart: number;
   mdEnd: number;
 }
@@ -64,6 +73,7 @@ export interface TestMountCompleteMessage {
 export type FormJsMessage =
   | RequestEditMessage
   | EditOpenedMessage
+  | EditClosedMessage
   | SaveSchemaMessage
   | SaveResultMessage
   | SourceUpdatedMessage

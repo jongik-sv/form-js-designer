@@ -18,7 +18,8 @@
   "main": "./dist/extension.cjs",
   "activationEvents": [
     "onLanguage:markdown",
-    "onStartupFinished"
+    "onStartupFinished",
+    "onCustomEditor:form-js.block-editor"
   ],
   "contributes": {
     "markdown": {
@@ -30,12 +31,26 @@
         "./media/form-js-block.css"
       ]
     },
+    "commands": [
+      {
+        "command": "formJs.openBlockEditor",
+        "title": "form-js: Open Block Editor"
+      }
+    ],
     "customEditors": [
       {
         "viewType": "formJsDesigner.formEditor",
         "displayName": "Form.js Designer",
         "selector": [
           { "filenamePattern": "*.form.json" }
+        ],
+        "priority": "option"
+      },
+      {
+        "viewType": "form-js.block-editor",
+        "displayName": "form-js Block Editor",
+        "selector": [
+          { "filenamePattern": "*.md" }
         ],
         "priority": "option"
       }

@@ -62,3 +62,16 @@ export class Range {
     return !positionOrRange.isBefore(this.start) && !positionOrRange.isAfter(this.end);
   }
 }
+
+/** WorkspaceEdit mock — replace 연산을 내부 배열에 누적한다 */
+export class WorkspaceEdit {
+  readonly _replacements: Array<{ uri: unknown; range: Range; newText: string }> = [];
+
+  replace(uri: unknown, range: Range, newText: string): void {
+    this._replacements.push({ uri, range, newText });
+  }
+
+  get size(): number {
+    return this._replacements.length;
+  }
+}

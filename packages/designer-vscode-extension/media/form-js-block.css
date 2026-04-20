@@ -101,3 +101,38 @@
   background-color: transparent;
   border-left-color: currentColor;
 }
+
+/* ── TSK-02-01: ✏️ 편집 버튼 최소 스타일 ─────────────── */
+
+.form-js-edit-button {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  display: none;
+  padding: 2px 4px;
+  font-size: 14px;
+  line-height: 1;
+  text-decoration: none;
+  cursor: pointer;
+  border-radius: 3px;
+  background-color: rgba(0, 0, 0, 0.15);
+  color: inherit;
+  opacity: 0.8;
+  z-index: 10;
+  transition: opacity 0.15s ease;
+}
+
+.form-js-block:hover .form-js-edit-button {
+  display: inline-block;
+}
+
+.form-js-edit-button:hover {
+  opacity: 1;
+  background-color: rgba(0, 0, 0, 0.3);
+}
+
+.form-js-edit-button[aria-disabled="true"] {
+  opacity: 0.3;
+  pointer-events: none;
+  cursor: not-allowed;
+}

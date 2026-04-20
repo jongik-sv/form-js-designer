@@ -154,6 +154,82 @@ function startThemeObserver(): void {
   });
 }
 
+// ── TSK-02-01: ✏️ 편집 버튼 + edit-opened/edit-closed 핸들링 ────────────
+
+/**
+ * `.form-js-block` 우상단에 ✏️ 편집 버튼(anchor)을 삽입한다.
+ *
+ * 버튼은 `command:formJs.openBlockEditor?<URI-encoded JSON>` 링크로
+ * extension host의 `formJs.openBlockEditor` 커맨드를 활성화한다.
+ *
+ * @param block - `.form-js-block` DOM 요소
+ */
+export function mountEditButton(block: HTMLElement): void {
+  // 이미 버튼이 있으면 중복 삽입 방지
+  if (block.querySelector('.form-js-edit-button')) return;
+
+  const schema = block.dataset['schema'] ?? '';
+  const mdStart = block.dataset['mdStart'] ?? '0';
+  const mdEnd = block.dataset['mdEnd'] ?? '0';
+  const docUri = block.dataset['docUri'] ?? '';
+
+  const args = JSON.stringify({
+    uri: docUri,
+    mdStart: Number(mdStart),
+    mdEnd: Number(mdEnd),
+    schema,
+  });
+
+  const encodedArgs = encodeURIComponent(args);
+  const href = `command:formJs.openBlockEditor?${encodedArgs}`;
+
+  const btn = document.createElement('a');
+  btn.className = 'form-js-edit-button';
+  btn.href = href;
+  btn.title = 'form-js 블록 편집';
+  btn.setAttribute('aria-label', 'form-js 블록 편집');
+  btn.textContent = '✏️';
+
+  block.appendChild(btn);
+}
+
+/**
+ * extension → preview 방향 메시지(`edit-opened`, `edit-closed`)를 처리한다.
+ *
+ * - `edit-opened`: 해당 블록의 ✏️ 버튼을 비활성(aria-disabled)
+ * - `edit-closed`: 해당 블록의 ✏️ 버튼을 재활성
+ */
+export function handleEditMessage(
+  event: MessageEvent,
+  getBlocks: () => HTMLElement[] = getFormBlocks
+): void {
+  const data = event.data as { type?: string; mdStart?: number; mdEnd?: number };
+  if (!data?.type) return;
+
+  if (data.type === 'edit-opened' || data.type === 'edit-closed') {
+    const blocks = getBlocks();
+    for (const block of blocks) {
+      const blockStart = Number(block.dataset['mdStart'] ?? '-1');
+      const blockEnd = Number(block.dataset['mdEnd'] ?? '-1');
+
+      if (blockStart === data.mdStart && blockEnd === data.mdEnd) {
+        const btn = block.querySelector<HTMLElement>('.form-js-edit-button');
+        if (!btn) continue;
+
+        if (data.type === 'edit-opened') {
+          btn.setAttribute('aria-disabled', 'true');
+          btn.style.pointerEvents = 'none';
+          btn.style.opacity = '0.4';
+        } else {
+          btn.removeAttribute('aria-disabled');
+          btn.style.pointerEvents = '';
+          btn.style.opacity = '';
+        }
+      }
+    }
+  }
+}
+
 function init(): void {
   disposeAll();
   const themeKind = document.body.getAttribute('data-vscode-theme-kind') ?? '';
@@ -162,6 +238,12 @@ function init(): void {
     console.error('[form-js preview] mountViewers 실패:', err);
   });
   startThemeObserver();
+
+  // TSK-02-01: 각 블록에 ✏️ 버튼 삽입 + edit 메시지 리스너 등록
+  for (const block of getFormBlocks()) {
+    mountEditButton(block);
+  }
+  window.addEventListener('message', (event) => handleEditMessage(event));
 }
 
 if (typeof document !== 'undefined' && typeof window !== 'undefined') {
