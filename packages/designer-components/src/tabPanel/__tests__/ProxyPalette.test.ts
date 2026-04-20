@@ -52,12 +52,11 @@ describe('Proxy-based palette hiding', () => {
     expect(config?.type).toBe('tabPanel');
   });
 
-  it('other components (card, stack, tabs) remain enumerable', () => {
+  it('other components (card, tabs) remain enumerable', () => {
     const ff = createMockFormFields();
     invokeRegistration(ff);
     const keys = Object.entries(ff._formFields).map(([k]) => k);
     expect(keys).toContain('card');
-    expect(keys).toContain('stack');
     expect(keys).toContain('tabs');
   });
 

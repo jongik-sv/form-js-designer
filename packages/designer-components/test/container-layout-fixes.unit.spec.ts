@@ -1,13 +1,12 @@
 /**
  * container-layout-fixes — Unit Tests (TDD Red→Green)
  *
- * Bug 1: Card/Stack에 escapeGridRender:false 누락
+ * Bug 1: Card에 escapeGridRender:false 누락
  * Bug 2: CSS grid 음수마진 오버플로우 (CSS 직접 확인 불가 → defineComponent 경유 config 확인)
  * Bug 3: Tabs per-tab components 미구현
  */
 import { describe, it, expect } from 'vitest';
 import { CardComponent } from '../src/card/index';
-import { StackComponent } from '../src/stack/index';
 import { ModalComponent } from '../src/modal/Modal';
 import { TabsComponent } from '../src/tabs/Tabs';
 
@@ -19,10 +18,6 @@ describe('Bug 1 — escapeGridRender: false must be explicitly set on containers
     // undefined → falsy이지만 form-js가 Column wrapper를 쓰지 않음
     // false → 명시적으로 Column wrapper를 적용해 grid 가로배치 활성화
     expect(CardComponent.component.config.escapeGridRender).toBe(false);
-  });
-
-  it('StackComponent.config.escapeGridRender is false (not undefined)', () => {
-    expect(StackComponent.component.config.escapeGridRender).toBe(false);
   });
 
   it('ModalComponent.config.escapeGridRender is already false (regression guard)', () => {
@@ -40,11 +35,6 @@ describe('Bug 1 — escapeGridRender: false must be explicitly set on containers
 describe('Bug 1 — container create() includes components array', () => {
   it('CardComponent create() returns components: []', () => {
     const schema = CardComponent.create();
-    expect(Array.isArray((schema as Record<string, unknown>)['components'])).toBe(true);
-  });
-
-  it('StackComponent create() returns components: []', () => {
-    const schema = StackComponent.create();
     expect(Array.isArray((schema as Record<string, unknown>)['components'])).toBe(true);
   });
 

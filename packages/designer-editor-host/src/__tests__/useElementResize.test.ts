@@ -371,4 +371,45 @@ describe('useElementResize', () => {
       expect(result.current.value).toBe(230);
     });
   });
+
+  describe('startDrag overrideStartValue', () => {
+    it('uses override as baseline instead of current value (drag delta added to override)', () => {
+      const onCommit = vi.fn();
+      const { result } = renderHook(() =>
+        useElementResize({ axis: 'y', initial: 75, min: 36, max: 2000, onCommit }),
+      );
+
+      const target = makeDragTarget();
+      const downEvent = makePointerEvent('pointerdown', { clientY: 300, pointerId: 1 });
+      Object.defineProperty(downEvent, 'currentTarget', { value: target });
+
+      // override baseline = 308 (실측된 자연 높이), value 는 아직 75
+      act(() => result.current.startDrag(downEvent, 308));
+
+      // 50px 아래로 드래그
+      const moveEvent = makePointerEvent('pointermove', { clientY: 350 });
+      act(() => window.dispatchEvent(moveEvent));
+
+      // value = 308 + (350-300) = 358 (state 이 아닌 override 기준)
+      expect(result.current.value).toBe(358);
+
+      const upEvent = makePointerEvent('pointerup', { clientY: 350 });
+      act(() => window.dispatchEvent(upEvent));
+      expect(onCommit).toHaveBeenCalledWith(358);
+    });
+
+    it('override is clamped to min/max', () => {
+      const { result } = renderHook(() =>
+        useElementResize({ axis: 'y', initial: 100, min: 50, max: 500 }),
+      );
+
+      const target = makeDragTarget();
+      const downEvent = makePointerEvent('pointerdown', { clientY: 0, pointerId: 1 });
+      Object.defineProperty(downEvent, 'currentTarget', { value: target });
+
+      act(() => result.current.startDrag(downEvent, 9999));
+      // override 9999 → clamp 500
+      expect(result.current.value).toBe(500);
+    });
+  });
 });

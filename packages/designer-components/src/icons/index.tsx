@@ -71,44 +71,6 @@ export const CardIcon: ComponentType<IconProps> = (props) => (
   </svg>
 );
 
-export const StackIcon: ComponentType<IconProps> = (props) => (
-  <svg {...SVG_BASE} {...props}>
-    <rect
-      x={9}
-      y={11}
-      width={36}
-      height={8}
-      rx={2}
-      fill="currentColor"
-      fillOpacity={0.12}
-      stroke="currentColor"
-      strokeWidth={2}
-    />
-    <rect
-      x={9}
-      y={23}
-      width={36}
-      height={8}
-      rx={2}
-      fill="currentColor"
-      fillOpacity={0.12}
-      stroke="currentColor"
-      strokeWidth={2}
-    />
-    <rect
-      x={9}
-      y={35}
-      width={36}
-      height={8}
-      rx={2}
-      fill="currentColor"
-      fillOpacity={0.12}
-      stroke="currentColor"
-      strokeWidth={2}
-    />
-  </svg>
-);
-
 export const TabsIcon: ComponentType<IconProps> = (props) => (
   <svg {...SVG_BASE} {...props}>
     <rect

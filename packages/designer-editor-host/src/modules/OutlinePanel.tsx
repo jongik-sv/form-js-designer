@@ -17,7 +17,7 @@ export interface OutlinePanelProps {
 const VIRTUAL_ROOT_ID = '__outline_root__';
 
 /** 컨테이너 타입 목록: inside 드롭 가능 여부 판단에 사용 */
-const CONTAINER_TYPES = new Set(['card', 'stack', 'modal', 'tabPanel', 'tabs']);
+const CONTAINER_TYPES = new Set(['card', 'modal', 'tabPanel', 'tabs']);
 
 function wrapWithVirtualRoot(nodes: OutlineNode[]): OutlineNode {
   return {

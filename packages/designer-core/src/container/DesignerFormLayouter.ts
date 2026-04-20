@@ -2,13 +2,13 @@
  * DesignerFormLayouter — FormLayouter 서브클래스.
  *
  * 기본 FormLayouter의 calculateLayout은 'default'/'group'/'dynamiclist' 타입만
- * row 추적 대상으로 인정한다. 커스텀 container(card/stack/tabs/modal)를 포함하려면
+ * row 추적 대상으로 인정한다. 커스텀 container(card/tabs/modal)를 포함하려면
  * field.type을 임시로 'group'으로 치환하여 부모 구현을 통과시킨다.
  */
 import { FormLayouter } from '@bpmn-io/form-js-viewer';
 
 /** 커스텀 컨테이너 타입 목록 — designer-components 등록 타입과 동기화 유지 */
-const DESIGNER_CONTAINER_TYPES = new Set<string>(['card', 'stack', 'tabs', 'modal', 'tabPanel']);
+const DESIGNER_CONTAINER_TYPES = new Set<string>(['card', 'tabs', 'modal', 'tabPanel']);
 
 const BUILTIN_GROUPLIKE = new Set<string>(['default', 'group', 'dynamiclist']);
 

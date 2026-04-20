@@ -13,7 +13,7 @@ import { DesignerComponentsModule } from '@form-js-designer/designer-components'
 import { LayoutHeightModule } from '@form-js-designer/designer-runtime';
 
 // Viewer에도 에디터와 동일한 커스텀 container/component 모듈을 주입해야
-// tabs/tabPanel/card/modal/stack 등이 렌더링되고, 삭제 시 잔여 DOM 없이 깔끔하게
+// tabs/tabPanel/card/modal 등이 렌더링되고, 삭제 시 잔여 DOM 없이 깔끔하게
 // 재임포트된다. Button 과 Table 은 form-js native 컴포넌트를 그대로 사용한다.
 // DesignerContainerModule: formLayouter override (커스텀 container 렌더 필수)
 // DesignerComponentsModule: 커스텀 컴포넌트 타입 등록

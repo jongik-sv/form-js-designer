@@ -21,10 +21,15 @@ describe('getCLIRegistry', () => {
     // SYNC with packages/designer-components/src/index.ts
     const registry = getCLIRegistry();
     expect(registry.has('card')).toBe(true);
-    expect(registry.has('stack')).toBe(true);
     expect(registry.has('button')).toBe(true);
     expect(registry.has('tabs')).toBe(true);
     expect(registry.has('modal')).toBe(true);
+  });
+
+  it('stack 타입은 제거되어 false 반환', () => {
+    // Stack 컴포넌트는 deprecation 이후 제거됨. breaking change 회귀 가드.
+    const registry = getCLIRegistry();
+    expect(registry.has('stack')).toBe(false);
   });
 
   it('미등록 타입 has() false 반환', () => {

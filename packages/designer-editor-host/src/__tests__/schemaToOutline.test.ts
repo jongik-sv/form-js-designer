@@ -70,7 +70,7 @@ describe('schemaToOutline', () => {
           type: 'card',
           label: 'My Card',
           components: [
-            { id: 'stack-1', type: 'stack' },
+            { id: 'inner-1', type: 'card' },
             { id: 'btn-1', type: 'button', label: 'OK' },
           ],
         },
@@ -82,7 +82,7 @@ describe('schemaToOutline', () => {
     expect(cardNode.id).toBe('card-1');
     expect(cardNode.type).toBe('card');
     expect(cardNode.children).toHaveLength(2);
-    expect(cardNode.children[0]).toMatchObject({ id: 'stack-1', type: 'stack', children: [] });
+    expect(cardNode.children[0]).toMatchObject({ id: 'inner-1', type: 'card', children: [] });
     expect(cardNode.children[1]).toMatchObject({ id: 'btn-1', type: 'button', label: 'OK', children: [] });
   });
 
@@ -95,8 +95,8 @@ describe('schemaToOutline', () => {
           type: 'card',
           components: [
             {
-              id: 'stack-1',
-              type: 'stack',
+              id: 'inner-1',
+              type: 'card',
               components: [
                 { id: 'btn-1', type: 'button', label: 'Deep' },
               ],

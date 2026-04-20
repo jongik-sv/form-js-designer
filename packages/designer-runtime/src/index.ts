@@ -31,10 +31,6 @@ export type {
 export { initWatermarkMonitor } from './watermark/index';
 export type { MonitorOptions, Dispose } from './watermark/index';
 
-// layout height module
+// layout height module — 컴포넌트 높이만 (row 높이는 제거됨)
 export { LayoutHeightModule, LayoutHeightService, applyLayoutHeight, LAYOUT_HEIGHT_TARGET_TYPES } from './modules/index';
 export type { ApplierField, LayoutHeightTargetType } from './modules/index';
-
-// row height applier — TSK-12-03
-export { applyRowHeight, ROW_HEIGHT_MIN, ROW_HEIGHT_MAX } from './modules/index';
-export type { RowLike, FormLayouterLike, ApplierFieldWithRow } from './modules/index';

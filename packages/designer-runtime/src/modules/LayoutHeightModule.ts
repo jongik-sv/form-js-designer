@@ -11,8 +11,6 @@
 
 import { applyLayoutHeight } from './LayoutHeightApplier';
 import type { ApplierField } from './LayoutHeightApplier';
-import { applyRowHeight } from './RowLayoutHeightApplier';
-import type { FormLayouterLike } from './RowLayoutHeightApplier';
 
 interface EventBusLike {
   on(event: string, handler: (...args: unknown[]) => void): void;
@@ -24,26 +22,22 @@ interface FormFieldRegistryLike {
 
 /**
  * LayoutHeightService — DI 서비스 클래스.
- * $inject: ['eventBus', 'formFieldRegistry', 'formLayouter']
- * formLayouter는 optional (viewer에 없을 수 있음)
+ * $inject: ['eventBus', 'formFieldRegistry']
  */
 export class LayoutHeightService {
-  static $inject = ['eventBus', 'formFieldRegistry', 'formLayouter'];
+  static $inject = ['eventBus', 'formFieldRegistry'];
 
   private readonly eventBus: EventBusLike;
   private readonly formFieldRegistry: FormFieldRegistryLike;
-  private readonly formLayouter: FormLayouterLike | undefined;
   // form-js config.container 또는 fallback
   private readonly root: ParentNode;
 
   constructor(
     eventBus: EventBusLike,
     formFieldRegistry: FormFieldRegistryLike,
-    formLayouter?: FormLayouterLike,
   ) {
     this.eventBus = eventBus;
     this.formFieldRegistry = formFieldRegistry;
-    this.formLayouter = formLayouter;
 
     // DOM root: .fjs-container 우선, 없으면 document fallback
     this.root = (
@@ -68,11 +62,17 @@ export class LayoutHeightService {
     for (const event of [
       'import.done',
       'elements.changed',
-      'commandStack.formField.edit.postExecuted',
       'form.layoutCalculated',
     ]) {
       this.eventBus.on(event, () => this._applyAll());
     }
+
+    // editor에서 edit.postExecuted 직후 Preact가 field DOM을 재렌더하며 inline style을 덮어쓸 수 있다.
+    // 즉시 1회 적용(viewer / 테스트 호환) + rAF 1회 적용(rerender 이후 복원)으로 양쪽 모두 보장.
+    this.eventBus.on('commandStack.formField.edit.postExecuted', () => {
+      this._applyAll();
+      scheduleApply();
+    });
 
     // remove / add 는 DOM insert/remove 전에 발화할 수 있으므로 rAF 지연
     // remove.postExecuted: formLayouter._rows 갱신이 이벤트 이후에 완료될 수 있음
@@ -87,7 +87,6 @@ export class LayoutHeightService {
   private _applyAll(): void {
     const fields = this.formFieldRegistry.getAll();
     applyLayoutHeight(this.root, fields);
-    applyRowHeight(this.root, fields, this.formLayouter);
   }
 }
 

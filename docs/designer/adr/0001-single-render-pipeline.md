@@ -5,7 +5,7 @@
 - **승격일**: 2026-04-17
 - **결정자**: jongik-sv (repo owner)
 - **검증 커밋**: `2e36d6a` — *feat: Phase 0 spike validates ADR-0001 single render pipeline*
-- **관련 문서**: [PRD §4 #4-1](../PRD.md), [TRD §7](../TRD.md), [Spike README](../../packages/designer-core/spike/wysiwyg/README.md)
+- **관련 문서**: [PRD §4 #4-1](../PRD.md), [TRD §7](../TRD.md), [Spike README](../../../packages/designer-core/spike/wysiwyg/README.md)
 
 ---
 

@@ -5,7 +5,7 @@
  * 브라우저 의존(Preact, DOM shim) 없이 Node.js에서만 실행된다.
  *
  * SYNC with:
- *   - packages/designer-components/src/index.ts (card, stack, tabs, modal)
+ *   - packages/designer-components/src/index.ts (card, tabs, modal)
  *   - @bpmn-io/form-js-viewer built-in field types (textfield, number, table, ...)
  *
  * 위 패키지에 신규 타입이 추가되면 이 목록도 동기화해야 한다.
@@ -38,7 +38,6 @@ const FORM_JS_BASE_TYPES = new Set([
 // Note: 'button' / 'table' 은 form-js 기본 타입에도 포함되므로 중복 등록 불필요
 const DESIGNER_COMPONENTS_TYPES = new Set([
   'card',
-  'stack',
   'tabs',
   'modal',
 ]);

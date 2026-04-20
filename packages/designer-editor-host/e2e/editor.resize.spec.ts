@@ -1,15 +1,9 @@
 /**
- * editor.resize.spec.ts — TSK-12-04 통합 E2E 스펙
+ * editor.resize.spec.ts — 컴포넌트 높이 E2E 스펙 (row 높이 기능은 제거됨)
  *
- * 3가지 리사이즈 경로를 단일 스펙에서 커버한다:
+ * 2가지 리사이즈 경로:
  * 1. 컴포넌트 핸들 드래그 → layout.height 설정
- * 2. 행 핸들 드래그 → layout.rowHeight / min-height 증가
- * 3. propsPanel 숫자 입력 → layout.height === 300
- *
- * 수락 기준 (TSK-12-04):
- * - Playwright `editor.resize.spec.ts` 3 케이스 green
- * - 각 케이스는 팔레트 드래그·드롭으로 에디터 진입 (URL 직접 입력 금지)
- * - 브라우저에서 핵심 UI 요소(palette·resize-handle·props-panel)가 실제 표시
+ * 2. propsPanel 숫자 입력 → layout.height === 300
  *
  * 참고: baseURL http://localhost:5173 (playwright.config.ts)
  */
@@ -50,7 +44,7 @@ async function dragHandleBy(page: PW, selector: string, deltaY: number) {
   await page.waitForTimeout(300);
 }
 
-test.describe('Editor Resize — TSK-12-04 통합 스펙', () => {
+test.describe('Editor Resize — 컴포넌트 높이', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
     await page.waitForSelector('[data-testid="editor-root"]', { timeout: 15000 });
@@ -102,39 +96,9 @@ test.describe('Editor Resize — TSK-12-04 통합 스펙', () => {
   });
 
   // ────────────────────────────────────────────────────────────
-  // 케이스 2 — 행 핸들 드래그 → min-height 증가
+  // 케이스 2 — propsPanel 숫자 입력 → layout.height === 300
   // ────────────────────────────────────────────────────────────
-  test('케이스2: 행 핸들 드래그 → .fjs-layout-row style.minHeight 비어있지 않음', async ({ page }) => {
-    // (클릭 경로) textfield 드롭
-    await dropToCanvas(page, 'textfield');
-    await page.waitForSelector('.fjs-form-field-textfield', { timeout: 10000 });
-
-    // 컴포넌트 클릭 → 선택
-    await page.locator('.fjs-form-field-textfield').first().click();
-
-    // 행 높이 변경 전 측정 (dragHandleBy 내부에서 handle 표시 확인)
-    const rowBoxBefore = await page.locator('.fjs-layout-row').first().boundingBox();
-    const heightBefore = rowBoxBefore?.height ?? 0;
-
-    // 핸들 드래그 +160px (내부에서 row-resize-handle 표시 확인)
-    await dragHandleBy(page, '[data-testid="row-resize-handle"]', 160);
-    await page.waitForTimeout(200); // DOM 안정화 추가 대기
-
-    // min-height가 빈 문자열이 아님을 확인 (rowHeight 적용됨)
-    const rowEl = page.locator('.fjs-layout-row').first();
-    const minHeight = await rowEl.evaluate((el) => (el as HTMLElement).style.minHeight);
-    expect(minHeight).not.toBe('');
-
-    // 행 높이가 증가했는지도 확인
-    const rowBoxAfter = await page.locator('.fjs-layout-row').first().boundingBox();
-    const heightAfter = rowBoxAfter?.height ?? 0;
-    expect(heightAfter).toBeGreaterThan(heightBefore);
-  });
-
-  // ────────────────────────────────────────────────────────────
-  // 케이스 3 — propsPanel 숫자 입력 → layout.height === 300
-  // ────────────────────────────────────────────────────────────
-  test('케이스3: propsPanel props-entry-layout.height 숫자 입력 → schema layout.height === 300', async ({ page }) => {
+  test('케이스2: propsPanel props-entry-layout.height 숫자 입력 → schema layout.height === 300', async ({ page }) => {
     // (클릭 경로) textarea 드롭
     await dropToCanvas(page, 'textarea');
     await page.waitForSelector('.fjs-form-field-textarea', { timeout: 10000 });

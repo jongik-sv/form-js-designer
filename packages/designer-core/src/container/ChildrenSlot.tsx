@@ -9,7 +9,6 @@ import { h, Fragment } from 'preact';
 import { useContext } from 'preact/hooks';
 import { FormContext, FormRenderContext, FormField } from '@bpmn-io/form-js-viewer';
 import type { ContainerField } from '../types';
-import { RowResizeHandle } from './RowResizeHandle';
 
 void h;
 
@@ -85,7 +84,6 @@ function Rows(props: { field: ContainerField }): h.JSX.Element {
               // FormField는 form-js-viewer가 export — field 필수, 나머지는 내부에서 service 조회
               return <FormField key={childId} field={childField as never} />;
             })}
-            <RowResizeHandle row={{ id: row.id, components: rowComponents }} parentField={field} />
           </Row>
         );
       })}

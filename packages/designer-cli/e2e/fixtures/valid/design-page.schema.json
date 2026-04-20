@@ -3,26 +3,18 @@
   "type": "default",
   "components": [
     {
-      "type": "stack",
-      "id": "stack-1716700001",
-      "direction": "vertical",
-      "gap": 2,
+      "type": "card",
+      "id": "card-1716700002",
+      "header": "",
+      "padding": "md",
+      "elevation": 1,
+      "headerTag": "h3",
       "components": [
         {
-          "type": "card",
-          "id": "card-1716700002",
-          "header": "",
-          "padding": "md",
-          "elevation": 1,
-          "headerTag": "h3",
-          "components": [
-            {
-              "type": "button",
-              "id": "button-1716700003",
-              "label": "",
-              "action": "submit"
-            }
-          ]
+          "type": "button",
+          "id": "button-1716700003",
+          "label": "",
+          "action": "submit"
         }
       ]
     }

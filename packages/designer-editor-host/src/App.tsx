@@ -40,7 +40,6 @@ import { ValidationBadge } from './components/ValidationBadge';
 import { PanelSplitter } from './components/PanelSplitter';
 import { SidePanelToggle } from './components/SidePanelToggle';
 import { ComponentResizeOverlay } from './components/ComponentResizeOverlay';
-import { RowResizeOverlay } from './components/RowResizeOverlay';
 import { usePanelResize } from './hooks/usePanelResize';
 import { installPropsPanelFocusGuard } from './hooks/usePropsPanelFocusGuard';
 import { useSidePanelTab } from './router';
@@ -271,10 +270,6 @@ export function App(): h.JSX.Element {
               editorInstanceRef.current 도 반드시 채워져 있음이 보장된다. */}
           {services.eventBus && editorInstanceRef.current && (
             <ComponentResizeOverlay editor={editorInstanceRef.current} />
-          )}
-          {/* TSK-12-03: 행 높이 리사이즈 핸들 — default 루트 행 대응 */}
-          {services.eventBus && editorInstanceRef.current && (
-            <RowResizeOverlay editor={editorInstanceRef.current} />
           )}
         </div>
       </div>

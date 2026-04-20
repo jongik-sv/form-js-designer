@@ -31,7 +31,7 @@ const VIEWER_MODULES: unknown[] = [
 // 간단한 테스트용 registry mock
 const mockRegistry = {
   get: (type: string) => {
-    const types = ['card', 'textfield', 'button', 'stack', 'tabs', 'default'];
+    const types = ['card', 'textfield', 'button', 'tabs', 'default'];
     return types.includes(type) ? {} : undefined;
   },
 };
