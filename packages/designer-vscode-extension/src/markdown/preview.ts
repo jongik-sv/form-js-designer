@@ -16,6 +16,8 @@ import { createForm } from '@bpmn-io/form-js-viewer';
 import { LRUCache } from './lruCache';
 import { renderErrorBanner } from './errorBanner';
 import type { BlockMountState, TestMountCompleteMessage } from '../shared/messages';
+// TSK-05-01: 커스텀 컴포넌트 모듈 주입 (Card/Tabs/Modal/TabPanel registry)
+import { customComponentsModule } from '../components';
 
 declare const FORM_JS_TEST_BRIDGE: boolean;
 
@@ -75,6 +77,7 @@ export async function mountViewers(): Promise<void> {
         const instance = await createForm({
           container: block,
           schema,
+          additionalModules: [customComponentsModule],
           properties: { readOnly: true },
         });
         if (schemaId) {

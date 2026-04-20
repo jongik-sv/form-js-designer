@@ -727,7 +727,7 @@ node, vitest
 - category: development
 - domain: frontend
 - model: opus
-- status: [dd]
+- status: [xx]
 - priority: critical
 - assignee: -
 - schedule: 2026-05-09 ~ 2026-05-10

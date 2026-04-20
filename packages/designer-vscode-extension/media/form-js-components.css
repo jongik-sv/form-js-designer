@@ -1,0 +1,81 @@
+/**
+ * form-js-components.css — TSK-05-01
+ *
+ * 커스텀 컴포넌트(Card/Tabs/Modal/TabPanel) VSCode 테마 토큰 바인딩 + 최소 스타일.
+ *
+ * - 모든 셀렉터는 .form-js-block 루트 내부로 scope한다
+ * - VSCode 테마 토큰 기반 색상 바인딩
+ * - HC(High Contrast) 테마 대응
+ * - 각 컴포넌트 min-height: 40px
+ *
+ * contributes.markdown.previewStyles에 등록되어 VSCode webview에 주입된다.
+ */
+
+/* ── 공통 커스텀 컴포넌트 베이스 ─────────────────────────── */
+.form-js-block .dc-card,
+.form-js-block .dc-tabs,
+.form-js-block .dc-modal,
+.form-js-block .dc-tab-panel {
+  min-height: 40px;
+  color: var(--vscode-editor-foreground);
+  background: var(--vscode-editor-background);
+  border: 1px solid var(--vscode-panel-border, var(--vscode-editorGroup-border, #ccc));
+  box-sizing: border-box;
+}
+
+/* ── Card ────────────────────────────────────────────────── */
+.form-js-block .dc-card {
+  border-radius: 4px;
+  padding: 8px;
+}
+
+/* ── Tabs ────────────────────────────────────────────────── */
+.form-js-block .dc-tabs {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-js-block .dc-tabs__header {
+  display: flex;
+  background: var(--vscode-tab-inactiveBackground, var(--vscode-editor-background));
+  border-bottom: 1px solid var(--vscode-panel-border, #ccc);
+}
+
+.form-js-block .dc-tabs__tab {
+  padding: 4px 12px;
+  cursor: pointer;
+  color: var(--vscode-tab-inactiveForeground, var(--vscode-editor-foreground));
+  background: transparent;
+  border: none;
+}
+
+.form-js-block .dc-tabs__tab--active {
+  color: var(--vscode-tab-activeForeground, var(--vscode-editor-foreground));
+  border-bottom: 2px solid var(--vscode-focusBorder, var(--vscode-editor-foreground));
+}
+
+/* ── Modal ───────────────────────────────────────────────── */
+.form-js-block .dc-modal {
+  border-radius: 4px;
+  padding: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* ── TabPanel ────────────────────────────────────────────── */
+.form-js-block .dc-tab-panel {
+  padding: 8px;
+  border-top: none;
+}
+
+/* ── High Contrast 테마 대응 ─────────────────────────────── */
+.form-js-block.theme-high-contrast .dc-card,
+.form-js-block.theme-high-contrast .dc-tabs,
+.form-js-block.theme-high-contrast .dc-modal,
+.form-js-block.theme-high-contrast .dc-tab-panel,
+.form-js-block.theme-high-contrast-light .dc-card,
+.form-js-block.theme-high-contrast-light .dc-tabs,
+.form-js-block.theme-high-contrast-light .dc-modal,
+.form-js-block.theme-high-contrast-light .dc-tab-panel {
+  border-color: var(--vscode-contrastBorder, ButtonText);
+  forced-color-adjust: auto;
+}
