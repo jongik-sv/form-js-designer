@@ -36,20 +36,40 @@ export interface TabsRendererProps {
   ChildrenRenderer: ComponentType<{ field: TabPanelField }>;
 }
 
-/** tabPanel 목록에서 id 기반으로 초기 인덱스를 결정한다. */
+// ── DOM id 생성 헬퍼 ──────────────────────────────────────────
+// tabPanel id를 기반으로 탭 버튼/패널 DOM id를 일관된 방식으로 생성한다.
+// 두 값을 함께 구조 분해하여 호출하면 aria-controls/aria-labelledby 연결 오류를 방지한다.
+
+interface PanelDomIds {
+  tabId: string;
+  panelId: string;
+}
+
+function makePanelDomIds(panelId: string): PanelDomIds {
+  return {
+    tabId: `fj-tab-btn-${panelId}`,
+    panelId: `fj-tab-panel-${panelId}`,
+  };
+}
+
+// ── 초기 인덱스 결정 ──────────────────────────────────────────
+
+/** tabPanel 목록에서 activeTab id 기반으로 초기 인덱스를 결정한다. */
 function resolveInitialIndex(panels: TabPanelField[], activeTab?: string): number {
-  if (!activeTab) return 0;
+  if (!activeTab || panels.length === 0) return 0;
   const idx = panels.findIndex((p) => p.id === activeTab);
   return idx >= 0 ? idx : 0;
 }
 
-/** DOM id 생성 — tabPanel id 기반으로 충돌 없는 고정 id를 반환한다. */
-function tabButtonId(panelId: string): string {
-  return `fj-tab-btn-${panelId}`;
-}
+// ── 탭 포커스 + 스크롤 ────────────────────────────────────────
 
-function tabPanelDomId(panelId: string): string {
-  return `fj-tab-panel-${panelId}`;
+/**
+ * 탭 버튼에 포커스를 이동하고, scrollable 헤더 영역에서 보이도록 스크롤한다.
+ * jsdom 환경에서 scrollIntoView가 미구현이므로 실제 DOM API 존재 여부를 확인한다.
+ */
+function focusAndScrollTab(btn: HTMLButtonElement): void {
+  btn.focus();
+  btn.scrollIntoView?.({ block: 'nearest', inline: 'nearest' });
 }
 
 /**
@@ -70,55 +90,46 @@ export function TabsRenderer({ field, ChildrenRenderer }: TabsRendererProps) {
   // 탭 버튼 DOM 참조 배열 — 키보드 포커스 관리용
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
-  // 탭 수가 바뀌면 refs 배열 크기도 동기화
+  // 탭 수 변경 시 refs 배열 크기를 동기화하여 stale ref 방지
   useEffect(() => {
     tabRefs.current = tabRefs.current.slice(0, panels.length);
   }, [panels.length]);
 
-  // activeTab prop이 변경되면 인덱스를 재계산 (외부 schema 변경 대응)
+  // 외부 schema 변경(activeTab prop)에 반응하여 활성 인덱스를 재계산
+  // panels는 render마다 새 배열이므로 field.activeTab만 의존
   useEffect(() => {
     setActiveIndex(resolveInitialIndex(panels, field.activeTab));
-    // panels는 render마다 새 배열이므로 field.activeTab만 의존
   }, [field.activeTab]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  function activateTab(index: number) {
+  function activateTab(index: number): void {
     setActiveIndex(index);
-    // 포커스를 해당 탭 버튼으로 이동 + scrollable 헤더에서 보이도록 스크롤
     const btn = tabRefs.current[index];
     if (btn) {
-      btn.focus();
-      // jsdom에는 scrollIntoView 미구현 — 실제 브라우저에서만 동작
-      if (typeof btn.scrollIntoView === 'function') {
-        btn.scrollIntoView({ block: 'nearest', inline: 'nearest' });
-      }
+      focusAndScrollTab(btn);
     }
   }
 
-  function handleKeyDown(e: KeyboardEvent, currentIndex: number) {
+  function handleKeyDown(e: KeyboardEvent, currentIndex: number): void {
     const count = panels.length;
     if (count === 0) return;
 
     switch (e.key) {
-      case 'ArrowRight': {
+      case 'ArrowRight':
         e.preventDefault();
         activateTab((currentIndex + 1) % count);
         break;
-      }
-      case 'ArrowLeft': {
+      case 'ArrowLeft':
         e.preventDefault();
         activateTab((currentIndex - 1 + count) % count);
         break;
-      }
-      case 'Home': {
+      case 'Home':
         e.preventDefault();
         activateTab(0);
         break;
-      }
-      case 'End': {
+      case 'End':
         e.preventDefault();
         activateTab(count - 1);
         break;
-      }
     }
   }
 
@@ -128,15 +139,14 @@ export function TabsRenderer({ field, ChildrenRenderer }: TabsRendererProps) {
       <div role="tablist" class="fj-tabs-header">
         {panels.map((panel, i) => {
           const isActive = i === activeIndex;
-          const btnId = tabButtonId(panel.id);
-          const pnlId = tabPanelDomId(panel.id);
+          const { tabId, panelId } = makePanelDomIds(panel.id);
           return (
             <button
               key={panel.id}
-              id={btnId}
+              id={tabId}
               role="tab"
               aria-selected={isActive ? 'true' : 'false'}
-              aria-controls={pnlId}
+              aria-controls={panelId}
               tabIndex={isActive ? 0 : -1}
               class={`fj-tabs-tab${isActive ? ' fj-tabs-tab--active' : ''}`}
               onClick={() => activateTab(i)}
@@ -153,16 +163,19 @@ export function TabsRenderer({ field, ChildrenRenderer }: TabsRendererProps) {
 
       {/* 패널 영역 — 비활성 패널은 hidden이지만 항상 마운트 */}
       <div class="fj-tabs-body">
-        {panels.map((panel, i) => (
-          <TabPanelRenderer
-            key={panel.id}
-            field={panel}
-            isActive={i === activeIndex}
-            tabId={tabButtonId(panel.id)}
-            panelId={tabPanelDomId(panel.id)}
-            ChildrenRenderer={ChildrenRenderer}
-          />
-        ))}
+        {panels.map((panel, i) => {
+          const { tabId, panelId } = makePanelDomIds(panel.id);
+          return (
+            <TabPanelRenderer
+              key={panel.id}
+              field={panel}
+              isActive={i === activeIndex}
+              tabId={tabId}
+              panelId={panelId}
+              ChildrenRenderer={ChildrenRenderer}
+            />
+          );
+        })}
       </div>
     </div>
   );
