@@ -20,9 +20,13 @@ const { mockDestroy, mockImportSchema, mockCreateForm } = vi.hoisted(() => {
   return { mockDestroy, mockImportSchema, mockCreateForm };
 });
 
-vi.mock('@bpmn-io/form-js-viewer', () => ({
-  createForm: mockCreateForm,
-}));
+vi.mock('@bpmn-io/form-js-viewer', async (importOriginal) => {
+  const actual = (await importOriginal()) as Record<string, unknown>;
+  return {
+    ...actual,
+    createForm: mockCreateForm,
+  };
+});
 
 import {
   mountViewers,

@@ -58,6 +58,7 @@ if (isTestMode) {
     { in: 'test/integration/runTests.ts', out: 'dist/test/integration/runTests.js', external: ['vscode', '@vscode/test-electron'] },
     { in: 'test/integration/suite/index.ts', out: 'dist/test/integration/suite/index.js', external: ['vscode', 'mocha', 'glob'] },
     { in: 'test/integration/suite/preview.test.ts', out: 'dist/test/integration/suite/preview.test.js', external: ['vscode', 'mocha', 'assert', 'path'] },
+    { in: 'test/integration/suite/customComponents.test.ts', out: 'dist/test/integration/suite/customComponents.test.js', external: ['vscode', 'mocha', 'assert', 'path', 'fs'] },
     { in: 'test/integration/helpers/waitForElement.ts', out: 'dist/test/integration/helpers/waitForElement.js', external: [] },
     { in: 'test/integration/helpers/openPreview.ts', out: 'dist/test/integration/helpers/openPreview.js', external: ['vscode'] },
   ];

@@ -45,9 +45,9 @@ function validateAndSanitize(field: TabsSchema): {
 
   if (tabPanels.length > 0 && !ids.includes(effectiveDefaultValue)) {
     console.warn(
-      `[Tabs] defaultValue "${effectiveDefaultValue}" not found in tabPanel ids [${ids.join(', ')}] — falling back to "${tabPanels[0].id}"`,
+      `[Tabs] defaultValue "${effectiveDefaultValue}" not found in tabPanel ids [${ids.join(', ')}] — falling back to "${tabPanels[0]!.id}"`,
     );
-    effectiveDefaultValue = tabPanels[0].id;
+    effectiveDefaultValue = tabPanels[0]!.id;
   }
 
   return { tabPanels, effectiveDefaultValue, orientation };
