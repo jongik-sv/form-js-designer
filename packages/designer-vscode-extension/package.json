@@ -1,0 +1,58 @@
+{
+  "name": "designer-vscode-extension",
+  "displayName": "Form.js Designer",
+  "version": "0.1.0",
+  "private": true,
+  "description": "VSCode extension for editing form-js form schemas in Markdown",
+  "publisher": "form-js-designer",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bpmn-io/form-js-designer"
+  },
+  "engines": {
+    "vscode": "^1.90.0",
+    "node": ">=20"
+  },
+  "categories": ["Other"],
+  "main": "./dist/extension.cjs",
+  "activationEvents": ["onLanguage:markdown"],
+  "contributes": {
+    "markdown": {
+      "markdownItPlugins": true,
+      "previewScripts": ["./dist/webview/preview.js"],
+      "previewStyles": ["./media/form-js.css", "./media/form-js-base.css"]
+    },
+    "customEditors": [
+      {
+        "viewType": "formJsDesigner.formEditor",
+        "displayName": "Form.js Designer",
+        "selector": [
+          {
+            "filenamePattern": "*.form.json"
+          }
+        ],
+        "priority": "option"
+      }
+    ]
+  },
+  "scripts": {
+    "build": "node esbuild.config.mjs && node scripts/copy-media.mjs",
+    "build:prod": "NODE_ENV=production node esbuild.config.mjs && node scripts/copy-media.mjs",
+    "typecheck": "tsc --noEmit",
+    "lint": "echo 'lint: not yet configured'",
+    "test:unit": "vitest run",
+    "test:coverage": "vitest run --coverage"
+  },
+  "devDependencies": {
+    "@types/node": "^20.16.10",
+    "@types/vscode": "^1.90.0",
+    "esbuild": "^0.24.0",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.2"
+  },
+  "dependencies": {
+    "@bpmn-io/form-js-editor": "^1.21.2",
+    "@bpmn-io/form-js-viewer": "^1.21.2",
+    "preact": "^10.19.3"
+  }
+}
