@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { detectIndent, formatJson } from '../../src/editor/workspaceEdit';
+import { describe, it, expect, vi } from 'vitest';
+import { detectIndent, formatJson, replaceFenceBody } from '../../src/editor/workspaceEdit';
 
 /** 테스트용 TextDocument stub */
 function makeDoc(lines: string[]) {

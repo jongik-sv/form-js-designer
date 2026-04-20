@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { locateFenceBody, FenceNotFoundError } from '../../src/editor/blockLocator';
+import { locateFenceBody, FenceNotFoundError, blockLocator } from '../../src/editor/blockLocator';
 
 /** vscode mock: Position/Range는 test/setup/vscode-mock.ts에서 자동 주입됨 */
 import type { Range } from 'vscode';
@@ -104,5 +104,48 @@ describe('locateFenceBody', () => {
     // 힌트는 0번 줄인데 거기엔 fence가 없음
     const range: Range = locateFenceBody(doc as any, 0, 0);
     expect(range.start.line).toBe(2);
+  });
+
+  it('펜스 본문 뒤에 빈 줄이 여러 개 있어도 Range end가 마지막 본문 줄을 가리킨다', () => {
+    const doc = makeDoc([
+      '```form-js',         // 0
+      '{"type":"default"}', // 1
+      '',                   // 2  ← 빈 줄
+      '',                   // 3  ← 빈 줄
+      '```',                // 4
+    ]);
+    const range: Range = locateFenceBody(doc as any, 0, 4);
+    // 본문은 1~3줄, 닫는 ``` 직전 줄인 3번이 end
+    expect(range.start.line).toBe(1);
+    expect(range.end.line).toBe(3);
+  });
+
+  it('다른 언어 펜스(```typescript)는 무시하고 FenceNotFoundError를 throw한다', () => {
+    const doc = makeDoc([
+      '```typescript',
+      'const x = 1;',
+      '```',
+    ]);
+    expect(() => locateFenceBody(doc as any, 0, 2)).toThrow(FenceNotFoundError);
+  });
+});
+
+describe('blockLocator 네임스페이스 객체', () => {
+  it('blockLocator.locateFenceBody가 named export와 동일하게 동작한다', () => {
+    const doc = makeDoc([
+      '```form-js',        // 0
+      '{"type":"default"}',// 1
+      '```',               // 2
+    ]);
+    const rangeNamed: Range = locateFenceBody(doc as any, 0, 2);
+    const rangeObject: Range = blockLocator.locateFenceBody(doc as any, 0, 2);
+    expect(rangeObject.start.line).toBe(rangeNamed.start.line);
+    expect(rangeObject.end.line).toBe(rangeNamed.end.line);
+    expect(rangeObject.start.character).toBe(rangeNamed.start.character);
+    expect(rangeObject.end.character).toBe(rangeNamed.end.character);
+  });
+
+  it('blockLocator 객체가 locateFenceBody 메서드를 가진다', () => {
+    expect(typeof blockLocator.locateFenceBody).toBe('function');
   });
 });
