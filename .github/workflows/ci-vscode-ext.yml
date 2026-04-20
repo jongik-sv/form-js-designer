@@ -1,0 +1,36 @@
+name: ci-vscode-ext
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'packages/designer-vscode-extension/**'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'packages/designer-vscode-extension/**'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  vscode-ext-ci:
+    name: ci · designer-vscode-extension (lint / typecheck / test:unit / build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Lint
+        run: npm -w designer-vscode-extension run lint
+      - name: Typecheck
+        run: npm -w designer-vscode-extension run typecheck
+      - name: Unit tests
+        run: npm -w designer-vscode-extension run test:unit
+      - name: Build
+        run: npm -w designer-vscode-extension run build
