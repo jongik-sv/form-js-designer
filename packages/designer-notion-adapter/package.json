@@ -20,9 +20,11 @@
     "typecheck": "../../node_modules/.bin/tsc --noEmit --project tsconfig.json",
     "test:unit": "../../node_modules/.bin/vitest run --config vitest.config.ts",
     "test:unit:watch": "../../node_modules/.bin/vitest --config vitest.config.ts",
-    "test:coverage": "../../node_modules/.bin/vitest run --config vitest.config.ts --coverage"
+    "test:coverage": "../../node_modules/.bin/vitest run --config vitest.config.ts --coverage",
+    "test:e2e:smoke": "../../node_modules/.bin/playwright test --config playwright.config.ts"
   },
   "devDependencies": {
+    "@playwright/test": "^1.40.0",
     "@types/node": "^20.16.10",
     "esbuild": "^0.24.0",
     "typescript": "^5.6.0",

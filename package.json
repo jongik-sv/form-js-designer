@@ -20,7 +20,8 @@
     "release:rc": "node scripts/ci/tag-rc.mjs",
     "test:ac-matrix": "node scripts/rc/run-ac-matrix.mjs",
     "test:rc": "npm run lint && npm run lint:license && npm run test:ac-matrix",
-    "test:ci-scripts": "node --test scripts/ci/__tests__/watermark-scss-lint.test.mjs && node --test scripts/ci/__tests__/watermark-hash.test.mjs"
+    "test:ci-scripts": "node --test scripts/ci/__tests__/watermark-scss-lint.test.mjs && node --test scripts/ci/__tests__/watermark-hash.test.mjs",
+    "test:e2e:smoke": "npm -w @form-js-designer/designer-notion-adapter run test:e2e:smoke"
   },
   "dependencies": {
     "@bpmn-io/form-js-editor": "^1.21.2",

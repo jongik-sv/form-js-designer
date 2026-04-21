@@ -59,11 +59,19 @@
   <h1>form-js Notion Adapter — PoC 샘플</h1>
   <div class="toolbar">
     <button id="btn-insert-block" data-testid="btn-insert-block">+ 블록 삽입</button>
+    <button id="btn-edit-schema" data-testid="edit-schema">스키마 편집</button>
     <button id="btn-toggle-theme" data-testid="btn-toggle-theme">
       <span id="theme-label">다크 모드</span>
     </button>
   </div>
+  <div id="schema-editor-container" data-testid="schema-editor-container" style="display:none; padding: 12px; border: 1px solid #ccc; border-radius: 6px; margin-bottom: 12px;">
+    <textarea id="schema-editor-textarea" data-testid="schema-editor-textarea" rows="10" style="width:100%; font-family:monospace; font-size:13px;"></textarea>
+    <div style="margin-top:8px; display:flex; gap:8px;">
+      <button id="btn-save-schema" data-testid="save-schema">저장</button>
+      <button id="btn-cancel-schema" data-testid="cancel-schema">취소</button>
+    </div>
+  </div>
   <div id="blocks-container" data-testid="blocks-container"></div>
-  <script type="module" src="./main.ts"></script>
+  <script type="module" src="./main.js"></script>
 </body>
 </html>

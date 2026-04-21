@@ -45,6 +45,13 @@ await Promise.all([
     format: 'cjs',
     outfile: 'dist/index.cjs',
   }),
+  // 샘플 페이지 빌드 (main.ts → sample/main.js)
+  build({
+    ...sharedOptions,
+    entryPoints: ['sample/main.ts'],
+    format: 'esm',
+    outfile: 'sample/main.js',
+  }),
 ]);
 
-console.log('[esbuild] 빌드 완료: dist/index.js (ESM), dist/index.cjs (CJS)');
+console.log('[esbuild] 빌드 완료: dist/index.js (ESM), dist/index.cjs (CJS), sample/main.js');
