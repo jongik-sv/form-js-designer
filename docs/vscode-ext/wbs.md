@@ -493,7 +493,7 @@ node, vitest
 - category: infrastructure
 - domain: infra
 - model: sonnet
-- status: [ ]
+- status: [xx]
 - priority: critical
 - assignee: -
 - schedule: 2026-05-04 ~ 2026-05-05
@@ -524,7 +524,7 @@ node, vitest
 - category: development
 - domain: fullstack
 - model: opus
-- status: [ ]
+- status: [xx]
 - priority: high
 - assignee: -
 - schedule: 2026-05-06 ~ 2026-05-07
@@ -555,7 +555,7 @@ node, vitest
 - category: development
 - domain: fullstack
 - model: sonnet
-- status: [ ]
+- status: [xx]
 - priority: high
 - assignee: -
 - schedule: 2026-05-08 ~ 2026-05-12
@@ -589,7 +589,7 @@ node, vitest
 - category: infrastructure
 - domain: test
 - model: sonnet
-- status: [ ]
+- status: [xx]
 - priority: medium
 - assignee: -
 - schedule: 2026-05-13 ~ 2026-05-14
