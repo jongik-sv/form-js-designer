@@ -23,8 +23,8 @@ const REPO_ROOT = resolve(__dirname, '../../..');
 const I18N_CHECK = resolve(REPO_ROOT, 'packages/designer-i18n/bin/i18n-check.mjs');
 
 const child = spawn(
-  process.execPath,
-  [I18N_CHECK],
+  'npx',
+  ['tsx', I18N_CHECK],
   {
     stdio: 'inherit',
     cwd: REPO_ROOT,

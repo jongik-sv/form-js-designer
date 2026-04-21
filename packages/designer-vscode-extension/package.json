@@ -87,9 +87,12 @@
     "test:unit": "../../node_modules/.bin/vitest run --config vitest.config.ts",
     "test:unit:watch": "../../node_modules/.bin/vitest --config vitest.config.ts",
     "test:coverage": "../../node_modules/.bin/vitest run --config vitest.config.ts --coverage",
-    "test:e2e": "node scripts/assert-i18n-coverage.mjs && FORM_JS_TEST_MODE=1 node esbuild.config.mjs && FORM_JS_TEST_MODE=1 node dist/test/integration/runTests.js"
+    "test:e2e": "node scripts/assert-i18n-coverage.mjs && FORM_JS_TEST_MODE=1 node esbuild.config.mjs && FORM_JS_TEST_MODE=1 node dist/test/integration/runTests.js",
+    "test:a11y": "FORM_JS_TEST_MODE=1 node esbuild.config.mjs && FORM_JS_TEST_MODE=1 node dist/test/integration/runTests.js"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.9.1",
+    "axe-core": "^4.9.1",
     "@types/markdown-it": "^14.1.2",
     "@types/mocha": "^10.0.10",
     "@types/node": "^20.16.10",

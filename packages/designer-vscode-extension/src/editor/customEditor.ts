@@ -18,6 +18,9 @@ import { createFormEditor } from '@bpmn-io/form-js-editor';
 import { customComponentsModule } from '../components';
 import type { EditOpenedMessage, SaveSchemaMessage } from '../shared/messages';
 
+// TSK-04-02: axe-core 스캔 테스트 모드 플래그 (esbuild define)
+declare const FORM_JS_TEST_BRIDGE: boolean;
+
 /** VSCode webview API 타입 */
 interface VsCodeApi {
   postMessage(message: unknown): void;
@@ -232,6 +235,56 @@ export function init(): void {
       editorInstance = null;
     }
   });
+
+  // TSK-04-02: axe-core 스캔 실행 (테스트 모드 전용)
+  console.log('[form-js custom-editor] FORM_JS_TEST_BRIDGE:', typeof FORM_JS_TEST_BRIDGE);
+  if (typeof FORM_JS_TEST_BRIDGE !== 'undefined' && FORM_JS_TEST_BRIDGE) {
+    console.log('[form-js custom-editor] starting axe scan');
+    void runAxeScan('custom-editor');
+  }
+}
+
+/**
+ * TSK-04-02: axe-core를 동적으로 로드하고 스캔을 실행한다.
+ * 결과를 postMessage({ type: 'axe-result', violations })로 전송한다.
+ *
+ * @param webviewId 식별자 ('preview' 또는 'custom-editor')
+ */
+async function runAxeScan(webviewId: string): Promise<void> {
+  try {
+    // 동적 import로 axe-core 로드 (번들에 포함됨)
+    const axe = (await import('axe-core')).default;
+
+    // 스캔 실행 (root = document.documentElement)
+    const results = await new Promise<{ violations: unknown[] }>((resolve, reject) => {
+      axe.run(document.documentElement, (error: Error | null, result: unknown) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(result as { violations: unknown[] });
+        }
+      });
+    });
+
+    // 결과 postMessage 발송
+    if (vscodeApi) {
+      vscodeApi.postMessage({
+        type: 'axe-result',
+        webviewId,
+        violations: results.violations,
+      });
+    }
+  } catch (err) {
+    // axe 스캔 실패 시 빈 결과 전송 (타임아웃 방지)
+    if (vscodeApi) {
+      vscodeApi.postMessage({
+        type: 'axe-result',
+        webviewId,
+        violations: [],
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
+  }
 }
 
 if (typeof document !== 'undefined' && typeof window !== 'undefined') {
