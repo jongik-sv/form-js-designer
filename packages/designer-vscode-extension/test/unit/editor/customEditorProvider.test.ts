@@ -92,6 +92,91 @@ describe('buildHtml', () => {
     const html = buildHtml(opts);
     expect(html).toContain("default-src 'none'");
   });
+
+  it('additionalStyleUris의 모든 CSS가 <link> 태그로 포함된다', () => {
+    const extras = [
+      'webview://form-js.css',
+      'webview://form-js-editor.css',
+      'webview://properties-panel.css',
+    ];
+    const html = buildHtml({ ...opts, additionalStyleUris: extras });
+    for (const uri of extras) {
+      expect(html).toContain(`href="${uri}"`);
+    }
+  });
+
+  it('additionalStyleUris 미지정 시에도 정상 동작한다 (backward compat)', () => {
+    const html = buildHtml(opts);
+    expect(html).toContain(`href="${opts.styleUri}"`);
+  });
+});
+
+/**
+ * Block Editor 스타일 회귀 방지:
+ * form-js-editor 팔레트/properties-panel 정상 렌더링을 위해
+ * 반드시 로드돼야 하는 핵심 CSS 자산들을 webview HTML이 참조하는지 검증.
+ */
+describe('resolveCustomTextEditor CSS 자산 로드', () => {
+  beforeEach(() => {
+    editSessionRegistry.disposeAll();
+    pendingEditSchemas.clear();
+  });
+
+  function makeFullWebviewPanel() {
+    return {
+      webview: {
+        options: {} as Record<string, unknown>,
+        html: '',
+        cspSource: 'vscode-webview-resource:',
+        asWebviewUri: vi.fn((u: { toString(): string }) => ({
+          toString: () => `webview://${u.toString()}`,
+        })),
+        postMessage: vi.fn().mockResolvedValue(undefined),
+        onDidReceiveMessage: vi.fn(() => ({ dispose: vi.fn() })),
+      },
+      onDidDispose: vi.fn(() => ({ dispose: vi.fn() })),
+      dispose: vi.fn(),
+      reveal: vi.fn(),
+    };
+  }
+
+  it.each([
+    'form-js-base.css',
+    'form-js.css',
+    'form-js-editor-base.css',
+    'form-js-editor.css',
+    'properties-panel.css',
+    'draggle.css',
+    'form-js-editor-host.css',
+  ])('webview HTML이 %s를 <link>로 포함한다', async (cssFile) => {
+    const extensionUri = makeUri('/ext') as never;
+    const provider = new FormJsBlockEditorProvider(extensionUri);
+    const panel = makeFullWebviewPanel();
+    const doc = { uri: { toString: () => 'file:///test.md', fsPath: 'file:///test.md' } };
+
+    await provider.resolveCustomTextEditor(
+      doc as never,
+      panel as never,
+      { isCancellationRequested: false, onCancellationRequested: vi.fn() } as never
+    );
+
+    expect(panel.webview.html).toContain(cssFile);
+  });
+
+  it('webview HTML이 customEditor.css(빌드 산출물)도 포함한다', async () => {
+    const extensionUri = makeUri('/ext') as never;
+    const provider = new FormJsBlockEditorProvider(extensionUri);
+    const panel = makeFullWebviewPanel();
+    const doc = { uri: { toString: () => 'file:///test.md', fsPath: 'file:///test.md' } };
+
+    await provider.resolveCustomTextEditor(
+      doc as never,
+      panel as never,
+      { isCancellationRequested: false, onCancellationRequested: vi.fn() } as never
+    );
+
+    expect(panel.webview.html).toContain('customEditor.css');
+  });
 });
 
 describe('FormJsBlockEditorProvider', () => {

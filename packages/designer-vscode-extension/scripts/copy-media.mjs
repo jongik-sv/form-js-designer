@@ -21,32 +21,32 @@ if (!fs.existsSync(mediaDir)) {
   fs.mkdirSync(mediaDir, { recursive: true });
 }
 
+/**
+ * form-js-editor 패키지 자산은 별도 경로에만 존재 (form-js, form-js-viewer에는 없음).
+ * Block Editor webview가 정상 동작하려면 아래 4개 editor 자산 필수.
+ */
+const editorAssetCandidates = (file) => [
+  path.join(pkgRoot, `node_modules/@bpmn-io/form-js-editor/dist/assets/${file}`),
+  path.join(pkgRoot, `../../node_modules/@bpmn-io/form-js-editor/dist/assets/${file}`),
+];
+
+const viewerAssetCandidates = (file) => [
+  path.join(pkgRoot, `node_modules/@bpmn-io/form-js/dist/assets/${file}`),
+  path.join(pkgRoot, `node_modules/@bpmn-io/form-js-viewer/dist/assets/${file}`),
+  path.join(pkgRoot, `node_modules/@bpmn-io/form-js-editor/dist/assets/${file}`),
+  path.join(pkgRoot, `../../node_modules/@bpmn-io/form-js/dist/assets/${file}`),
+  path.join(pkgRoot, `../../node_modules/@bpmn-io/form-js-viewer/dist/assets/${file}`),
+  path.join(pkgRoot, `../../node_modules/@bpmn-io/form-js-editor/dist/assets/${file}`),
+];
+
 /** @type {{ css: string; candidates: string[] }[]} */
 const fileCandidates = [
-  {
-    css: 'form-js.css',
-    candidates: [
-      path.join(pkgRoot, 'node_modules/@bpmn-io/form-js/dist/assets/form-js.css'),
-      path.join(pkgRoot, 'node_modules/@bpmn-io/form-js-viewer/dist/assets/form-js.css'),
-      path.join(pkgRoot, 'node_modules/@bpmn-io/form-js-editor/dist/assets/form-js.css'),
-      // workspace root node_modules fallback
-      path.join(pkgRoot, '../../node_modules/@bpmn-io/form-js/dist/assets/form-js.css'),
-      path.join(pkgRoot, '../../node_modules/@bpmn-io/form-js-viewer/dist/assets/form-js.css'),
-      path.join(pkgRoot, '../../node_modules/@bpmn-io/form-js-editor/dist/assets/form-js.css'),
-    ],
-  },
-  {
-    css: 'form-js-base.css',
-    candidates: [
-      path.join(pkgRoot, 'node_modules/@bpmn-io/form-js/dist/assets/form-js-base.css'),
-      path.join(pkgRoot, 'node_modules/@bpmn-io/form-js-viewer/dist/assets/form-js-base.css'),
-      path.join(pkgRoot, 'node_modules/@bpmn-io/form-js-editor/dist/assets/form-js-base.css'),
-      // workspace root node_modules fallback
-      path.join(pkgRoot, '../../node_modules/@bpmn-io/form-js/dist/assets/form-js-base.css'),
-      path.join(pkgRoot, '../../node_modules/@bpmn-io/form-js-viewer/dist/assets/form-js-base.css'),
-      path.join(pkgRoot, '../../node_modules/@bpmn-io/form-js-editor/dist/assets/form-js-base.css'),
-    ],
-  },
+  { css: 'form-js.css', candidates: viewerAssetCandidates('form-js.css') },
+  { css: 'form-js-base.css', candidates: viewerAssetCandidates('form-js-base.css') },
+  { css: 'form-js-editor.css', candidates: editorAssetCandidates('form-js-editor.css') },
+  { css: 'form-js-editor-base.css', candidates: editorAssetCandidates('form-js-editor-base.css') },
+  { css: 'properties-panel.css', candidates: editorAssetCandidates('properties-panel.css') },
+  { css: 'draggle.css', candidates: editorAssetCandidates('draggle.css') },
 ];
 
 let allFound = true;

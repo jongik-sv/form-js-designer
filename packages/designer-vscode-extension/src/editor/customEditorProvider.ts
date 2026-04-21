@@ -73,9 +73,34 @@ export class FormJsBlockEditorProvider {
       vscode.Uri.joinPath(this.extensionUri, 'dist', 'webview', 'customEditor.js')
     );
 
-    const styleUri = webviewPanel.webview.asWebviewUri(
-      vscode.Uri.joinPath(this.extensionUri, 'media', 'form-js-editor.css')
-    );
+    // CSS 로드 순서 (cascade 중요):
+    //   1. form-js-base.css        - form-js 공통 base (drop container h=0 fix)
+    //   2. form-js.css             - form-js 공통 스타일
+    //   3. form-js-editor-base.css - editor base 레이아웃
+    //   4. form-js-editor.css      - editor 메인 (63KB, palette/canvas)
+    //   5. properties-panel.css    - 우측 properties panel
+    //   6. draggle.css             - drag & drop 시각 효과
+    //   7. customEditor.css        - 빌드된 webview 자체 스타일
+    //   8. form-js-editor-host.css - #app flex 레이아웃 override (마지막)
+    const mediaAsset = (name: string): string =>
+      webviewPanel.webview.asWebviewUri(
+        vscode.Uri.joinPath(this.extensionUri, 'media', name)
+      ).toString();
+    const distAsset = (name: string): string =>
+      webviewPanel.webview.asWebviewUri(
+        vscode.Uri.joinPath(this.extensionUri, 'dist', 'webview', name)
+      ).toString();
+
+    const styleUri = mediaAsset('form-js-base.css');
+    const additionalStyleUris = [
+      mediaAsset('form-js.css'),
+      mediaAsset('form-js-editor-base.css'),
+      mediaAsset('form-js-editor.css'),
+      mediaAsset('properties-panel.css'),
+      mediaAsset('draggle.css'),
+      distAsset('customEditor.css'),
+      mediaAsset('form-js-editor-host.css'),
+    ];
 
     const cspSource = webviewPanel.webview.cspSource;
 
@@ -85,6 +110,7 @@ export class FormJsBlockEditorProvider {
       cspSource,
       scriptUri: scriptUri.toString(),
       styleUri: styleUri.toString(),
+      additionalStyleUris,
     });
 
     // EditSessionRegistry lock 등록
@@ -175,11 +201,16 @@ interface HtmlOptions {
   cspSource: string;
   scriptUri: string;
   styleUri: string;
+  /** 추가 stylesheet URI (form-js-base.css, form-js.css, dist/webview/customEditor.css 등) */
+  additionalStyleUris?: string[];
 }
 
 /** Custom Editor webview HTML 생성 (CSP + nonce 적용, inline script 금지) */
 export function buildHtml(opts: HtmlOptions): string {
-  const { nonce, cspSource, scriptUri, styleUri } = opts;
+  const { nonce, cspSource, scriptUri, styleUri, additionalStyleUris = [] } = opts;
+  const extraLinks = additionalStyleUris
+    .map((uri) => `  <link rel="stylesheet" href="${uri}">`)
+    .join('\n');
   return `<!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -188,6 +219,7 @@ export function buildHtml(opts: HtmlOptions): string {
   <meta http-equiv="Content-Security-Policy"
     content="default-src 'none'; script-src 'nonce-${nonce}' ${cspSource}; style-src ${cspSource} 'unsafe-inline'; img-src ${cspSource} data:; font-src ${cspSource};">
   <link rel="stylesheet" href="${styleUri}">
+${extraLinks}
   <title>form-js Block Editor</title>
 </head>
 <body>
