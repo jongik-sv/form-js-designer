@@ -140,6 +140,23 @@ export class FormJsBlockEditorProvider {
         this.broadcastFn(editClosedMsg);
       }
     });
+
+    // TSK-04-02: webview에서 보낸 axe-result 메시지 처리
+    webviewPanel.webview.onDidReceiveMessage((message: unknown) => {
+      const msg = message as { type?: string; webviewId?: string; violations?: unknown[] };
+      if (msg?.type === 'axe-result') {
+        try {
+          // eslint-disable-next-line @typescript-eslint/no-require-imports
+          const { registerAxeResult } = require('../testBridge') as typeof import('../testBridge');
+          type AxeViolationLike = import('../testBridge').AxeViolation;
+          registerAxeResult(msg.webviewId ?? 'custom-editor', {
+            violations: (msg.violations ?? []) as AxeViolationLike[],
+          });
+        } catch {
+          // testBridge not available in production mode
+        }
+      }
+    });
   }
 }
 

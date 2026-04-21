@@ -94,6 +94,9 @@ if (isTestMode) {
     { in: 'test/integration/helpers/openCustomEditor.ts', out: 'dist/test/integration/helpers/openCustomEditor.js', external: ['vscode'] },
     { in: 'test/integration/helpers/waitForMessage.ts', out: 'dist/test/integration/helpers/waitForMessage.js', external: [] },
     { in: 'test/integration/helpers/byteCompareFence.ts', out: 'dist/test/integration/helpers/byteCompareFence.js', external: [] },
+    // TSK-04-02: 접근성 (axe) + 테마 전환 E2E 통합 테스트
+    { in: 'test/integration/suite/a11y.test.ts', out: 'dist/test/integration/suite/a11y.test.js', external: ['vscode', 'mocha', 'assert', 'path'] },
+    { in: 'test/integration/suite/themeSwitch.test.ts', out: 'dist/test/integration/suite/themeSwitch.test.js', external: ['vscode', 'mocha', 'assert', 'path'] },
   ];
   for (const { in: entry, out, external } of testEntries) {
     testBundles.push(build({

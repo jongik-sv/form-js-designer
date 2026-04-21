@@ -43,6 +43,11 @@ export function activate(
 ): {
   extendMarkdownIt: (md: MarkdownIt) => MarkdownIt;
   editSessionRegistry: typeof editSessionRegistry;
+  waitForAxeResult: typeof import('./testBridge').waitForAxeResult;
+  getAxeResult: typeof import('./testBridge').getAxeResult;
+  clearAxeResult: typeof import('./testBridge').clearAxeResult;
+  filterCriticalViolations: typeof import('./testBridge').filterCriticalViolations;
+  registerAxeResult: typeof import('./testBridge').registerAxeResult;
 } {
   // DIAG: activate 진입 확인 (test mode가 아니어도 로그는 찍도록)
   // eslint-disable-next-line no-console
@@ -165,7 +170,13 @@ export function activate(
     try {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       const vscode = require('vscode') as typeof import('vscode');
-      const { getMountStateForUri, clearMountState } = require('./testBridge') as typeof import('./testBridge');
+      const { getMountStateForUri, clearMountState, registerAxeResult } = require('./testBridge') as typeof import('./testBridge');
+
+      // TSK-04-02: webview에서 axe-result를 직접 등록할 수 있도록 globalThis에 testBridge 객체 등록
+      // Markdown preview webview는 postMessage 리스너를 설정할 수 없어 직접 함수 호출이 필요하다.
+      (globalThis as Record<string, unknown>)['__formJsTestBridge'] = { registerAxeResult };
+      // eslint-disable-next-line no-console
+      console.log('[form-js testBridge] registered on globalThis, __formJsTestBridge:', typeof (globalThis as Record<string, unknown>)['__formJsTestBridge']);
 
       const getMountStateCmd = vscode.commands.registerCommand(
         'form-js._test.getMountState',
@@ -189,15 +200,42 @@ export function activate(
   // 통해 플러그인을 수집한다. top-level export만으로는 누락되는 경우가 있어
   // activate의 return 값으로도 함께 노출한다.
   // TSK-02-05: 동시에 editSessionRegistry 싱글톤도 함께 노출 (테스트 번들 공유).
-  return { extendMarkdownIt, editSessionRegistry };
+  // TSK-04-02: testBridge 함수들도 return에 포함하여 테스트 번들이 접근 가능하도록
+  const {
+    waitForAxeResult,
+    getAxeResult,
+    clearAxeResult,
+    filterCriticalViolations,
+    registerAxeResult,
+  } = require('./testBridge') as typeof import('./testBridge');
+
+  return {
+    extendMarkdownIt,
+    editSessionRegistry,
+    waitForAxeResult,
+    getAxeResult,
+    clearAxeResult,
+    filterCriticalViolations,
+    registerAxeResult,
+  };
 }
 
 /**
  * TSK-02-05: 통합 테스트에서 extension host의 editSessionRegistry 싱글톤에 접근할 수 있도록
  * re-export한다. 테스트 번들은 별도 인스턴스를 가지므로 ext.exports.editSessionRegistry를
  * 통해 공유 인스턴스에 접근해야 한다.
+ *
+ * TSK-04-02: testBridge 함수들도 re-export하여 테스트 번들이 extension host의
+ * 싱글톤 testBridge state에 접근할 수 있도록 한다.
  */
 export { editSessionRegistry };
+export {
+  registerAxeResult,
+  getAxeResult,
+  clearAxeResult,
+  filterCriticalViolations,
+  waitForAxeResult,
+} from './testBridge';
 
 export function deactivate(): void {
   // TSK-02-04: sourceWatcher 구독 해제

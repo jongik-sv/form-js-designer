@@ -626,7 +626,7 @@ node, vitest
 - category: infrastructure
 - domain: infra
 - model: sonnet
-- status: [ ]
+- status: [xx]
 - priority: high
 - assignee: -
 - schedule: 2026-05-11 ~ 2026-05-12
@@ -659,7 +659,7 @@ node, vitest
 - category: infrastructure
 - domain: test
 - model: sonnet
-- status: [ ]
+- status: [xx]
 - priority: high
 - assignee: -
 - schedule: 2026-05-13 ~ 2026-05-14
@@ -689,7 +689,7 @@ node, vitest
 - category: infrastructure
 - domain: test
 - model: sonnet
-- status: [ ]
+- status: [xx]
 - priority: medium
 - assignee: -
 - schedule: 2026-05-15 ~ 2026-05-15

@@ -111,6 +111,7 @@ describe('FormJsBlockEditorProvider', () => {
         cspSource: 'vscode-webview-resource:',
         asWebviewUri: vi.fn((u: unknown) => ({ toString: () => `webview://${String(u)}` })),
         postMessage,
+        onDidReceiveMessage: vi.fn(() => ({ dispose: vi.fn() })),
       },
       onDidDispose: vi.fn((cb: () => void) => {
         onDisposeCallbacks.push(cb);
