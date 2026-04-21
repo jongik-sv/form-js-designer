@@ -56,7 +56,7 @@ function CardRendererRender(props: PureRenderProps<CardRendererSchema>) {
         <footer class="fjs-card__footer">
           {actions.map((action, i) => (
             <button
-              key={i}
+              key={`${action.label}-${i}`}
               type="button"
               class={`fjs-card__action fjs-card__action--${action.variant ?? 'default'}`}
             >

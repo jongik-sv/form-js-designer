@@ -9,22 +9,32 @@
  * Single Source of Truth.
  */
 import { DesignerComponentsModule } from '@form-js-designer/designer-components';
+import { StackRendererComponent } from './StackRenderer';
+
+interface FormFieldsService {
+  register: (type: string, component: unknown) => void;
+}
+
+function StackRegistration(formFields: FormFieldsService) {
+  formFields.register(StackRendererComponent.type, StackRendererComponent.component);
+}
+(StackRegistration as unknown as { $inject: string[] }).$inject = ['formFields'];
 
 /**
  * form-js additionalModules 주입용 싱글톤 모듈.
- * Card / Tabs / Modal / TabPanel 을 FormFields registry에 등록한다.
+ * Card / Tabs / Modal / TabPanel (designer-components) + Stack (vscode-ext)를
+ * FormFields registry에 등록한다.
  *
  * viewer·editor 양쪽에서 동일 객체 참조를 공유한다.
  */
-export const customComponentsModule = DesignerComponentsModule;
+export const customComponentsModule = {
+  ...DesignerComponentsModule,
+  __init__: [...DesignerComponentsModule.__init__, 'stackRegistration'],
+  stackRegistration: ['type' as const, StackRegistration] as ['type', typeof StackRegistration],
+};
 
-/**
- * 팩토리 형태의 export — 테스트에서 격리 인스턴스가 필요한 경우 사용.
- * 싱글톤과 동일 객체를 반환하며, 이는 form-js didi 컨테이너가 참조 동등성을
- * 요구하지 않으므로 기능상 동일하다.
- */
-export function createCustomComponentsModule(): typeof DesignerComponentsModule {
-  return DesignerComponentsModule;
+export function createCustomComponentsModule(): typeof customComponentsModule {
+  return customComponentsModule;
 }
 
 // defineComponent 계약 및 타입 re-export

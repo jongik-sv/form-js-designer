@@ -806,7 +806,7 @@ node, vitest
 - category: development
 - domain: frontend
 - model: sonnet
-- status: [im]
+- status: [xx]
 - priority: high
 - assignee: -
 - schedule: 2026-05-13 ~ 2026-05-14
