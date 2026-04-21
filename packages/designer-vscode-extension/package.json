@@ -1,7 +1,7 @@
 {
   "name": "@form-js-designer/designer-vscode-extension",
   "displayName": "Form.js Designer",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "private": true,
   "description": "VSCode extension for editing form-js form schemas in Markdown",
   "publisher": "form-js-designer",
@@ -69,10 +69,13 @@
         "displayName": "form-js Block Editor",
         "selector": [
           {
-            "filenamePattern": "*.md"
+            "filenamePattern": "*.__fjs-never-match__"
+          },
+          {
+            "filenamePattern": "*.form-js"
           }
         ],
-        "priority": "option"
+        "priority": "default"
       }
     ]
   },

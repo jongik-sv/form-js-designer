@@ -16,19 +16,41 @@ import { schemaHash } from '../shared/schemaHash';
 /**
  * 성공 경로 HTML 생성.
  * data-schema-id, data-md-start, data-md-end, hidden <pre class="form-js-source"> 포함.
+ *
+ * @param docUri - 해당 Markdown 문서의 URI 문자열 (없으면 펜슬 링크 생략)
  */
 export function renderFormJsBlock(
   content: string,
   id: string,
   start: number,
-  end: number
+  end: number,
+  docUri?: string
 ): string {
   const escaped = escapeHtml(content);
+  const editLink = docUri
+    ? `  ${renderEditLink(docUri, start, end, content)}\n`
+    : '';
   return [
     `<div class="form-js-block" data-schema-id="${id}" data-md-start="${start}" data-md-end="${end}">`,
-    `  <pre class="form-js-source" hidden>${escaped}</pre>`,
+    `${editLink}  <pre class="form-js-source" hidden>${escaped}</pre>`,
     `</div>`,
   ].join('\n');
+}
+
+/**
+ * ✏️ 편집 펜슬을 `command:formJs.openBlockEditor` 링크로 렌더한다.
+ *
+ * VSCode markdown preview가 command: URI를 허용하도록 trustedCommands 설정이 필요하지만,
+ * 최초 클릭 시 VSCode가 trust dialog를 표시하여 사용자가 승인하면 이후 동작한다.
+ */
+export function renderEditLink(
+  uri: string,
+  mdStart: number,
+  mdEnd: number,
+  schema: string
+): string {
+  const args = encodeURIComponent(JSON.stringify([{ uri, mdStart, mdEnd, schema }]));
+  return `<a class="fjs-edit-btn" role="button" aria-label="편집" title="Block Editor 열기" href="command:formJs.openBlockEditor?${args}">✏️</a>`;
 }
 
 /**
@@ -79,13 +101,20 @@ export function formJsMarkdownPlugin(md: MarkdownIt): void {
       ? token.content.slice(0, -1)
       : token.content;
 
+    // VSCode markdown-language-features는 env.currentDocument에 원본 Markdown 문서 URI(vscode.Uri)를 전달한다.
+    // 이 URI를 펜슬 command:URI args에 포함하여 extension이 어떤 문서의 블록인지 식별하게 한다.
+    const docUri = ((): string | undefined => {
+      const e = env as { currentDocument?: { toString(): string } } | undefined;
+      return e?.currentDocument?.toString();
+    })();
+
     try {
       // JSON 파싱 시도 — 실패 시 catch로 진입
       JSON.parse(raw);
 
       // 성공: schemaHash로 ID 생성 후 플레이스홀더 HTML 반환
       const id = schemaHash(raw);
-      return renderFormJsBlock(raw, id, start, end);
+      return renderFormJsBlock(raw, id, start, end, docUri);
     } catch (err) {
       // 실패: 블록 단위 오류 배너만 반환, 전체 preview 미중단
       const message = err instanceof Error ? err.message : String(err);

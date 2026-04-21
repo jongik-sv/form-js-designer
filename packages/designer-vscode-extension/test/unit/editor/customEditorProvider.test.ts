@@ -306,3 +306,93 @@ describe('FormJsBlockEditorProvider', () => {
     );
   });
 });
+
+/**
+ * 0.1.4: .form-js 네이티브 파일 분기 — 전체-파일을 스키마로 로드하는 경로.
+ * pendingEditSchemas는 무시하고 document.getText()를 사용해야 한다.
+ */
+describe('resolveCustomTextEditor: .form-js 파일 분기', () => {
+  beforeEach(() => {
+    editSessionRegistry.disposeAll();
+    pendingEditSchemas.clear();
+  });
+
+  function makeFormJsPanel() {
+    const posted: unknown[] = [];
+    return {
+      webview: {
+        options: {} as Record<string, unknown>,
+        html: '',
+        cspSource: 'vscode-webview-resource:',
+        asWebviewUri: vi.fn((u: { toString(): string }) => ({
+          toString: () => `webview://${u.toString()}`,
+        })),
+        postMessage: vi.fn((m: unknown) => {
+          posted.push(m);
+          return Promise.resolve(undefined);
+        }),
+        onDidReceiveMessage: vi.fn(() => ({ dispose: vi.fn() })),
+      },
+      onDidDispose: vi.fn(() => ({ dispose: vi.fn() })),
+      dispose: vi.fn(),
+      reveal: vi.fn(),
+      _posted: posted,
+    };
+  }
+
+  function makeFormJsDocument(body: string, uriStr = 'file:///workspace/sample.form-js') {
+    return {
+      uri: { toString: () => uriStr, fsPath: uriStr, path: uriStr },
+      version: 1,
+      lineCount: Math.max(1, body.split('\n').length),
+      lineAt: (n: number) => ({ text: body.split('\n')[n] ?? '', range: { end: { line: n, character: 0 } } }),
+      getText: () => body,
+      save: vi.fn().mockResolvedValue(true),
+    };
+  }
+
+  it('.form-js URI에서는 pendingEditSchemas 대신 document.getText()를 스키마로 사용한다', async () => {
+    // pending 값은 .form-js에서 무시돼야 함 (URI가 다르므로 애초에 매칭되지 않음)
+    pendingEditSchemas.set('file:///ghost.md', { mdStart: 1, mdEnd: 2, schema: '{"ghost":true}' });
+
+    const provider = new FormJsBlockEditorProvider(makeUri('/ext') as never);
+    const panel = makeFormJsPanel();
+    const body = '{"components":[{"type":"textfield","key":"name"}]}';
+    const doc = makeFormJsDocument(body);
+
+    await provider.resolveCustomTextEditor(
+      doc as never,
+      panel as never,
+      { isCancellationRequested: false, onCancellationRequested: vi.fn() } as never
+    );
+
+    // setImmediate로 dispatched edit-opened 메시지가 posted에 들어갈 때까지 대기
+    await new Promise((resolve) => setImmediate(resolve));
+
+    const editOpened = (panel._posted as Array<{ type: string; schema?: string; mdStart?: number; mdEnd?: number }>)
+      .find((m) => m.type === 'edit-opened');
+    expect(editOpened).toBeDefined();
+    expect(editOpened!.schema).toBe(body);
+    expect(editOpened!.mdStart).toBe(-1);
+    expect(editOpened!.mdEnd).toBe(-1);
+  });
+
+  it('.form-js 빈 파일에서는 기본 스키마로 초기화한다', async () => {
+    const provider = new FormJsBlockEditorProvider(makeUri('/ext') as never);
+    const panel = makeFormJsPanel();
+    const doc = makeFormJsDocument('');
+
+    await provider.resolveCustomTextEditor(
+      doc as never,
+      panel as never,
+      { isCancellationRequested: false, onCancellationRequested: vi.fn() } as never
+    );
+
+    await new Promise((resolve) => setImmediate(resolve));
+
+    const editOpened = (panel._posted as Array<{ type: string; schema?: string }>).find(
+      (m) => m.type === 'edit-opened'
+    );
+    expect(editOpened!.schema).toBe('{"type":"default","components":[]}');
+  });
+});

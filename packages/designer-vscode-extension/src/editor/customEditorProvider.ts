@@ -51,13 +51,31 @@ export class FormJsBlockEditorProvider {
   ): Promise<void> {
     const uri = document.uri.toString();
 
-    // schema stash consume (openBlockEditorCommand가 설정한 스키마를 읽고 즉시 제거)
-    const pending = pendingEditSchemas.get(uri);
-    pendingEditSchemas.delete(uri);
+    // .form-js 네이티브 파일: 전체 본문을 스키마로 로드 (markdown fence 경로 우회)
+    // mdStart/mdEnd = -1 sentinel로 "whole-file" 모드를 표현한다.
+    const isFormJsFile = uri.toLowerCase().endsWith('.form-js');
 
-    const schema = pending?.schema ?? '{"type":"default","components":[]}';
-    const mdStart = pending?.mdStart ?? 0;
-    const mdEnd = pending?.mdEnd ?? 0;
+    let schema: string;
+    let mdStart: number;
+    let mdEnd: number;
+
+    if (isFormJsFile) {
+      // 전체 파일을 JSON 스키마로 간주. 빈 파일이면 기본 스키마.
+      const raw = document.getText().trim();
+      schema = raw.length > 0 ? raw : '{"type":"default","components":[]}';
+      mdStart = -1;
+      mdEnd = -1;
+      // pending은 .md 경로 전용이므로 혹시 남아있으면 제거
+      pendingEditSchemas.delete(uri);
+    } else {
+      // .md 경로: openBlockEditorCommand가 설정한 스키마를 consume
+      const pending = pendingEditSchemas.get(uri);
+      pendingEditSchemas.delete(uri);
+
+      schema = pending?.schema ?? '{"type":"default","components":[]}';
+      mdStart = pending?.mdStart ?? 0;
+      mdEnd = pending?.mdEnd ?? 0;
+    }
 
     // webview 옵션 설정
     webviewPanel.webview.options = {
@@ -167,9 +185,19 @@ export class FormJsBlockEditorProvider {
       }
     });
 
-    // TSK-04-02: webview에서 보낸 axe-result 메시지 처리
+    // webview → extension 메시지 처리 (axe-result + save-schema)
     webviewPanel.webview.onDidReceiveMessage((message: unknown) => {
-      const msg = message as { type?: string; webviewId?: string; violations?: unknown[] };
+      const msg = message as {
+        type?: string;
+        webviewId?: string;
+        violations?: unknown[];
+        uri?: string;
+        mdStart?: number;
+        mdEnd?: number;
+        schema?: string;
+        docVersion?: number;
+      };
+
       if (msg?.type === 'axe-result') {
         try {
           // eslint-disable-next-line @typescript-eslint/no-require-imports
@@ -181,8 +209,129 @@ export class FormJsBlockEditorProvider {
         } catch {
           // testBridge not available in production mode
         }
+        return;
+      }
+
+      if (msg?.type === 'save-schema') {
+        void handleSaveFromWebview(webviewPanel, document, {
+          uri: msg.uri ?? uri,
+          mdStart: msg.mdStart ?? -1,
+          mdEnd: msg.mdEnd ?? -1,
+          schema: msg.schema ?? '',
+          docVersion: msg.docVersion ?? document.version,
+        });
+        return;
       }
     });
+  }
+}
+
+/**
+ * webview의 save-schema 메시지를 처리하여 문서에 반영한다.
+ *
+ * 분기:
+ * - mdStart/mdEnd === -1 (whole-file mode, `.form-js` 네이티브 파일):
+ *     전체 문서 본문을 포맷된 JSON으로 치환한다.
+ * - 그 외 (markdown fence mode):
+ *     locateFenceBody + replaceFenceBody로 펜스 본문만 교체한다 (handleSaveSchema 위임).
+ *
+ * 저장 결과는 webview에 `save-result` 메시지로 회신한다.
+ */
+async function handleSaveFromWebview(
+  webviewPanel: vscode.WebviewPanel,
+  document: vscode.TextDocument,
+  payload: { uri: string; mdStart: number; mdEnd: number; schema: string; docVersion: number }
+): Promise<void> {
+  const reply = (ok: boolean, error?: string): void => {
+    try {
+      void webviewPanel.webview.postMessage({ type: 'save-result', ok, error });
+    } catch {
+      // panel disposed
+    }
+  };
+
+  const isWholeFile = payload.mdStart === -1 && payload.mdEnd === -1;
+
+  try {
+    if (isWholeFile) {
+      // `.form-js` whole-file 치환: 들여쓰기 2칸 고정
+      let formatted: string;
+      try {
+        const parsed: unknown = JSON.parse(payload.schema || '{}');
+        formatted = JSON.stringify(parsed, null, 2);
+      } catch {
+        reply(false, 'invalid JSON');
+        return;
+      }
+
+      const fullRange = new vscode.Range(
+        new vscode.Position(0, 0),
+        document.lineAt(Math.max(0, document.lineCount - 1)).range.end
+      );
+      const edit = new vscode.WorkspaceEdit();
+      edit.replace(document.uri, fullRange, formatted);
+      const applied = await vscode.workspace.applyEdit(edit);
+      if (!applied) {
+        reply(false, 'applyEdit failed');
+        return;
+      }
+      // TextDocument는 dirty 상태가 됨 — save까지 자동 트리거
+      try {
+        await document.save();
+      } catch {
+        // save 실패 시에도 applyEdit는 성공이므로 success 리포트
+      }
+      reply(true);
+      return;
+    }
+
+    // markdown fence 경로 (위임)
+    const { handleSaveSchema } = await import('./saveSchemaController');
+    const { locateFenceBody } = await import('./blockLocator');
+    const { replaceFenceBody } = await import('./workspaceEdit');
+
+    await handleSaveSchema(
+      {
+        type: 'save-schema',
+        uri: payload.uri,
+        mdStart: payload.mdStart,
+        mdEnd: payload.mdEnd,
+        schema: payload.schema,
+        docVersion: payload.docVersion,
+      },
+      {
+        openTextDocument: async (u: string) =>
+          (await vscode.workspace.openTextDocument(vscode.Uri.parse(u))) as unknown as {
+            version: number;
+            lineCount: number;
+            lineAt(line: number): { text: string };
+            uri: { toString(): string };
+          },
+        applyEdit: async (e) => vscode.workspace.applyEdit(e as vscode.WorkspaceEdit),
+        showWarningMessage: (m, opts, ...items) =>
+          Promise.resolve(vscode.window.showWarningMessage(m, opts, ...items)) as Promise<string | undefined>,
+        locateFenceBody: (doc, s, e) =>
+          locateFenceBody(doc as unknown as vscode.TextDocument, s, e) as unknown as {
+            start: { line: number; character: number };
+            end: { line: number; character: number };
+          },
+        replaceFenceBody: async (doc, s, r) =>
+          replaceFenceBody(
+            doc as unknown as vscode.TextDocument,
+            s,
+            r as unknown as vscode.Range
+          ),
+        onResult: (result) => reply(result.ok, result.error),
+        markSaveInFlight: (u, v) => {
+          editSessionRegistry.markSaveInFlight?.(u, v);
+        },
+        clearSaveInFlight: (u, v) => {
+          editSessionRegistry.clearSaveInFlight?.(u, v);
+        },
+      }
+    );
+  } catch (err) {
+    reply(false, err instanceof Error ? err.message : String(err));
   }
 }
 

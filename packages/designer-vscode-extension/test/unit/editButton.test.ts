@@ -112,34 +112,19 @@ describe('mountEditButton: 버튼 생성·마운트', () => {
 });
 
 // ──────────────────────────────────────────────────────
-// 2. mountEditButton: 클릭 → postMessage 송신
+// 2. mountEditButton: 0.1.4부터 postMessage 경로 제거
 // ──────────────────────────────────────────────────────
-describe('mountEditButton: 클릭 → postMessage 송신', () => {
-  it('버튼 클릭 시 postMessage가 { type: "request-edit", mdStart, mdEnd }로 1회 호출된다', async () => {
+// 0.1.4에서 펜슬은 markdown-it 렌더 단계의 `<a href="command:formJs.openBlockEditor?...">`
+// 로 전환되어 DOM click → postMessage 경로는 사용하지 않는다.
+// mountEditButton은 legacy HTML 캐시 대응 fallback 버튼만 삽입한다.
+describe('mountEditButton: postMessage 경로 없음 (0.1.4)', () => {
+  it('fallback 버튼 클릭 시 postMessage를 호출하지 않는다', async () => {
     setupVscodeApi();
     const { mountEditButton } = await import('../../src/markdown/editButton');
     const block = createBlock(10, 50);
 
     mountEditButton(block, 10, 50);
     const btn = block.querySelector<HTMLButtonElement>('.fjs-edit-btn')!;
-    btn.click();
-
-    expect(mockPostMessage).toHaveBeenCalledTimes(1);
-    expect(mockPostMessage).toHaveBeenCalledWith({
-      type: 'request-edit',
-      mdStart: 10,
-      mdEnd: 50,
-    });
-  });
-
-  it('aria-disabled="true" 상태에서 클릭해도 postMessage가 호출되지 않는다', async () => {
-    setupVscodeApi();
-    const { mountEditButton } = await import('../../src/markdown/editButton');
-    const block = createBlock(10, 50);
-
-    mountEditButton(block, 10, 50);
-    const btn = block.querySelector<HTMLButtonElement>('.fjs-edit-btn')!;
-    btn.setAttribute('aria-disabled', 'true');
     btn.click();
 
     expect(mockPostMessage).not.toHaveBeenCalled();
@@ -184,33 +169,6 @@ describe('lockAllButtons: single-editor lock', () => {
     }
   });
 
-  it('단일 블록에서 클릭 시 자신도 aria-disabled가 설정된다', async () => {
-    setupVscodeApi();
-    const { mountEditButton } = await import('../../src/markdown/editButton');
-    const block = createBlock(10, 50);
-
-    mountEditButton(block, 10, 50);
-    const btn = block.querySelector<HTMLButtonElement>('.fjs-edit-btn')!;
-    btn.click();
-
-    expect(btn.getAttribute('aria-disabled')).toBe('true');
-  });
-
-  it('버튼 클릭 후 다른 블록의 버튼에도 aria-disabled="true"가 설정된다', async () => {
-    setupVscodeApi();
-    const { mountEditButton } = await import('../../src/markdown/editButton');
-    const block1 = createBlock(10, 50);
-    const block2 = createBlock(60, 100);
-
-    mountEditButton(block1, 10, 50);
-    mountEditButton(block2, 60, 100);
-
-    const btn1 = block1.querySelector<HTMLButtonElement>('.fjs-edit-btn')!;
-    btn1.click();
-
-    const btn2 = block2.querySelector<HTMLButtonElement>('.fjs-edit-btn')!;
-    expect(btn2.getAttribute('aria-disabled')).toBe('true');
-  });
 });
 
 // ──────────────────────────────────────────────────────

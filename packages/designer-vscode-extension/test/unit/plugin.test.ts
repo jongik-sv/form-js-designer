@@ -190,6 +190,29 @@ describe('formJsMarkdownPlugin: XSS 방지', () => {
 });
 
 // ──────────────────────────────────────────────────────
+// 6b. ✏️ 펜슬 command URI 링크 (env.currentDocument 기반)
+// ──────────────────────────────────────────────────────
+describe('formJsMarkdownPlugin: 펜슬 command URI 링크', () => {
+  it('env.currentDocument가 제공되면 <a href="command:formJs.openBlockEditor?..."> 링크를 포함한다', () => {
+    const md = createMd();
+    const html = md.render(fence('form-js', VALID_JSON), {
+      currentDocument: { toString: () => 'file:///workspace/doc.md' },
+    });
+    expect(html).toContain('class="fjs-edit-btn"');
+    expect(html).toContain('href="command:formJs.openBlockEditor?');
+    // args에 uri가 포함돼야 함
+    expect(decodeURIComponent(html)).toContain('file:///workspace/doc.md');
+  });
+
+  it('env.currentDocument가 없으면 펜슬 링크를 생략한다 (블록 렌더는 유지)', () => {
+    const md = createMd();
+    const html = md.render(fence('form-js', VALID_JSON));
+    expect(html).toContain('class="form-js-block"');
+    expect(html).not.toContain('href="command:formJs.openBlockEditor');
+  });
+});
+
+// ──────────────────────────────────────────────────────
 // 7. extendMarkdownIt — VSCode 진입점
 // ──────────────────────────────────────────────────────
 describe('extendMarkdownIt', () => {
