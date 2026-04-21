@@ -19,6 +19,10 @@ import { customComponentsModule } from '../components';
 // Tabs/Card 등 커스텀 container의 자식 row를 얻으려면 form-js 기본 formLayouter를
 // DesignerFormLayouter로 교체해야 한다. preview.ts와 동일한 모듈 조합 유지.
 import { DesignerContainerModule } from '@form-js-designer/designer-core';
+// context-pad에 "행으로 복사 / 세로로 복사" 버튼 주입 (웹 호스트의 OutlineModule 경량 포팅)
+import { ContextPadExtrasModule } from './contextPadExtras';
+// form-js 기본 properties panel에 "Custom properties" 그룹을 추가하는 provider
+import { PropsPanelModule } from './propsPanel/PropsPanelService';
 import type { EditOpenedMessage, SaveSchemaMessage } from '../shared/messages';
 
 // TSK-04-02: axe-core 스캔 테스트 모드 플래그 (esbuild define)
@@ -43,7 +47,15 @@ export interface FormEditorInstance {
   saveSchema?(): unknown;
   getSchema?(): unknown;
   importSchema?(schema: unknown): Promise<unknown>;
+  get?(name: string, strict?: boolean): unknown;
 }
+
+const EDITOR_MODULES = [
+  DesignerContainerModule,
+  customComponentsModule,
+  ContextPadExtrasModule,
+  PropsPanelModule,
+];
 
 /**
  * initCustomEditor — 주어진 container에 form-js editor를 마운트한다 (TSK-05-04).
@@ -58,7 +70,7 @@ export async function initCustomEditor(
   const editor = await createFormEditor({
     container,
     schema,
-    additionalModules: [DesignerContainerModule, customComponentsModule],
+    additionalModules: EDITOR_MODULES,
   });
   return editor as unknown as FormEditorInstance;
 }
@@ -72,8 +84,25 @@ let currentMdStart = 0;
 let currentMdEnd = 0;
 let lastKnownDocVersion = 0;
 
+/** 마지막으로 전송한 스키마 JSON — 동일 스키마 재전송 억제용 */
+let lastSyncedSchemaJson = '';
+/** debounce 타이머 */
+let syncTimer: ReturnType<typeof setTimeout> | null = null;
+/** commandStack.changed 구독 해제 핸들 */
+let unsubscribeChange: (() => void) | null = null;
+
+/** form-js 편집 이벤트 → 자동 sync 간격 (ms) */
+const SYNC_DEBOUNCE_MS = 250;
+
+interface FormEventBus {
+  on(event: string, handler: (...args: unknown[]) => void): void;
+  off(event: string, handler: (...args: unknown[]) => void): void;
+}
+
 /**
  * form-js editor를 #app 컨테이너에 마운트한다.
+ * PropsPanelModule이 DI 초기화 시 propertiesPanel.registerProvider를 호출하여
+ * Custom properties 그룹을 form-js 기본 properties panel에 추가한다.
  */
 export async function mountEditor(schema: unknown): Promise<void> {
   const container = document.getElementById('app');
@@ -91,42 +120,99 @@ export async function mountEditor(schema: unknown): Promise<void> {
     }
     editorInstance = null;
   }
+  if (unsubscribeChange) {
+    try {
+      unsubscribeChange();
+    } catch {
+      // off 실패 무시
+    }
+    unsubscribeChange = null;
+  }
+  if (syncTimer) {
+    clearTimeout(syncTimer);
+    syncTimer = null;
+  }
 
   try {
-    editorInstance = await createFormEditor({
+    editorInstance = (await createFormEditor({
       container,
       schema,
-      additionalModules: [DesignerContainerModule, customComponentsModule],
-    }) as FormEditorInstance;
+      additionalModules: EDITOR_MODULES,
+    })) as FormEditorInstance;
   } catch (err) {
     console.error('[form-js editor] createFormEditor 실패:', err);
     container.textContent = `편집기 초기화 실패: ${err instanceof Error ? err.message : String(err)}`;
+    return;
+  }
+
+  // 초기 스키마 JSON 기록 (동일 내용 재전송 방지용 기준점)
+  lastSyncedSchemaJson = serializeCurrentSchema();
+
+  // commandStack.changed 구독 — 사용자 편집이 발생할 때만 dirty 동기화
+  if (typeof editorInstance.get === 'function') {
+    const eventBus = editorInstance.get('eventBus', false) as FormEventBus | undefined;
+    if (eventBus) {
+      const onChanged = (): void => scheduleSync();
+      eventBus.on('commandStack.changed', onChanged);
+      unsubscribeChange = () => eventBus.off('commandStack.changed', onChanged);
+    }
   }
 }
 
-/**
- * extension host로 save-schema 메시지를 송신한다.
- * TSK-02-04: uri, mdStart, mdEnd, docVersion 포함.
- */
-export function sendSaveSchema(): void {
-  if (!vscodeApi || !editorInstance) return;
-
+/** 현재 editor의 schema를 JSON 문자열로 직렬화 (없으면 빈 객체) */
+function serializeCurrentSchema(): string {
+  if (!editorInstance) return '{}';
   try {
-    const rawSchema = typeof editorInstance.getSchema === 'function'
+    const raw = typeof editorInstance.getSchema === 'function'
       ? editorInstance.getSchema()
       : typeof editorInstance.saveSchema === 'function'
         ? editorInstance.saveSchema()
         : null;
+    return raw != null ? JSON.stringify(raw) : '{}';
+  } catch {
+    return '{}';
+  }
+}
 
-    const msg: SaveSchemaMessage = {
-      type: 'save-schema',
-      uri: currentUri,
-      mdStart: currentMdStart,
-      mdEnd: currentMdEnd,
-      schema: rawSchema != null ? JSON.stringify(rawSchema) : '{}',
-      docVersion: lastKnownDocVersion,
-    };
+/** 편집 이벤트를 debounce로 묶어 sync 메시지를 발송 (persist=false, dirty 유지) */
+function scheduleSync(): void {
+  if (syncTimer) clearTimeout(syncTimer);
+  syncTimer = setTimeout(() => {
+    syncTimer = null;
+    sendSchemaMessage(false);
+  }, SYNC_DEBOUNCE_MS);
+}
+
+/**
+ * extension host로 save-schema 메시지를 송신한다.
+ * persist=true: applyEdit + document.save() (Cmd+S).
+ * persist=false: applyEdit만 — 문서는 dirty 상태로 남음 (자동 sync).
+ */
+export function sendSaveSchema(persist: boolean = true): void {
+  sendSchemaMessage(persist);
+}
+
+function sendSchemaMessage(persist: boolean): void {
+  if (!vscodeApi || !editorInstance) return;
+
+  const schemaJson = serializeCurrentSchema();
+
+  // persist=false(sync)이고 스키마가 이전과 동일하면 생략
+  if (!persist && schemaJson === lastSyncedSchemaJson) return;
+
+  const msg: SaveSchemaMessage = {
+    type: 'save-schema',
+    uri: currentUri,
+    mdStart: currentMdStart,
+    mdEnd: currentMdEnd,
+    schema: schemaJson,
+    docVersion: lastKnownDocVersion,
+    persist,
+  };
+
+  try {
     vscodeApi.postMessage(msg);
+    lastSyncedSchemaJson = schemaJson;
   } catch (err) {
     console.error('[form-js editor] save-schema 송신 실패:', err);
   }
@@ -204,8 +290,15 @@ export function init(): void {
 
     if (msg.type === 'save-result') {
       const result = msg as import('../shared/messages').SaveResultMessage;
+      // applyEdit 성공 시 새 doc.version을 기록하여 다음 sync에서 재사용
+      if (result.ok && typeof result.version === 'number') {
+        lastKnownDocVersion = result.version;
+      }
       if (result.ok) {
-        showSaveToast('저장되었습니다.');
+        // persist=true(Cmd+S)일 때만 "저장됨" 토스트 표시. 자동 sync는 조용히 진행.
+        if (result.persisted) {
+          showSaveToast('저장되었습니다.');
+        }
       } else if (result.error !== 'cancelled') {
         showErrorBanner(`저장 실패: ${result.error ?? '알 수 없는 오류'}`);
       }
@@ -213,17 +306,17 @@ export function init(): void {
     }
   });
 
-  // 저장 버튼 wiring (TSK-02-04)
+  // 저장 버튼 wiring (TSK-02-04) — persist=true
   const saveBtn = document.querySelector<HTMLElement>('[data-testid="form-js-save-button"]');
   if (saveBtn) {
-    saveBtn.addEventListener('click', sendSaveSchema);
+    saveBtn.addEventListener('click', () => sendSaveSchema(true));
   }
 
-  // Cmd+S / Ctrl+S keydown 캡처
+  // Cmd+S / Ctrl+S keydown 캡처 — persist=true로 디스크에 저장
   window.addEventListener('keydown', (event: KeyboardEvent) => {
     if ((event.metaKey || event.ctrlKey) && event.key === 's') {
       event.preventDefault();
-      sendSaveSchema();
+      sendSaveSchema(true);
     }
   });
 

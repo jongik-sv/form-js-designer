@@ -68,7 +68,9 @@ describe('handleSaveSchema', () => {
     await handleSaveSchema(makeMsg({ docVersion: 3 }), deps);
 
     expect(deps.applyEdit).toHaveBeenCalledOnce();
-    expect(deps.onResult).toHaveBeenCalledWith({ ok: true });
+    expect(deps.onResult).toHaveBeenCalledWith(
+      expect.objectContaining({ ok: true }),
+    );
   });
 
   it('정상 저장 시 충돌 모달(showWarningMessage)이 호출되지 않는다', async () => {
@@ -96,7 +98,9 @@ describe('handleSaveSchema', () => {
 
     expect(deps.showWarningMessage).toHaveBeenCalledOnce();
     expect(deps.applyEdit).toHaveBeenCalledOnce();
-    expect(deps.onResult).toHaveBeenCalledWith({ ok: true });
+    expect(deps.onResult).toHaveBeenCalledWith(
+      expect.objectContaining({ ok: true }),
+    );
   });
 
   // ── 3. 버전 불일치 + 취소 ────────────────────────

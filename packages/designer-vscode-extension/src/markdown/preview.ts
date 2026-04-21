@@ -313,6 +313,64 @@ function handleEditMessage(event: MessageEvent): void {
   }
 }
 
+/** preview content 교체 후 재마운트 debounce 타이머 */
+let remountTimer: ReturnType<typeof setTimeout> | null = null;
+
+/**
+ * 현재 DOM의 모든 .form-js-block을 재마운트한다.
+ * VS Code markdown preview가 원본 문서 변경 시 body HTML을 교체한 후 호출된다.
+ * 기존 viewer 인스턴스는 dispose하여 누수와 stale container 참조를 방지한다.
+ */
+function remountAll(): void {
+  disposeAll();
+  mountViewers().catch((err) => {
+    console.error('[form-js preview] remount mountViewers 실패:', err);
+  });
+  for (const block of getFormBlocks()) {
+    const mdStart = Number(block.dataset['mdStart'] ?? '0');
+    const mdEnd = Number(block.dataset['mdEnd'] ?? '0');
+    mountEditButtonOverlay(block, mdStart, mdEnd);
+  }
+}
+
+/** remount 이벤트를 debounce로 묶어 preview 1회 갱신에 대해 최대 1회 실행 */
+function scheduleRemount(): void {
+  if (remountTimer) clearTimeout(remountTimer);
+  remountTimer = setTimeout(() => {
+    remountTimer = null;
+    remountAll();
+  }, 80);
+}
+
+/**
+ * body의 자식 변경을 감시하여 `.form-js-block`이 새로 삽입/교체되면 재마운트한다.
+ * VS Code markdown preview는 원본 문서 편집 시 body 영역을 innerHTML 교체 방식으로 갱신하며,
+ * 이때 preview.ts는 이미 로드된 상태이므로 초기화는 다시 실행되지 않는다.
+ *
+ * 기준: addedNodes 중 `.form-js-block` 자체(또는 그것을 포함한 컨테이너)가 있을 때만 트리거.
+ * form-js viewer가 .form-js-block 내부에 렌더한 자식 노드(fjs-form 등)는 해당 클래스를
+ * 갖지 않으므로 remount가 반복되지 않는다.
+ */
+function startContentObserver(): void {
+  if (typeof MutationObserver === 'undefined') return;
+  const observer = new MutationObserver((mutations) => {
+    for (const m of mutations) {
+      for (const node of Array.from(m.addedNodes)) {
+        if (!(node instanceof HTMLElement)) continue;
+        if (node.classList?.contains('form-js-block')) {
+          scheduleRemount();
+          return;
+        }
+        if (node.querySelector?.('.form-js-block')) {
+          scheduleRemount();
+          return;
+        }
+      }
+    }
+  });
+  observer.observe(document.body, { childList: true, subtree: true });
+}
+
 function init(): void {
   // DIAG: webview 진입 + DOM 스냅샷
   const blockCount = document.querySelectorAll('.form-js-block').length;
@@ -341,6 +399,9 @@ function init(): void {
     mountEditButtonOverlay(block, mdStart, mdEnd);
   }
   window.addEventListener('message', handleEditMessage);
+
+  // 원본 문서 변경 시 VS Code markdown preview가 DOM을 교체하면 재마운트
+  startContentObserver();
 }
 
 if (typeof document !== 'undefined' && typeof window !== 'undefined') {

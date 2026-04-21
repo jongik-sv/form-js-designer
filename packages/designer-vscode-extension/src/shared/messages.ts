@@ -52,12 +52,22 @@ export interface SaveSchemaMessage {
   schema: string;
   /** webview가 본 마지막 TextDocument.version */
   docVersion: number;
+  /**
+   * true  = applyEdit 후 document.save()까지 호출 (Cmd+S / 저장 버튼).
+   * false = applyEdit만 수행하여 dirty 상태로 남김 (form-js change 자동 동기화).
+   * 기본 true (하위 호환).
+   */
+  persist?: boolean;
 }
 
 export interface SaveResultMessage {
   type: 'save-result';
   ok: boolean;
   error?: string;
+  /** applyEdit 후 TextDocument.version. 이후 sync에서 docVersion으로 재사용. */
+  version?: number;
+  /** 디스크 저장까지 완료됐는지 여부 (persist=true 결과) */
+  persisted?: boolean;
 }
 
 export interface SourceUpdatedMessage {

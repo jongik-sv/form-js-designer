@@ -27,6 +27,8 @@ interface TextDocumentLike {
   lineCount: number;
   lineAt(line: number): { text: string };
   uri: { toString(): string };
+  /** persist=true일 때 호출 — 디스크에 저장 */
+  save?(): Promise<boolean>;
 }
 
 /** Range 최소 인터페이스 */
@@ -77,6 +79,8 @@ export async function handleSaveSchema(
   deps: SaveSchemaDeps
 ): Promise<void> {
   const { uri, mdStart, mdEnd, schema, docVersion } = message;
+  // persist=false는 form-js 편집 이벤트 자동 sync — 조용히 dirty만 유지하고 충돌 모달을 띄우지 않는다.
+  const persist = message.persist !== false;
 
   // doc 획득 (버전 불일치 시 사용자 확인 후 재획득)
   let doc: TextDocumentLike;
@@ -87,20 +91,23 @@ export async function handleSaveSchema(
     return;
   }
 
-  // 버전 비교 — 불일치 시 충돌 모달
+  // 버전 비교 — Cmd+S(persist)일 때만 충돌 모달. 자동 sync는 최신 doc 기준으로 덮어쓴다.
   if (doc.version !== docVersion) {
-    const choice = await showConflictModal(deps.showWarningMessage);
-    if (choice === 'cancel') {
-      deps.onResult({ ok: false, error: 'cancelled' });
-      return;
+    if (persist) {
+      const choice = await showConflictModal(deps.showWarningMessage);
+      if (choice === 'cancel') {
+        deps.onResult({ ok: false, error: 'cancelled' });
+        return;
+      }
+      // 덮어쓰기: 최신 doc 재획득
+      try {
+        doc = await deps.openTextDocument(uri);
+      } catch (err) {
+        deps.onResult({ ok: false, error: toErrorMessage(err) });
+        return;
+      }
     }
-    // 덮어쓰기: 최신 doc 재획득
-    try {
-      doc = await deps.openTextDocument(uri);
-    } catch (err) {
-      deps.onResult({ ok: false, error: toErrorMessage(err) });
-      return;
-    }
+    // persist=false: 현재 doc 기준으로 진행 (docVersion 최신화 역할만)
   }
 
   // in-flight 토큰 등록 (self-edit cascade 억제용)
@@ -138,7 +145,18 @@ export async function handleSaveSchema(
       return;
     }
 
-    deps.onResult({ ok: true });
+    // persist=true: 디스크까지 저장 (Cmd+S). 실패해도 applyEdit는 성공이므로 ok=true 유지.
+    let persisted = false;
+    if (persist && typeof doc.save === 'function') {
+      try {
+        await doc.save();
+        persisted = true;
+      } catch {
+        // save 실패 시에도 applyEdit는 이미 성공 상태로 보고
+      }
+    }
+
+    deps.onResult({ ok: true, version: doc.version, persisted });
   } finally {
     deps.clearSaveInFlight(uri, doc.version);
   }

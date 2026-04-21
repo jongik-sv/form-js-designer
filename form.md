@@ -95,6 +95,22 @@
                   "key": "date"
                 }
               ]
+            },
+            {
+              "label": "Radio group",
+              "values": [
+                {
+                  "label": "Value",
+                  "value": "value"
+                }
+              ],
+              "type": "radio",
+              "layout": {
+                "row": "Row_1pqay4s",
+                "columns": null
+              },
+              "id": "Field_0xp63qy",
+              "key": "radio_7css2v"
             }
           ],
           "id": "tabPanel_83fe6de4-3e11-4cd2-b87a-7ac04c2d869c",
@@ -342,5 +358,26 @@
   "id": "Form_0xlefrh",
   "schemaVersion": 19
 }
+```
 
+
+```form-js
+{
+  "components": [
+    {
+      "subtype": "date",
+      "dateLabel": "Date",
+      "type": "datetime",
+      "layout": {
+        "row": "Row_0mkqsgy",
+        "columns": null
+      },
+      "id": "Field_19sg6bb",
+      "key": "datetime_alt2k6"
+    }
+  ],
+  "type": "default",
+  "id": "Form_0xlefrh",
+  "schemaVersion": 19
+}
 ```

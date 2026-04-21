@@ -196,6 +196,7 @@ export class FormJsBlockEditorProvider {
         mdEnd?: number;
         schema?: string;
         docVersion?: number;
+        persist?: boolean;
       };
 
       if (msg?.type === 'axe-result') {
@@ -219,6 +220,7 @@ export class FormJsBlockEditorProvider {
           mdEnd: msg.mdEnd ?? -1,
           schema: msg.schema ?? '',
           docVersion: msg.docVersion ?? document.version,
+          persist: msg.persist ?? true,
         });
         return;
       }
@@ -240,11 +242,27 @@ export class FormJsBlockEditorProvider {
 async function handleSaveFromWebview(
   webviewPanel: vscode.WebviewPanel,
   document: vscode.TextDocument,
-  payload: { uri: string; mdStart: number; mdEnd: number; schema: string; docVersion: number }
+  payload: {
+    uri: string;
+    mdStart: number;
+    mdEnd: number;
+    schema: string;
+    docVersion: number;
+    persist: boolean;
+  }
 ): Promise<void> {
-  const reply = (ok: boolean, error?: string): void => {
+  const reply = (
+    ok: boolean,
+    opts: { error?: string; version?: number; persisted?: boolean } = {},
+  ): void => {
     try {
-      void webviewPanel.webview.postMessage({ type: 'save-result', ok, error });
+      void webviewPanel.webview.postMessage({
+        type: 'save-result',
+        ok,
+        error: opts.error,
+        version: opts.version,
+        persisted: opts.persisted,
+      });
     } catch {
       // panel disposed
     }
@@ -260,7 +278,7 @@ async function handleSaveFromWebview(
         const parsed: unknown = JSON.parse(payload.schema || '{}');
         formatted = JSON.stringify(parsed, null, 2);
       } catch {
-        reply(false, 'invalid JSON');
+        reply(false, { error: 'invalid JSON' });
         return;
       }
 
@@ -272,16 +290,21 @@ async function handleSaveFromWebview(
       edit.replace(document.uri, fullRange, formatted);
       const applied = await vscode.workspace.applyEdit(edit);
       if (!applied) {
-        reply(false, 'applyEdit failed');
+        reply(false, { error: 'applyEdit failed' });
         return;
       }
-      // TextDocument는 dirty 상태가 됨 — save까지 자동 트리거
-      try {
-        await document.save();
-      } catch {
-        // save 실패 시에도 applyEdit는 성공이므로 success 리포트
+
+      // 내용이 바뀌지 않았으면 dirty 마크도 생기지 않음 → webview에는 현재 version을 회신
+      let persisted = false;
+      if (payload.persist) {
+        try {
+          await document.save();
+          persisted = true;
+        } catch {
+          // save 실패 시에도 applyEdit는 성공 → persisted=false로 회신
+        }
       }
-      reply(true);
+      reply(true, { version: document.version, persisted });
       return;
     }
 
@@ -298,6 +321,7 @@ async function handleSaveFromWebview(
         mdEnd: payload.mdEnd,
         schema: payload.schema,
         docVersion: payload.docVersion,
+        persist: payload.persist,
       },
       {
         openTextDocument: async (u: string) =>
@@ -306,6 +330,7 @@ async function handleSaveFromWebview(
             lineCount: number;
             lineAt(line: number): { text: string };
             uri: { toString(): string };
+            save?(): Promise<boolean>;
           },
         applyEdit: async (e) => vscode.workspace.applyEdit(e as vscode.WorkspaceEdit),
         showWarningMessage: (m, opts, ...items) =>
@@ -321,7 +346,8 @@ async function handleSaveFromWebview(
             s,
             r as unknown as vscode.Range
           ),
-        onResult: (result) => reply(result.ok, result.error),
+        onResult: (result) =>
+          reply(result.ok, { error: result.error, version: result.version, persisted: result.persisted }),
         markSaveInFlight: (u, v) => {
           editSessionRegistry.markSaveInFlight?.(u, v);
         },
@@ -331,7 +357,7 @@ async function handleSaveFromWebview(
       }
     );
   } catch (err) {
-    reply(false, err instanceof Error ? err.message : String(err));
+    reply(false, { error: err instanceof Error ? err.message : String(err) });
   }
 }
 

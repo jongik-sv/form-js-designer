@@ -1,11 +1,9 @@
 /**
- * form-js-editor.css — TSK-02-01
- *
- * Custom Editor webview 전용 최소 스타일.
+ * form-js-editor-host.css — Custom Editor webview 전용 최소 스타일.
  * form-js Block Editor 패널(ViewColumn.Beside)에서만 로드된다.
  */
 
-/* ── 루트 레이아웃 ──────────────���───────────────────── */
+/* ── 루트 레이아웃 ─────────────────────────────────── */
 
 html,
 body {
@@ -19,7 +17,7 @@ body {
   font-family: var(--vscode-font-family, sans-serif);
 }
 
-/* ── #app 컨테이너 ───────────────────���──────────────── */
+/* ── #app 컨테이너 ─────────────────────────────────── */
 
 #app {
   width: 100%;
