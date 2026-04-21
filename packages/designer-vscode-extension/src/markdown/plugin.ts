@@ -28,7 +28,7 @@ export function renderFormJsBlock(
 ): string {
   const escaped = escapeHtml(content);
   const editLink = docUri
-    ? `  ${renderEditLink(docUri, start, end, content)}\n`
+    ? `  ${renderEditLink(docUri, start, end)}\n`
     : '';
   return [
     `<div class="form-js-block" data-schema-id="${id}" data-md-start="${start}" data-md-end="${end}">`,
@@ -40,16 +40,20 @@ export function renderFormJsBlock(
 /**
  * ✏️ 편집 펜슬을 `command:formJs.openBlockEditor` 링크로 렌더한다.
  *
- * VSCode markdown preview가 command: URI를 허용하도록 trustedCommands 설정이 필요하지만,
- * 최초 클릭 시 VSCode가 trust dialog를 표시하여 사용자가 승인하면 이후 동작한다.
+ * args는 `{ uri, mdStart, mdEnd }` 만 포함한다 — schema는 extension이 문서를 열어
+ * locateFenceBody로 추출하므로 URL에 싣지 않는다 (큰 스키마가 encoded URL 한계를
+ * 넘어 클릭이 무시되던 0.1.4 회귀 대응).
+ *
+ * VSCode markdown preview는 기본적으로 command: URI 링크를 trusted markdown에서만
+ * 허용한다 — extension이 기여한 markdown-it plugin에서 렌더된 HTML은 trusted이므로
+ * workspace trust가 있는 프로젝트에서는 바로 동작한다.
  */
 export function renderEditLink(
   uri: string,
   mdStart: number,
-  mdEnd: number,
-  schema: string
+  mdEnd: number
 ): string {
-  const args = encodeURIComponent(JSON.stringify([{ uri, mdStart, mdEnd, schema }]));
+  const args = encodeURIComponent(JSON.stringify([{ uri, mdStart, mdEnd }]));
   return `<a class="fjs-edit-btn" role="button" aria-label="편집" title="Block Editor 열기" href="command:formJs.openBlockEditor?${args}">✏️</a>`;
 }
 

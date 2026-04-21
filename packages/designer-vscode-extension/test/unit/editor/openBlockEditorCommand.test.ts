@@ -17,6 +17,27 @@ vi.mock('vscode', () => ({
   window: {
     registerCustomEditorProvider: vi.fn(),
   },
+  workspace: {
+    openTextDocument: vi.fn(async () => ({
+      lineCount: 5,
+      lineAt: (n: number) => ({
+        text: [
+          '# header',
+          '```form-js',
+          '{"type":"default","components":[]}',
+          '```',
+          '',
+        ][n] ?? '',
+      }),
+      getText: (_range?: unknown) => '{"type":"default","components":[]}',
+    })),
+  },
+  Position: class {
+    constructor(public line: number, public character: number) {}
+  },
+  Range: class {
+    constructor(public start: unknown, public end: unknown) {}
+  },
 }));
 
 // 모킹된 vscode.commands.executeCommand 참조
@@ -119,5 +140,14 @@ describe('openBlockEditorCommand', () => {
     await cmd(baseArgs);
     // provider.resolveCustomTextEditor가 consume하기 전까지 stash는 남아있음
     expect(pendingEditSchemas.has(baseArgs.uri)).toBe(true);
+  });
+
+  it('schema 미제공 시 문서를 열어 locateFenceBody로 본문을 추출하여 stash한다', async () => {
+    const cmd = await importCmd();
+    await cmd({ uri: baseArgs.uri, mdStart: 1, mdEnd: 3 });
+    const stashed = pendingEditSchemas.get(baseArgs.uri);
+    expect(stashed).toBeDefined();
+    // mock getText가 리턴하는 본문이 stash돼야 함
+    expect(stashed!.schema).toBe('{"type":"default","components":[]}');
   });
 });

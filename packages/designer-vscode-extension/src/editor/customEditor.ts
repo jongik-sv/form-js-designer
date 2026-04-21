@@ -16,6 +16,9 @@
 
 import { createFormEditor } from '@bpmn-io/form-js-editor';
 import { customComponentsModule } from '../components';
+// Tabs/Card 등 커스텀 container의 자식 row를 얻으려면 form-js 기본 formLayouter를
+// DesignerFormLayouter로 교체해야 한다. preview.ts와 동일한 모듈 조합 유지.
+import { DesignerContainerModule } from '@form-js-designer/designer-core';
 import type { EditOpenedMessage, SaveSchemaMessage } from '../shared/messages';
 
 // TSK-04-02: axe-core 스캔 테스트 모드 플래그 (esbuild define)
@@ -55,7 +58,7 @@ export async function initCustomEditor(
   const editor = await createFormEditor({
     container,
     schema,
-    additionalModules: [customComponentsModule],
+    additionalModules: [DesignerContainerModule, customComponentsModule],
   });
   return editor as unknown as FormEditorInstance;
 }
@@ -93,7 +96,7 @@ export async function mountEditor(schema: unknown): Promise<void> {
     editorInstance = await createFormEditor({
       container,
       schema,
-      additionalModules: [customComponentsModule],
+      additionalModules: [DesignerContainerModule, customComponentsModule],
     }) as FormEditorInstance;
   } catch (err) {
     console.error('[form-js editor] createFormEditor 실패:', err);

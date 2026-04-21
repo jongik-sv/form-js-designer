@@ -24,8 +24,13 @@ export interface OpenBlockEditorArgs {
   mdStart: number;
   /** 펜스 블록 종료 라인 (0-based) */
   mdEnd: number;
-  /** 초기 스키마 JSON 문자열 */
-  schema: string;
+  /**
+   * 초기 스키마 JSON 문자열.
+   *
+   * command: URI 링크(markdown preview 펜슬) 호출 시에는 생략되며,
+   * 이 경우 extension이 문서를 열어 locateFenceBody로 본문을 추출한다.
+   */
+  schema?: string;
 }
 
 /**
@@ -46,7 +51,22 @@ export const pendingEditSchemas = new Map<string, {
 export async function openBlockEditorCommand(
   args: OpenBlockEditorArgs
 ): Promise<void> {
-  const { uri, mdStart, mdEnd, schema } = args;
+  const { uri, mdStart, mdEnd } = args;
+  let schema = args.schema;
+
+  // schema 미제공 시 문서를 열어 펜스 본문을 추출한다.
+  // (markdown preview 펜슬의 command URI 링크는 URL 길이 제한을 피하기 위해 schema를 싣지 않는다.)
+  if (typeof schema !== 'string' || schema.length === 0) {
+    try {
+      const doc = await vscode.workspace.openTextDocument(vscode.Uri.parse(uri));
+      const { locateFenceBody } = await import('./blockLocator');
+      const range = locateFenceBody(doc, mdStart, mdEnd);
+      schema = doc.getText(range);
+    } catch {
+      // fallback: 빈 스키마로 editor 열기 (사용자에게 오류 표시 없이 열고 나서 edit 가능)
+      schema = '{"type":"default","components":[]}';
+    }
+  }
 
   // single-editor lock: 이미 활성 세션이 있으면 reveal
   const existing = editSessionRegistry.getActive(uri);
