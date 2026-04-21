@@ -48,6 +48,44 @@
   border: 1px solid var(--fjs-border-color);
 }
 
+/* form-js CDS 토큰 → VS Code 다크 테마 매핑 */
+.form-js-block.theme-dark .fjs-container {
+  --cds-field: #3c3c3c;
+  --cds-field-01: #3c3c3c;
+  --cds-field-02: #3c3c3c;
+  --cds-background: #252526;
+  --cds-background-inverse: #e8e8e8;
+  --cds-background-inverse-hover: #d4d4d4;
+  --cds-background-active: #4e4e52;
+  --cds-layer: #2d2d30;
+  --cds-layer-01: #2d2d30;
+  --cds-layer-02: #3c3c3c;
+  --cds-layer-accent: #3e3e42;
+  --cds-icon-primary: #d4d4d4;
+  --cds-icon-secondary: #9d9d9d;
+  --cds-icon-inverse: #1e1e1e;
+  --cds-text-primary: #d4d4d4;
+  --cds-text-secondary: #a0a0a0;
+  --cds-text-placeholder: #6b6b6b;
+  --cds-text-inverse: #1e1e1e;
+  --cds-text-disabled: #5a5a5a;
+  --cds-text-error: #f14c4c;
+  --cds-border-strong: #6b6b6b;
+  --cds-border-strong-01: #6b6b6b;
+  --cds-border-subtle: #3e3e42;
+  --cds-border-subtle-01: #3e3e42;
+  --cds-border-disabled: #4e4e52;
+  --cds-border-inverse: #d4d4d4;
+  --cds-border-interactive: #3794ff;
+  --cds-link-primary: #3794ff;
+  --cds-button-primary: #0e639c;
+  --cds-focus: #007fd4;
+  --cds-interactive: #3794ff;
+  --cds-highlight: #1a3d5c;
+  --cds-shadow: rgba(0, 0, 0, 0.5);
+  --cds-toggle-off: #6b6b6b;
+}
+
 /* ── High Contrast 테마 (다크) ───────────────────────── */
 
 .form-js-block.theme-high-contrast {
@@ -100,6 +138,40 @@
 .form-js-block.theme-high-contrast-light .form-js-block--error {
   background-color: transparent;
   border-left-color: currentColor;
+}
+
+/* ── 다크 테마: 커스텀 designer-component 하드코딩 색상 오버라이드 ─── */
+
+.form-js-block.theme-dark .dc-tabs-container {
+  background-color: #252526;
+  border-color: #3e3e42;
+}
+
+.form-js-block.theme-dark .dc-tabs__list {
+  border-bottom-color: #3e3e42;
+}
+
+.form-js-block.theme-dark .dc-tabs__trigger {
+  color: #9d9d9d;
+}
+
+.form-js-block.theme-dark .dc-tabs__trigger:hover {
+  color: #d4d4d4;
+  background-color: #2d2d30;
+}
+
+.form-js-block.theme-dark .dc-tabs__trigger[data-state="active"] {
+  color: #d4d4d4;
+  border-bottom-color: #3794ff;
+}
+
+.form-js-block.theme-dark .dc-card {
+  background-color: #252526;
+  border-color: #3e3e42;
+}
+
+.form-js-block.theme-dark .dc-card__header {
+  color: #d4d4d4;
 }
 
 /* ── TSK-02-03: ✏️ 편집 버튼 오버레이 스타일 (VSCode 테마 토큰) ─────── */

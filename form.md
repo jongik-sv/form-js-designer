@@ -99,7 +99,7 @@
           ],
           "id": "tabPanel_83fe6de4-3e11-4cd2-b87a-7ac04c2d869c",
           "type": "tabPanel",
-          "label": "Tab 1",
+          "label": "Tab 1 조회",
           "layout": {
             "row": "Row_14s9htc"
           }
@@ -261,7 +261,7 @@
           ],
           "id": "tabPanel-2890f3df",
           "type": "tabPanel",
-          "label": "Tab 1",
+          "label": "Tab 수정화면",
           "layout": {
             "row": "Row_0v4yrm3"
           }
@@ -321,7 +321,7 @@
           ],
           "id": "tabPanel_46096571-dc11-4da6-902a-9a3046463c02",
           "type": "tabPanel",
-          "label": "Tab 2",
+          "label": "Tab 특별한 탭",
           "layout": {
             "row": "Row_179bmf2",
             "height": 482.73046875

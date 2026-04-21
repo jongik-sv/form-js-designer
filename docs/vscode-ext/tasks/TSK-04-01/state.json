@@ -1,0 +1,25 @@
+{
+  "status": "[ ]",
+  "started_at": "2026-04-20T23:56:35Z",
+  "last": {
+    "event": "test.ok",
+    "at": "2026-04-20T23:58:07Z"
+  },
+  "phase_history": [
+    {
+      "event": "test.ok",
+      "from": "[ ]",
+      "to": "[ ]",
+      "at": "2026-04-20T23:56:35Z",
+      "elapsed_seconds": 0
+    },
+    {
+      "event": "test.ok",
+      "from": "[ ]",
+      "to": "[ ]",
+      "at": "2026-04-20T23:58:07Z",
+      "elapsed_seconds": 92
+    }
+  ],
+  "updated": "2026-04-20T23:58:07Z"
+}
