@@ -105,6 +105,30 @@ export function activate(
         context.subscriptions.push(editorRegistration, commandRegistration);
       }
 
+      // 0.1.6: URI Handler 등록
+      // Markdown preview의 `command:` URI가 sanitize되어 동작하지 않는 문제를 우회하기 위해
+      // `vscode://form-js-designer.designer-vscode-extension/open-block-editor?uri=...&mdStart=...&mdEnd=...`
+      // 형식을 지원한다. Preview의 펜슬 <a href> 가 이 URI를 가리키면 VSCode가 extension의
+      // UriHandler로 라우팅한다.
+      try {
+        const uriHandler = vscode.window.registerUriHandler({
+          handleUri: (incoming: import('vscode').Uri) => {
+            if (incoming.path !== '/open-block-editor') return;
+            const params = new URLSearchParams(incoming.query);
+            const uri = params.get('uri') ?? '';
+            const mdStart = Number(params.get('mdStart') ?? '0');
+            const mdEnd = Number(params.get('mdEnd') ?? '0');
+            if (!uri || Number.isNaN(mdStart) || Number.isNaN(mdEnd)) return;
+            void openBlockEditorCommand({ uri, mdStart, mdEnd });
+          },
+        });
+        if (context) {
+          context.subscriptions.push(uriHandler);
+        }
+      } catch {
+        // UriHandler 등록 실패 시에도 다른 경로(command URI)로 동작 가능
+      }
+
       // TSK-02-04: sourceWatcher 시작 (onDidChangeTextDocument 구독)
       try {
         const { startSourceWatcher } = require('./editor/sourceWatcher') as typeof import('./editor/sourceWatcher');

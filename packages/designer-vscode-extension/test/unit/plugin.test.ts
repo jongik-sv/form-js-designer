@@ -190,21 +190,23 @@ describe('formJsMarkdownPlugin: XSS 방지', () => {
 });
 
 // ──────────────────────────────────────────────────────
-// 6b. ✏️ 펜슬 command URI 링크 (env.currentDocument 기반)
+// 6b. ✏️ 펜슬 UriHandler 링크 (env.currentDocument 기반, 0.1.6+)
 // ──────────────────────────────────────────────────────
-describe('formJsMarkdownPlugin: 펜슬 command URI 링크', () => {
-  it('env.currentDocument가 제공되면 <a href="command:formJs.openBlockEditor?..."> 링크를 포함한다', () => {
+describe('formJsMarkdownPlugin: 펜슬 UriHandler 링크', () => {
+  it('env.currentDocument가 제공되면 <a href="vscode://..."> UriHandler 링크를 포함한다', () => {
     const md = createMd();
     const html = md.render(fence('form-js', VALID_JSON), {
       currentDocument: { toString: () => 'file:///workspace/doc.md' },
     });
     expect(html).toContain('class="fjs-edit-btn"');
-    expect(html).toContain('href="command:formJs.openBlockEditor?');
-    // args에 uri가 포함돼야 함
+    expect(html).toContain(
+      'href="vscode://form-js-designer.designer-vscode-extension/open-block-editor?'
+    );
+    // query에 uri가 포함돼야 함 (URL-encoded form)
     expect(decodeURIComponent(html)).toContain('file:///workspace/doc.md');
   });
 
-  it('command URI args는 schema를 포함하지 않는다 (URL 길이 제한 회피)', () => {
+  it('UriHandler 링크 query는 uri/mdStart/mdEnd만 포함한다 (schema 미포함)', () => {
     const md = createMd();
     const hugeSchema = JSON.stringify({
       components: Array.from({ length: 50 }, (_, i) => ({ type: 'textfield', key: `f${i}` })),
@@ -212,19 +214,22 @@ describe('formJsMarkdownPlugin: 펜슬 command URI 링크', () => {
     const html = md.render(fence('form-js', hugeSchema), {
       currentDocument: { toString: () => 'file:///workspace/doc.md' },
     });
-    const match = html.match(/href="command:formJs\.openBlockEditor\?([^"]+)"/);
+    const match = html.match(
+      /href="vscode:\/\/form-js-designer\.designer-vscode-extension\/open-block-editor\?([^"]+)"/
+    );
     expect(match).not.toBeNull();
-    const decoded = decodeURIComponent(match![1]!);
-    const parsed = JSON.parse(decoded) as Array<{ uri: string; schema?: string }>;
-    expect(parsed[0]!.uri).toBe('file:///workspace/doc.md');
-    expect(parsed[0]!.schema).toBeUndefined();
+    const params = new URLSearchParams(match![1]!);
+    expect(params.get('uri')).toBe('file:///workspace/doc.md');
+    expect(params.get('mdStart')).not.toBeNull();
+    expect(params.get('mdEnd')).not.toBeNull();
+    expect(params.get('schema')).toBeNull();
   });
 
   it('env.currentDocument가 없으면 펜슬 링크를 생략한다 (블록 렌더는 유지)', () => {
     const md = createMd();
     const html = md.render(fence('form-js', VALID_JSON));
     expect(html).toContain('class="form-js-block"');
-    expect(html).not.toContain('href="command:formJs.openBlockEditor');
+    expect(html).not.toContain('open-block-editor');
   });
 });
 
