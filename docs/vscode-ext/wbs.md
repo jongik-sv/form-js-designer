@@ -524,7 +524,7 @@ node, vitest
 - category: development
 - domain: fullstack
 - model: opus
-- status: [dd]
+- status: [xx]
 - priority: high
 - assignee: -
 - schedule: 2026-05-06 ~ 2026-05-07
