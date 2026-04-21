@@ -4785,23 +4785,29 @@ var Formatter = class _Formatter {
       }
     }, era = (length) => knownEnglish ? eraForDateTime(dt, length) : string2({ era: length }, "era"), tokenToString = (token) => {
       switch (token) {
+        // ms
         case "S":
           return this.num(dt.millisecond);
         case "u":
+        // falls through
         case "SSS":
           return this.num(dt.millisecond, 3);
+        // seconds
         case "s":
           return this.num(dt.second);
         case "ss":
           return this.num(dt.second, 2);
+        // fractional seconds
         case "uu":
           return this.num(Math.floor(dt.millisecond / 10), 2);
         case "uuu":
           return this.num(Math.floor(dt.millisecond / 100));
+        // minutes
         case "m":
           return this.num(dt.minute);
         case "mm":
           return this.num(dt.minute, 2);
+        // hours
         case "h":
           return this.num(dt.hour % 12 === 0 ? 12 : dt.hour % 12);
         case "hh":
@@ -4810,6 +4816,7 @@ var Formatter = class _Formatter {
           return this.num(dt.hour);
         case "HH":
           return this.num(dt.hour, 2);
+        // offset
         case "Z":
           return formatOffset2({ format: "narrow", allowZ: this.opts.allowZ });
         case "ZZ":
@@ -4820,14 +4827,18 @@ var Formatter = class _Formatter {
           return dt.zone.offsetName(dt.ts, { format: "short", locale: this.loc.locale });
         case "ZZZZZ":
           return dt.zone.offsetName(dt.ts, { format: "long", locale: this.loc.locale });
+        // zone
         case "z":
           return dt.zoneName;
+        // meridiems
         case "a":
           return meridiem();
+        // dates
         case "d":
           return useDateTimeFormatter ? string2({ day: "numeric" }, "day") : this.num(dt.day);
         case "dd":
           return useDateTimeFormatter ? string2({ day: "2-digit" }, "day") : this.num(dt.day, 2);
+        // weekdays - standalone
         case "c":
           return this.num(dt.weekday);
         case "ccc":
@@ -4836,6 +4847,7 @@ var Formatter = class _Formatter {
           return weekday("long", true);
         case "ccccc":
           return weekday("narrow", true);
+        // weekdays - format
         case "E":
           return this.num(dt.weekday);
         case "EEE":
@@ -4844,6 +4856,7 @@ var Formatter = class _Formatter {
           return weekday("long", false);
         case "EEEEE":
           return weekday("narrow", false);
+        // months - standalone
         case "L":
           return useDateTimeFormatter ? string2({ month: "numeric", day: "numeric" }, "month") : this.num(dt.month);
         case "LL":
@@ -4854,6 +4867,7 @@ var Formatter = class _Formatter {
           return month("long", true);
         case "LLLLL":
           return month("narrow", true);
+        // months - format
         case "M":
           return useDateTimeFormatter ? string2({ month: "numeric" }, "month") : this.num(dt.month);
         case "MM":
@@ -4864,6 +4878,7 @@ var Formatter = class _Formatter {
           return month("long", false);
         case "MMMMM":
           return month("narrow", false);
+        // years
         case "y":
           return useDateTimeFormatter ? string2({ year: "numeric" }, "year") : this.num(dt.year);
         case "yy":
@@ -4872,6 +4887,7 @@ var Formatter = class _Formatter {
           return useDateTimeFormatter ? string2({ year: "numeric" }, "year") : this.num(dt.year, 4);
         case "yyyyyy":
           return useDateTimeFormatter ? string2({ year: "numeric" }, "year") : this.num(dt.year, 6);
+        // eras
         case "G":
           return era("short");
         case "GG":
@@ -6836,10 +6852,12 @@ function unitForToken(token, loc) {
       return literal2(t4);
     }
     switch (t4.val) {
+      // era
       case "G":
         return oneOf(loc.eras("short"), 0);
       case "GG":
         return oneOf(loc.eras("long"), 0);
+      // years
       case "y":
         return intUnit(oneToSix);
       case "yy":
@@ -6850,6 +6868,7 @@ function unitForToken(token, loc) {
         return intUnit(fourToSix);
       case "yyyyyy":
         return intUnit(six);
+      // months
       case "M":
         return intUnit(oneOrTwo);
       case "MM":
@@ -6866,14 +6885,17 @@ function unitForToken(token, loc) {
         return oneOf(loc.months("short", false), 1);
       case "LLLL":
         return oneOf(loc.months("long", false), 1);
+      // dates
       case "d":
         return intUnit(oneOrTwo);
       case "dd":
         return intUnit(two);
+      // ordinals
       case "o":
         return intUnit(oneToThree);
       case "ooo":
         return intUnit(three);
+      // time
       case "HH":
         return intUnit(two);
       case "H":
@@ -6904,16 +6926,20 @@ function unitForToken(token, loc) {
         return simple(oneOrTwo);
       case "uuu":
         return intUnit(one);
+      // meridiem
       case "a":
         return oneOf(loc.meridiems(), 0);
+      // weekYear (k)
       case "kkkk":
         return intUnit(four);
       case "kk":
         return intUnit(twoToFour, untruncateYear);
+      // weekNumber (W)
       case "W":
         return intUnit(oneOrTwo);
       case "WW":
         return intUnit(two);
+      // weekdays
       case "E":
       case "c":
         return intUnit(one);
@@ -6925,13 +6951,18 @@ function unitForToken(token, loc) {
         return oneOf(loc.weekdays("short", true), 1);
       case "cccc":
         return oneOf(loc.weekdays("long", true), 1);
+      // offset/zone
       case "Z":
       case "ZZ":
         return offset(new RegExp(`([+-]${oneOrTwo.source})(?::(${two.source}))?`), 2);
       case "ZZZ":
         return offset(new RegExp(`([+-]${oneOrTwo.source})(${two.source})?`), 2);
+      // we don't support ZZZZ (PST) or ZZZZZ (Pacific Standard Time) in parsing
+      // because we don't have any way to figure out what they are
       case "z":
         return simple(/[a-z_+-/]{1,256}?/i);
+      // this special-case "token" represents a place where a macro-token expanded into a white-space literal
+      // in this case we accept any non-newline white-space
       case " ":
         return simple(/[^\S\n\r]/);
       default:
@@ -8506,16 +8537,21 @@ var DateTime = class _DateTime {
     switch (normalizedUnit) {
       case "years":
         o3.month = 1;
+      // falls through
       case "quarters":
       case "months":
         o3.day = 1;
+      // falls through
       case "weeks":
       case "days":
         o3.hour = 0;
+      // falls through
       case "hours":
         o3.minute = 0;
+      // falls through
       case "minutes":
         o3.second = 0;
+      // falls through
       case "seconds":
         o3.millisecond = 0;
         break;
@@ -19975,6 +20011,8 @@ function evalNode(node, args, interpreterContext) {
       return node.input;
     case "SpecialFunctionName":
       return (context) => getBuiltin(node.input);
+    // preserve spaces in name, but compact multiple
+    // spaces into one (token)
     case "Name":
       return node.input.replace(/\s{2,}/g, " ");
     case "VariableName":
@@ -20018,6 +20056,8 @@ function evalNode(node, args, interpreterContext) {
       };
     case "?":
       return (context) => getFromContext("?", context);
+    // expression
+    // expression ".." expression
     case "IterationContext":
       return (context) => {
         const a3 = args[0](context);
@@ -20026,6 +20066,7 @@ function evalNode(node, args, interpreterContext) {
       };
     case "Type":
       return args[0];
+    // (x in [ [1,2], [3,4] ]), (y in x)
     case "InExpressions":
       return (context) => {
         const isValidContexts = (contexts) => {
@@ -20064,6 +20105,7 @@ function evalNode(node, args, interpreterContext) {
           return Object.assign(Object.assign({}, context), p3);
         });
       };
+    // Name kw<"in"> Expr
     case "InExpression":
       return (context) => {
         return extractValue(context, args[0], args[2]);
@@ -20232,6 +20274,8 @@ function evalNode(node, args, interpreterContext) {
         const condition = args[3];
         return testFn(contexts, condition);
       }, "test");
+    // DMN 1.2 - 10.3.2.14
+    // kw<"for"> commaSep1<InExpression<IterationContext>> kw<"return"> expression
     case "ForExpression":
       return (context) => {
         const extractor = args[args.length - 1];
@@ -20279,6 +20323,7 @@ function evalNode(node, args, interpreterContext) {
           return pathProp(pathTarget, true);
         }
       }, "any");
+    // expression !filter "[" expression "]"
     case "FilterExpression":
       return tag((context) => {
         const target = args[0](context);
