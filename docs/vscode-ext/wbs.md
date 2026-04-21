@@ -626,7 +626,7 @@ node, vitest
 - category: infrastructure
 - domain: infra
 - model: sonnet
-- status: [dd]
+- status: [xx]
 - priority: high
 - assignee: -
 - schedule: 2026-05-11 ~ 2026-05-12

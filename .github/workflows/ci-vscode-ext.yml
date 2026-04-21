@@ -3,6 +3,8 @@ name: ci-vscode-ext
 on:
   push:
     branches: [main, develop]
+    tags:
+      - 'vscode-ext-v*'
     paths:
       - 'packages/designer-vscode-extension/**'
   pull_request:
@@ -34,3 +36,38 @@ jobs:
         run: npm -w designer-vscode-extension run test:unit
       - name: Build
         run: npm -w designer-vscode-extension run build
+
+  release-vsix:
+    name: release · designer-vscode-extension (.vsix 생성 + 사내 저장소 업로드)
+    if: startsWith(github.ref, 'refs/tags/vscode-ext-v')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Build (production)
+        run: npm -w @form-js-designer/designer-vscode-extension run build:prod
+      - name: Package (.vsix)
+        id: package
+        run: |
+          # --silent: npm 자체 로그 억제. package.mjs 로그(stderr)는 유지하여 빌드 오류 진단 가능.
+          VSIX_PATH=$(npm -w @form-js-designer/designer-vscode-extension run package --silent | tail -1)
+          echo "vsix_path=${VSIX_PATH}" >> "$GITHUB_OUTPUT"
+          echo "vsix_name=$(basename "${VSIX_PATH}")" >> "$GITHUB_OUTPUT"
+      - name: Upload to internal registry
+        if: env.INTERNAL_REGISTRY_URL != ''
+        env:
+          INTERNAL_REGISTRY_URL: ${{ secrets.INTERNAL_REGISTRY_URL }}
+          INTERNAL_REGISTRY_TOKEN: ${{ secrets.INTERNAL_REGISTRY_TOKEN }}
+        run: |
+          node packages/designer-vscode-extension/scripts/upload-vsix.mjs "${{ steps.package.outputs.vsix_path }}"
+      - name: Upload .vsix as GitHub Actions artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.package.outputs.vsix_name }}
+          path: ${{ steps.package.outputs.vsix_path }}
+          retention-days: 90

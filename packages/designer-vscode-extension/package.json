@@ -68,7 +68,9 @@
         "viewType": "form-js.block-editor",
         "displayName": "form-js Block Editor",
         "selector": [
-          { "filenamePattern": "*.md" }
+          {
+            "filenamePattern": "*.md"
+          }
         ],
         "priority": "option"
       }
@@ -79,6 +81,7 @@
     "build:prod": "NODE_ENV=production node scripts/copy-media.mjs && node esbuild.config.mjs",
     "build:copy-css": "node scripts/copy-media.mjs",
     "build:bundle": "node esbuild.config.mjs",
+    "package": "node scripts/package.mjs",
     "typecheck": "tsc --noEmit",
     "lint": "echo 'lint: not yet configured'",
     "test:unit": "../../node_modules/.bin/vitest run --config vitest.config.ts",
@@ -93,6 +96,7 @@
     "@types/vscode": "^1.85.0",
     "@vitest/coverage-v8": "^4.1.4",
     "@vscode/test-electron": "^2.4.1",
+    "@vscode/vsce": "^3.9.1",
     "esbuild": "^0.24.0",
     "glob": "^11.0.0",
     "markdown-it": "^14.1.0",
