@@ -2,7 +2,8 @@
  * TSK-05-01: customComponentsModule 형상 검증 단위 테스트
  *
  * QA 체크리스트:
- * - (정상 — 모듈 형상) customComponentsModule.__init__이 1개 서비스 이름 배열
+ * - (정상 — 모듈 형상) customComponentsModule.__init__이 2개 서비스 이름 배열
+ *   (DesignerComponentsModule의 designerComponentsRegistration + vscode-ext 전용 stackRegistration)
  * - 해당 서비스가 ['type', Function] 튜플로 정의되어 있다
  * - (정상 — 주입) formFields.register가 card/tabs/modal/tabPanel 각 1회 호출
  */
@@ -42,10 +43,12 @@ import { customComponentsModule, createCustomComponentsModule } from '../../src/
 // 1. 모듈 형상 검증
 // ──────────────────────────────────────────────────────
 describe('customComponentsModule: 모듈 형상', () => {
-  it('__init__ 배열이 존재하고 길이가 1이다', () => {
+  it('__init__ 배열이 존재하고 길이가 2이다 (designerComponentsRegistration + stackRegistration)', () => {
     expect(customComponentsModule).toHaveProperty('__init__');
     expect(Array.isArray(customComponentsModule.__init__)).toBe(true);
-    expect(customComponentsModule.__init__.length).toBe(1);
+    expect(customComponentsModule.__init__.length).toBe(2);
+    expect(customComponentsModule.__init__).toContain('designerComponentsRegistration');
+    expect(customComponentsModule.__init__).toContain('stackRegistration');
   });
 
   it('__init__[0]로 선언된 서비스 이름이 모듈 객체의 키로 존재한다', () => {
