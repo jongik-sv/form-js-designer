@@ -41,31 +41,52 @@ function ensureScreenshotsDir(): void {
 }
 
 /**
+ * 최소 유효 1×1 RGB PNG 바이트 버퍼.
+ * headless 환경에서 실제 픽셀 렌더링이 없을 때 placeholder로 사용한다.
+ * 실제 픽셀 검증은 Playwright visible E2E(test/e2e/theme-switch.test.ts)에서 수행한다.
+ */
+const MINIMAL_PNG = Buffer.from([
+  0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
+  0x00, 0x00, 0x00, 0x0d, 0x49, 0x48, 0x44, 0x52,
+  0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01,
+  0x08, 0x02, 0x00, 0x00, 0x00, 0x90, 0x77, 0x53,
+  0xde, 0x00, 0x00, 0x00, 0x0c, 0x49, 0x44, 0x41,
+  0x54, 0x08, 0xd7, 0x63, 0xf8, 0xcf, 0xc0, 0x00,
+  0x00, 0x00, 0x02, 0x00, 0x01, 0xe2, 0x21, 0xbc,
+  0x33, 0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4e,
+  0x44, 0xae, 0x42, 0x60, 0x82,
+]);
+
+/**
  * 현재 VSCode 워크스페이스의 스크린샷을 캡처하여 지정 경로에 저장한다.
  *
- * @vscode/test-electron headless 환경에서는 실제 렌더링이 없으므로
- * 유효한 최소 1×1 PNG를 생성한다.
- * 실제 픽셀 검증은 Playwright visible E2E(test/e2e/theme-switch.test.ts)에서 수행한다.
+ * @vscode/test-electron headless 환경에서는 MINIMAL_PNG placeholder를 저장한다.
  *
  * @param outputPath 저장할 PNG 파일 경로
  */
 async function captureScreenshot(outputPath: string): Promise<void> {
   ensureScreenshotsDir();
+  fs.writeFileSync(outputPath, MINIMAL_PNG);
+}
 
-  // 최소 유효 1×1 RGB PNG (헤더 + IHDR + IDAT + IEND)
-  const minimalPng = Buffer.from([
-    0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
-    0x00, 0x00, 0x00, 0x0d, 0x49, 0x48, 0x44, 0x52,
-    0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01,
-    0x08, 0x02, 0x00, 0x00, 0x00, 0x90, 0x77, 0x53,
-    0xde, 0x00, 0x00, 0x00, 0x0c, 0x49, 0x44, 0x41,
-    0x54, 0x08, 0xd7, 0x63, 0xf8, 0xcf, 0xc0, 0x00,
-    0x00, 0x00, 0x02, 0x00, 0x01, 0xe2, 0x21, 0xbc,
-    0x33, 0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4e,
-    0x44, 0xae, 0x42, 0x60, 0x82,
-  ]);
+/**
+ * 테마를 전환하고 스크린샷을 캡처한다.
+ * 개별 테마 테스트와 순차 전환 테스트에서 공통으로 사용된다.
+ *
+ * @param themeName VSCode 테마 이름 (예: 'Default Dark Modern')
+ * @param kind 파일명 접미사 (예: 'dark', 'light', 'hc')
+ * @returns 저장된 스크린샷 경로
+ */
+async function applyThemeAndCapture(themeName: string, kind: string): Promise<string> {
+  await vscode.workspace
+    .getConfiguration('workbench')
+    .update('colorTheme', themeName, vscode.ConfigurationTarget.Global);
 
-  fs.writeFileSync(outputPath, minimalPng);
+  await new Promise<void>((resolve) => setTimeout(resolve, THEME_SETTLE_MS));
+
+  const screenshotPath = path.join(SCREENSHOTS_DIR, `theme-${kind}.png`);
+  await captureScreenshot(screenshotPath);
+  return screenshotPath;
 }
 
 suite('Form JS Theme Switch Integration (TSK-04-02)', () => {
@@ -86,14 +107,7 @@ suite('Form JS Theme Switch Integration (TSK-04-02)', () => {
    * QA: (정상) 테마를 Default Dark Modern으로 설정 후 스크린샷이 theme-dark.png로 저장된다.
    */
   test('Default Dark Modern 테마 전환 후 theme-dark.png가 저장된다', async () => {
-    await vscode.workspace
-      .getConfiguration('workbench')
-      .update('colorTheme', 'Default Dark Modern', vscode.ConfigurationTarget.Global);
-
-    await new Promise<void>((resolve) => setTimeout(resolve, THEME_SETTLE_MS));
-
-    const screenshotPath = path.join(SCREENSHOTS_DIR, 'theme-dark.png');
-    await captureScreenshot(screenshotPath);
+    const screenshotPath = await applyThemeAndCapture('Default Dark Modern', 'dark');
 
     assert.ok(fs.existsSync(screenshotPath), 'theme-dark.png 파일이 존재해야 함');
     assert.ok(fs.statSync(screenshotPath).size > 0, 'theme-dark.png 파일 크기가 0보다 커야 함');
@@ -103,14 +117,7 @@ suite('Form JS Theme Switch Integration (TSK-04-02)', () => {
    * QA: (정상) 테마를 Default Light Modern으로 설정 후 스크린샷이 theme-light.png로 저장된다.
    */
   test('Default Light Modern 테마 전환 후 theme-light.png가 저장된다', async () => {
-    await vscode.workspace
-      .getConfiguration('workbench')
-      .update('colorTheme', 'Default Light Modern', vscode.ConfigurationTarget.Global);
-
-    await new Promise<void>((resolve) => setTimeout(resolve, THEME_SETTLE_MS));
-
-    const screenshotPath = path.join(SCREENSHOTS_DIR, 'theme-light.png');
-    await captureScreenshot(screenshotPath);
+    const screenshotPath = await applyThemeAndCapture('Default Light Modern', 'light');
 
     assert.ok(fs.existsSync(screenshotPath), 'theme-light.png 파일이 존재해야 함');
     assert.ok(fs.statSync(screenshotPath).size > 0, 'theme-light.png 파일 크기가 0보다 커야 함');
@@ -120,14 +127,7 @@ suite('Form JS Theme Switch Integration (TSK-04-02)', () => {
    * QA: (정상) 테마를 Default High Contrast로 설정 후 스크린샷이 theme-hc.png로 저장된다.
    */
   test('Default High Contrast 테마 전환 후 theme-hc.png가 저장된다', async () => {
-    await vscode.workspace
-      .getConfiguration('workbench')
-      .update('colorTheme', 'Default High Contrast', vscode.ConfigurationTarget.Global);
-
-    await new Promise<void>((resolve) => setTimeout(resolve, THEME_SETTLE_MS));
-
-    const screenshotPath = path.join(SCREENSHOTS_DIR, 'theme-hc.png');
-    await captureScreenshot(screenshotPath);
+    const screenshotPath = await applyThemeAndCapture('Default High Contrast', 'hc');
 
     assert.ok(fs.existsSync(screenshotPath), 'theme-hc.png 파일이 존재해야 함');
     assert.ok(fs.statSync(screenshotPath).size > 0, 'theme-hc.png 파일 크기가 0보다 커야 함');
@@ -141,15 +141,7 @@ suite('Form JS Theme Switch Integration (TSK-04-02)', () => {
     const results: Array<{ kind: string; exists: boolean }> = [];
 
     for (const theme of THEMES) {
-      await vscode.workspace
-        .getConfiguration('workbench')
-        .update('colorTheme', theme.name, vscode.ConfigurationTarget.Global);
-
-      await new Promise<void>((resolve) => setTimeout(resolve, THEME_SETTLE_MS));
-
-      const screenshotPath = path.join(SCREENSHOTS_DIR, `theme-${theme.kind}.png`);
-      await captureScreenshot(screenshotPath);
-
+      const screenshotPath = await applyThemeAndCapture(theme.name, theme.kind);
       results.push({ kind: theme.kind, exists: fs.existsSync(screenshotPath) });
     }
 

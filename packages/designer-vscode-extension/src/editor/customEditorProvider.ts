@@ -148,8 +148,9 @@ export class FormJsBlockEditorProvider {
         try {
           // eslint-disable-next-line @typescript-eslint/no-require-imports
           const { registerAxeResult } = require('../testBridge') as typeof import('../testBridge');
+          type AxeViolationLike = import('../testBridge').AxeViolation;
           registerAxeResult(msg.webviewId ?? 'custom-editor', {
-            violations: msg.violations ?? [],
+            violations: (msg.violations ?? []) as AxeViolationLike[],
           });
         } catch {
           // testBridge not available in production mode

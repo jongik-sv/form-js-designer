@@ -22,7 +22,7 @@ import * as assert from 'assert';
 
 const SCREENSHOTS_DIR = path.resolve(
   __dirname,
-  '../../../../test/fixtures/screenshots'
+  '../fixtures/screenshots'
 );
 
 /** 테마 kind → 예상 배경색 CSS 변수값 힌트 (다크/라이트/HC 구분용) */

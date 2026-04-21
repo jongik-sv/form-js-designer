@@ -76,8 +76,19 @@ suite('Form JS A11y Integration (TSK-04-02)', () => {
     filterCriticalViolations = extExports.filterCriticalViolations as typeof filterCriticalViolations;
     registerAxeResult = extExports.registerAxeResult as typeof registerAxeResult;
 
-    if (!waitForAxeResult || !clearAxeResult || !filterCriticalViolations || !registerAxeResult) {
-      throw new Error(`testBridge functions not fully exported: waitForAxeResult=${typeof waitForAxeResult}, clearAxeResult=${typeof clearAxeResult}, filterCriticalViolations=${typeof filterCriticalViolations}, registerAxeResult=${typeof registerAxeResult}`);
+    const missing = (
+      [
+        ['waitForAxeResult', waitForAxeResult],
+        ['clearAxeResult', clearAxeResult],
+        ['filterCriticalViolations', filterCriticalViolations],
+        ['registerAxeResult', registerAxeResult],
+      ] as const
+    )
+      .filter(([, fn]) => !fn)
+      .map(([name]) => name);
+
+    if (missing.length > 0) {
+      throw new Error(`testBridge functions not fully exported: ${missing.join(', ')}`);
     }
   });
 
