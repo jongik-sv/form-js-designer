@@ -1,0 +1,38 @@
+[
+  {
+    "timestamp": "2026-04-21T01:36:12.221Z",
+    "renderP95Ms": null,
+    "renderP50Ms": null,
+    "renderSamplesMs": null,
+    "vsixBytes": 1190493,
+    "vsixMB": "1.14",
+    "renderGatePass": null,
+    "vsixGatePass": true
+  },
+  {
+    "timestamp": "2026-04-21T01:40:35.283Z",
+    "renderP95Ms": 105,
+    "renderP50Ms": 75,
+    "renderSamplesMs": [
+      113,
+      73,
+      75,
+      73,
+      75
+    ],
+    "vsixBytes": null,
+    "vsixMB": null,
+    "renderGatePass": true,
+    "vsixGatePass": null
+  },
+  {
+    "timestamp": "2026-04-21T01:40:35.335Z",
+    "renderP95Ms": null,
+    "renderP50Ms": null,
+    "renderSamplesMs": null,
+    "vsixBytes": 1190493,
+    "vsixMB": "1.14",
+    "renderGatePass": null,
+    "vsixGatePass": true
+  }
+]

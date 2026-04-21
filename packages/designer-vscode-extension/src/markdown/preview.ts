@@ -101,6 +101,9 @@ export async function mountViewers(): Promise<void> {
     }
   }
 
+  // TSK-04-03: 렌더 완료 시점 알림 — perf-gate.mjs가 p95 측정 기준으로 사용
+  window.dispatchEvent(new CustomEvent('__formJsReady', { detail: { timestamp: performance.now() } }));
+
   if (typeof FORM_JS_TEST_BRIDGE !== 'undefined' && FORM_JS_TEST_BRIDGE) {
     try {
       const api = (

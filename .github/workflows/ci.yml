@@ -115,6 +115,30 @@ jobs:
           name: a11y-report
           path: packages/designer-editor-host/playwright-report/
 
+  test-vscode-ext-perf:
+    name: test · vscode-ext perf-gate (TSK-04-03)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Build extension
+        run: npm -w @form-js-designer/designer-vscode-extension run build
+      - name: Package VSIX
+        run: npm -w @form-js-designer/designer-vscode-extension run package
+      - name: Run perf-gate (render p95 + vsix size)
+        run: npm -w @form-js-designer/designer-vscode-extension run test:perf
+      - name: Upload perf report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: perf-report
+          path: packages/designer-vscode-extension/reports/
+
   rc-ac-matrix:
     name: rc · AC 매트릭스 전수 통과 (phase-1-plan §4 ≥120 케이스)
     runs-on: ubuntu-latest
