@@ -5,10 +5,19 @@ export default defineConfig({
   root: __dirname,
   server: { port: 5179, strictPort: true },
   resolve: {
-    alias: {
-      '@form-js-designer/designer-tiptap': resolve(__dirname, '../../src/index.ts'),
-      '@form-js-designer/designer-tiptap/styles': resolve(__dirname, '../../src/styles/entry.css'),
-    },
+    alias: [
+      {
+        find: '@form-js-designer/designer-tiptap/styles',
+        replacement: resolve(__dirname, '../../src/styles/entry.css'),
+      },
+      {
+        find: '@form-js-designer/designer-tiptap',
+        replacement: resolve(__dirname, '../../src/index.ts'),
+      },
+      { find: 'react', replacement: 'preact/compat' },
+      { find: 'react-dom', replacement: 'preact/compat' },
+      { find: 'react/jsx-runtime', replacement: 'preact/jsx-runtime' },
+    ],
     dedupe: ['preact'],
   },
 });
