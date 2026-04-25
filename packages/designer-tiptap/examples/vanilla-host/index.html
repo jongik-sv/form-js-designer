@@ -5,23 +5,81 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>designer-tiptap vanilla host</title>
     <style>
-      body { font: 14px/1.5 system-ui, sans-serif; margin: 24px; max-width: 960px; }
-      .toolbar { margin-bottom: 12px; display: flex; gap: 8px; }
-      .toolbar button { padding: 6px 12px; cursor: pointer; }
-      .ProseMirror { border: 1px solid #ddd; padding: 16px; min-height: 400px; }
+      body { font: 14px/1.5 system-ui, sans-serif; margin: 24px; max-width: 960px; color: #1f2937; }
+      h1 { font-size: 20px; margin: 0 0 12px; }
+      .panel { margin-bottom: 14px; }
+      .panel-label { font-size: 11px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: .04em; margin-bottom: 6px; }
+      .toolbar { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px; background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 6px; }
+      .toolbar button { padding: 4px 10px; font-size: 13px; cursor: pointer; border: 1px solid #d1d5db; background: #fff; border-radius: 4px; }
+      .toolbar button:hover { background: #eef2ff; }
+      .toolbar button.is-active { background: #2563eb; color: #fff; border-color: #2563eb; }
+      .toolbar .sep { width: 1px; background: #d1d5db; margin: 0 4px; }
+      .ProseMirror {
+        border: 1px solid #d1d5db; border-radius: 6px;
+        padding: 16px; min-height: 360px; outline: none; background: #fff;
+      }
+      .ProseMirror:focus-within { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,.12); }
+      .ProseMirror h1 { font-size: 24px; margin: 16px 0 8px; }
+      .ProseMirror h2 { font-size: 19px; margin: 14px 0 6px; }
+      .ProseMirror h3 { font-size: 16px; margin: 12px 0 6px; }
+      .ProseMirror p { margin: 6px 0; }
+      .ProseMirror ul, .ProseMirror ol { padding-left: 24px; margin: 6px 0; }
+      .ProseMirror blockquote { border-left: 3px solid #cbd5e1; padding: 4px 12px; margin: 8px 0; color: #475569; background: #f8fafc; }
+      .ProseMirror code { background: #f1f5f9; padding: 1px 5px; border-radius: 3px; font-family: ui-monospace, monospace; font-size: 12.5px; }
+      .ProseMirror hr { border: none; border-top: 1px solid #e5e7eb; margin: 14px 0; }
+      #dump { background: #0f172a; color: #cbd5e1; padding: 12px; font-size: 12px; line-height: 1.5; border-radius: 6px; max-height: 200px; overflow: auto; white-space: pre-wrap; word-break: break-all; }
+      #dump:empty::before { content: "(빈 상태 — Dump HTML 클릭)"; color: #64748b; font-style: italic; }
     </style>
   </head>
   <body>
     <h1>designer-tiptap vanilla host</h1>
-    <div class="toolbar">
-      <button data-testid="insert-simple">Insert Simple</button>
-      <button data-testid="insert-tabs">Insert Tabs</button>
-      <button data-testid="insert-modal">Insert Modal</button>
-      <button data-testid="dump-html">Dump HTML</button>
-      <button data-testid="reload-from-html">Reload</button>
+
+    <div class="panel">
+      <div class="panel-label">Tiptap rich-text 툴바</div>
+      <div class="toolbar">
+        <button data-cmd="bold"><b>B</b></button>
+        <button data-cmd="italic"><i>I</i></button>
+        <button data-cmd="strike"><s>S</s></button>
+        <button data-cmd="code">&lt;/&gt;</button>
+        <span class="sep"></span>
+        <button data-cmd="h1">H1</button>
+        <button data-cmd="h2">H2</button>
+        <button data-cmd="h3">H3</button>
+        <button data-cmd="paragraph">P</button>
+        <span class="sep"></span>
+        <button data-cmd="bulletList">• 목록</button>
+        <button data-cmd="orderedList">1. 목록</button>
+        <button data-cmd="blockquote">❝ 인용</button>
+        <button data-cmd="codeBlock">코드블록</button>
+        <button data-cmd="hr">― 구분선</button>
+        <span class="sep"></span>
+        <button data-cmd="undo">↶ Undo</button>
+        <button data-cmd="redo">↷ Redo</button>
+      </div>
     </div>
-    <div id="editor"></div>
-    <pre id="dump" data-testid="dump-output" style="background:#f7f7f7; padding:12px"></pre>
+
+    <div class="panel">
+      <div class="panel-label">designer-tiptap form-js 블록 삽입</div>
+      <div class="toolbar">
+        <button data-testid="insert-simple">+ Simple form</button>
+        <button data-testid="insert-tabs">+ Tabs form</button>
+        <button data-testid="insert-modal">+ Modal form</button>
+        <span class="sep"></span>
+        <button data-testid="dump-html">Dump HTML</button>
+        <button data-testid="reload-from-html">Reload from HTML</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-label">Tiptap editor (ProseMirror)</div>
+      <div id="editor"></div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-label">직렬화된 HTML (Dump)</div>
+      <pre id="dump" data-testid="dump-output"></pre>
+    </div>
+
     <script type="module" src="./main.ts"></script>
   </body>
 </html>
