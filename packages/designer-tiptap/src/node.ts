@@ -53,4 +53,20 @@ export const FormJsBlock = Node.create({
   renderHTML({ HTMLAttributes }) {
     return ['div', mergeAttributes(HTMLAttributes, { 'data-type': 'form-js-block' })];
   },
+
+  addCommands() {
+    return {
+      insertFormJsBlock:
+        (schema, formId) =>
+        ({ commands }) =>
+          commands.insertContent({
+            type: this.name,
+            attrs: { schema, formId: formId ?? null },
+          }),
+      updateFormJsBlock:
+        (schema) =>
+        ({ commands }) =>
+          commands.updateAttributes(this.name, { schema }),
+    };
+  },
 });

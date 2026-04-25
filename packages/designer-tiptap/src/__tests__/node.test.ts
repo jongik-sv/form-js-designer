@@ -48,3 +48,25 @@ describe('FormJsBlock node spec', () => {
     expect(ext?.config.atom).toBe(true);
   });
 });
+
+describe('FormJsBlock commands', () => {
+  it('insertFormJsBlock inserts node with schema', () => {
+    const editor = makeEditor();
+    const schema = { type: 'default', components: [{ type: 'textfield', key: 'name' }] };
+    editor.commands.insertFormJsBlock(schema, 'form-1');
+    const block = editor.getJSON().content?.find((n) => n.type === 'formJsBlock');
+    expect(block?.attrs?.schema).toEqual(schema);
+    expect(block?.attrs?.formId).toBe('form-1');
+  });
+
+  it('updateFormJsBlock updates schema on selected node', () => {
+    const editor = makeEditor();
+    const v1 = { type: 'default', components: [] };
+    const v2 = { type: 'default', components: [{ type: 'textfield', key: 'x' }] };
+    editor.commands.insertFormJsBlock(v1);
+    editor.commands.selectNodeBackward();
+    editor.commands.updateFormJsBlock(v2);
+    const block = editor.getJSON().content?.find((n) => n.type === 'formJsBlock');
+    expect(block?.attrs?.schema).toEqual(v2);
+  });
+});
