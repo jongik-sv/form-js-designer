@@ -1,5 +1,5 @@
-@import '@bpmn-io/form-js/dist/assets/form-js-base.css';
-@import '@bpmn-io/form-js/dist/assets/form-js.css';
+@import '@bpmn-io/form-js-viewer/dist/assets/form-js-base.css';
+@import '@bpmn-io/form-js-viewer/dist/assets/form-js.css';
 @import '@form-js-designer/designer-components/src/container-base.css';
 
 .form-js-tiptap-block {
