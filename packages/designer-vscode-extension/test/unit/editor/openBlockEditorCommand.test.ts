@@ -126,6 +126,66 @@ describe('openBlockEditorCommand', () => {
     expect(revealMock).toHaveBeenCalled();
   });
 
+  it('같은 블록(mdStart/mdEnd 일치)은 edit-opened를 재전송하지 않는다', async () => {
+    const postMessageMock = vi.fn();
+    const mockPanel = {
+      dispose: vi.fn(),
+      reveal: revealMock,
+      webview: { postMessage: postMessageMock },
+    };
+    editSessionRegistry.beginSession({
+      uri: baseArgs.uri,
+      mdStart: baseArgs.mdStart,
+      mdEnd: baseArgs.mdEnd,
+      panel: mockPanel,
+    });
+
+    const cmd = await importCmd();
+    await cmd(baseArgs);
+
+    expect(postMessageMock).not.toHaveBeenCalled();
+    expect(revealMock).toHaveBeenCalled();
+  });
+
+  it('다른 블록 클릭 시 기존 세션의 mdStart/mdEnd를 갱신하고 edit-opened를 재전송한다', async () => {
+    const postMessageMock = vi.fn();
+    const mockPanel = {
+      dispose: vi.fn(),
+      reveal: revealMock,
+      webview: { postMessage: postMessageMock },
+    };
+    editSessionRegistry.beginSession({
+      uri: baseArgs.uri,
+      mdStart: 0,
+      mdEnd: 10,
+      panel: mockPanel,
+    });
+
+    const cmd = await importCmd();
+    await cmd({ ...baseArgs, mdStart: 20, mdEnd: 30 });
+
+    // 세션 블록 정보가 새 클릭 대상으로 갱신됨
+    const updated = editSessionRegistry.getActive(baseArgs.uri);
+    expect(updated?.mdStart).toBe(20);
+    expect(updated?.mdEnd).toBe(30);
+
+    // 새 schema로 edit-opened 재전송
+    expect(postMessageMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'edit-opened',
+        mdStart: 20,
+        mdEnd: 30,
+        schema: baseArgs.schema,
+      })
+    );
+
+    // reveal도 호출됨
+    expect(revealMock).toHaveBeenCalled();
+
+    // 새 패널을 여는 vscode.openWith는 호출되지 않음 (single-editor lock)
+    expect(getExecuteCommandMock()).not.toHaveBeenCalled();
+  });
+
   it('openWith 실패 시 pendingEditSchemas stash를 rollback한다', async () => {
     getExecuteCommandMock().mockRejectedValueOnce(new Error('open failed'));
 

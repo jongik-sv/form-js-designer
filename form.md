@@ -52,6 +52,76 @@
               "key": "textfield_gx0xf8_copy"
             },
             {
+              "label": "Text field",
+              "type": "textfield",
+              "layout": {
+                "columns": null,
+                "row": "Row_0q748qu"
+              },
+              "id": "textfield-98c0edbf",
+              "key": "textfield_gx0xf8_copy_copy_2"
+            },
+            {
+              "label": "Text field",
+              "type": "textfield",
+              "layout": {
+                "columns": null,
+                "row": "Row_0sey1ik"
+              },
+              "id": "textfield-e7162075",
+              "key": "textfield_gx0xf8_copy_copy_2_copy"
+            },
+            {
+              "label": "Text field",
+              "type": "textfield",
+              "layout": {
+                "columns": null,
+                "row": "Row_0sey1ik"
+              },
+              "id": "textfield-b7cc27b7",
+              "key": "textfield_gx0xf8_copy_copy_2_copy_copy"
+            },
+            {
+              "label": "Text field",
+              "type": "textfield",
+              "layout": {
+                "columns": null,
+                "row": "Row_0sey1ik"
+              },
+              "id": "textfield-3bde7bce",
+              "key": "textfield_gx0xf8_copy_copy_2_copy_copy_copy"
+            },
+            {
+              "label": "Text field",
+              "type": "textfield",
+              "layout": {
+                "columns": null,
+                "row": "Row_1wr8lgk"
+              },
+              "id": "textfield-0bfe9924",
+              "key": "textfield_gx0xf8_copy_copy_2_copy_copy_copy_copy"
+            },
+            {
+              "label": "Text field",
+              "type": "textfield",
+              "layout": {
+                "columns": null,
+                "row": "Row_1wr8lgk"
+              },
+              "id": "textfield-cf91ae20",
+              "key": "textfield_gx0xf8_copy_copy_2_copy_copy_copy_copy_copy"
+            },
+            {
+              "label": "Text field",
+              "type": "textfield",
+              "layout": {
+                "columns": null,
+                "row": "Row_1wr8lgk"
+              },
+              "id": "textfield-d74e3762",
+              "key": "textfield_gx0xf8_copy_copy_2_copy_copy_copy_copy_copy_copy"
+            },
+            {
               "label": "Button",
               "action": "submit",
               "type": "button",
@@ -70,6 +140,26 @@
                 "columns": null
               },
               "id": "button-80b43183"
+            },
+            {
+              "label": "Button",
+              "action": "submit",
+              "type": "button",
+              "layout": {
+                "row": "Row_0mkqsgy",
+                "columns": null
+              },
+              "id": "button-cb90f275"
+            },
+            {
+              "label": "Button",
+              "action": "submit",
+              "type": "button",
+              "layout": {
+                "row": "Row_0mkqsgy",
+                "columns": null
+              },
+              "id": "button-86b7219a"
             },
             {
               "type": "table",
@@ -195,6 +285,22 @@
                 {
                   "label": "Date",
                   "key": "date"
+                },
+                {
+                  "label": "Column",
+                  "key": "inputVariable"
+                },
+                {
+                  "label": "Column",
+                  "key": "inputVariable"
+                },
+                {
+                  "label": "Column",
+                  "key": "inputVariable"
+                },
+                {
+                  "label": "Column",
+                  "key": "inputVariable"
                 }
               ]
             },
@@ -266,6 +372,16 @@
                   },
                   "id": "Field_1k7uf9r",
                   "key": "radio_4bzf2"
+                },
+                {
+                  "label": "Text field",
+                  "type": "textfield",
+                  "layout": {
+                    "row": "Row_1ymbp9w",
+                    "columns": null
+                  },
+                  "id": "Field_1upsw4p",
+                  "key": "textfield_gcsfvf"
                 }
               ],
               "layout": {
@@ -359,7 +475,7 @@
   "schemaVersion": 19
 }
 ```
-
+# form-js 검증 문서
 
 ```form-js
 {
@@ -374,6 +490,36 @@
       },
       "id": "Field_19sg6bb",
       "key": "datetime_alt2k6"
+    },
+    {
+      "label": "Text field",
+      "type": "textfield",
+      "layout": {
+        "row": "Row_0llha14",
+        "columns": null
+      },
+      "id": "Field_0wkkywo",
+      "key": "textfield_qtvsnu"
+    },
+    {
+      "label": "Text field",
+      "type": "textfield",
+      "layout": {
+        "row": "Row_0llha14",
+        "columns": null
+      },
+      "id": "textfield-cfd04175",
+      "key": "textfield_qtvsnu_copy"
+    },
+    {
+      "label": "Text field",
+      "type": "textfield",
+      "layout": {
+        "row": "Row_0llha14",
+        "columns": null
+      },
+      "id": "textfield-152a1100",
+      "key": "textfield_qtvsnu_copy_copy"
     }
   ],
   "type": "default",
@@ -381,3 +527,56 @@
   "schemaVersion": 19
 }
 ```
+
+
+# form-js 검증 문서
+```form-js
+{
+  "components": [
+    {
+      "label": "Text field",
+      "type": "textfield",
+      "layout": {
+        "row": "Row_0llha14",
+        "columns": null
+      },
+      "id": "textfield-caaab5db",
+      "key": "textfield_qtvsnu_copy_copy"
+    },
+    {
+      "label": "Text field",
+      "type": "textfield",
+      "layout": {
+        "row": "Row_0llha14",
+        "columns": null
+      },
+      "id": "textfield-b46267f2",
+      "key": "textfield_qtvsnu_copy_copy_copy"
+    },
+    {
+      "label": "Text field",
+      "type": "textfield",
+      "layout": {
+        "row": "Row_11wen2b",
+        "columns": null
+      },
+      "id": "Field_0o0sfdb",
+      "key": "textfield_4esyzs"
+    },
+    {
+      "label": "Text field",
+      "type": "textfield",
+      "layout": {
+        "columns": null
+      },
+      "id": "textfield-5ed6bee4",
+      "key": "textfield_4esyzs_copy"
+    }
+  ],
+  "type": "default",
+  "id": "Form_0xlefri",
+  "schemaVersion": 19
+}
+```
+
+

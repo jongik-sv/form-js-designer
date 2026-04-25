@@ -112,6 +112,7 @@ export class FormJsBlockEditorProvider {
     const styleUri = mediaAsset('form-js-base.css');
     const additionalStyleUris = [
       mediaAsset('form-js.css'),
+      mediaAsset('form-js-grid-override.css'),
       mediaAsset('form-js-editor-base.css'),
       mediaAsset('form-js-editor.css'),
       mediaAsset('properties-panel.css'),
@@ -130,6 +131,9 @@ export class FormJsBlockEditorProvider {
       styleUri: styleUri.toString(),
       additionalStyleUris,
     });
+
+    // 탭 타이틀을 블록 에디터로 식별 가능하게 설정 (markdown source 탭과 구분)
+    webviewPanel.title = formatEditorTitle(document.uri, mdStart, mdEnd, isFormJsFile);
 
     // EditSessionRegistry lock 등록
     const sessionRegistered = editSessionRegistry.beginSession({
@@ -226,6 +230,30 @@ export class FormJsBlockEditorProvider {
       }
     });
   }
+}
+
+/**
+ * 블록 에디터 탭에 표시할 타이틀을 계산한다.
+ * VS Code는 동일 URI로 열린 textEditor + customEditor 탭을 같은 이름으로 표기하므로
+ * 사용자가 두 탭을 구분할 수 있도록 prefix + 라인 범위를 덧붙인다.
+ *
+ * - .md 블록: `✏ form-js · ${basename} [L${start}-${end}]`
+ * - .form-js 파일: `✏ form-js · ${basename}`
+ */
+export function formatEditorTitle(
+  uri: vscode.Uri,
+  mdStart: number,
+  mdEnd: number,
+  isFormJsFile: boolean
+): string {
+  // 테스트/모킹에서 uri.path 가 undefined 인 경우를 방어
+  const path = (uri as { path?: string } | undefined)?.path ?? '';
+  const basename = path.split('/').pop() || 'untitled';
+  if (isFormJsFile) {
+    return `✏ form-js · ${basename}`;
+  }
+  // mdStart/mdEnd가 0-based → 사용자에게는 1-based로 노출
+  return `✏ form-js · ${basename} [L${mdStart + 1}-${mdEnd + 1}]`;
 }
 
 /**

@@ -8,7 +8,7 @@
  * TSK-02-01: form-js.block-editor Custom Editor Provider + formJs.openBlockEditor 커맨드 등록.
  */
 import type MarkdownIt from 'markdown-it';
-import { formJsMarkdownPlugin } from './markdown/plugin';
+import { formJsMarkdownPlugin, setExtensionIdForUri } from './markdown/plugin';
 import { editSessionRegistry } from './editor/editSession';
 
 /** idempotent 가드: registerCustomEditorProvider 중복 등록 방지 */
@@ -73,6 +73,19 @@ export function activate(
 
     // DIAG: UI 팝업으로 activate 즉시 가시화
     void vscode.window.showInformationMessage('[form-js DIAG] Form.js Designer activate 호출됨');
+
+    // 펜슬 링크가 runtime extension identifier를 사용하도록 주입.
+    // (Dev Host에서 scoped package name 으로 로드된 경우에도 `vscode://<publisher>.<name>/...` 이
+    // VSCode 의 UriHandler 매칭과 일치하도록 보장)
+    try {
+      const id = context?.extension?.id;
+      if (typeof id === 'string' && id.length > 0) {
+        setExtensionIdForUri(id);
+        console.log('[form-js DIAG] extension id for pencil URI set to', id);
+      }
+    } catch {
+      // id 주입 실패 시 기본 하드코딩 fallback 유지
+    }
 
     // TSK-02-01: Custom Editor Provider 등록 (idempotent)
     if (!_blockEditorRegistered) {

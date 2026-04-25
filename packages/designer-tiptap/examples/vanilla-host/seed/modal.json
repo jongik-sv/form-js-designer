@@ -1,0 +1,13 @@
+{
+  "type": "default",
+  "components": [
+    {
+      "type": "modal",
+      "id": "modal-1",
+      "label": "모달 컨테이너",
+      "components": [
+        { "type": "textfield", "key": "code", "label": "코드" }
+      ]
+    }
+  ]
+}

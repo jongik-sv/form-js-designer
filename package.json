@@ -18,6 +18,7 @@
     "license:check": "node scripts/ci/license-gate.mjs",
     "license:gen": "node scripts/ci/gen-third-party-licenses.mjs",
     "release:rc": "node scripts/ci/tag-rc.mjs",
+    "release:tiptap": "npm run build -w @form-js-designer/designer-tiptap && npm publish -w @form-js-designer/designer-tiptap",
     "test:ac-matrix": "node scripts/rc/run-ac-matrix.mjs",
     "test:rc": "npm run lint && npm run lint:license && npm run test:ac-matrix",
     "test:ci-scripts": "node --test scripts/ci/__tests__/watermark-scss-lint.test.mjs && node --test scripts/ci/__tests__/watermark-hash.test.mjs",

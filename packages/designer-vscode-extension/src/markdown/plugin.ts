@@ -38,10 +38,29 @@ export function renderFormJsBlock(
 }
 
 /**
+ * Runtime extension identifier (`<publisher>.<name>`) — activate()에서 주입된다.
+ * Dev Host(scoped name) vs 패키징 .vsix(unscoped name) 환경에서 링크가 맞지 않는 문제를 방지하기 위해
+ * 하드코딩 대신 context.extension.id 를 사용한다.
+ *
+ * 주입 전(테스트/서브모듈 import 등) fallback 은 패키징 시점 publisher.unscoped-name.
+ */
+let runtimeExtensionId = 'form-js-designer.designer-vscode-extension';
+
+export function setExtensionIdForUri(id: string | undefined | null): void {
+  if (typeof id === 'string' && id.length > 0) {
+    runtimeExtensionId = id;
+  }
+}
+
+export function getExtensionIdForUri(): string {
+  return runtimeExtensionId;
+}
+
+/**
  * ✏️ 편집 펜슬을 extension UriHandler 링크로 렌더한다.
  *
  * 0.1.6부터 `command:formJs.openBlockEditor?...` 대신
- * `vscode://form-js-designer.designer-vscode-extension/open-block-editor?...` 형식을 사용한다.
+ * `vscode://<runtime-extension-id>/open-block-editor?...` 형식을 사용한다.
  *
  * 이유: VSCode markdown preview는 `command:` URI를 기본적으로 trusted markdown에서만 허용하여
  * 확장이 기여한 플러그인 출력에도 sanitize/차단이 발생한다. `vscode://` URI는 preview에서도
@@ -57,7 +76,7 @@ export function renderEditLink(
     mdStart: String(mdStart),
     mdEnd: String(mdEnd),
   });
-  const href = `vscode://form-js-designer.designer-vscode-extension/open-block-editor?${params.toString()}`;
+  const href = `vscode://${runtimeExtensionId}/open-block-editor?${params.toString()}`;
   return `<a class="fjs-edit-btn" role="button" aria-label="편집" title="Block Editor 열기" href="${href}">✏️</a>`;
 }
 
