@@ -7,6 +7,10 @@ export default defineConfig({
   resolve: {
     alias: [
       {
+        find: '@form-js-designer/designer-components/src/container-base.css',
+        replacement: resolve(__dirname, '../../../designer-components/src/container-base.css'),
+      },
+      {
         find: '@form-js-designer/designer-tiptap/styles',
         replacement: resolve(__dirname, '../../src/styles/entry.css'),
       },
