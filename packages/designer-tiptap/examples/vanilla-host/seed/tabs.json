@@ -1,0 +1,35 @@
+{
+  "type": "default",
+  "components": [
+    {
+      "type": "tabs",
+      "id": "tabs-root",
+      "label": "탭 컨테이너",
+      "components": [
+        {
+          "type": "tabPanel",
+          "id": "tab-1",
+          "label": "기본",
+          "components": [
+            { "type": "textfield", "key": "name", "label": "이름" }
+          ]
+        },
+        {
+          "type": "tabPanel",
+          "id": "tab-2",
+          "label": "추가",
+          "components": [
+            {
+              "type": "card",
+              "id": "card-1",
+              "label": "카드",
+              "components": [
+                { "type": "textfield", "key": "memo", "label": "메모" }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

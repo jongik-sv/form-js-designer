@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>designer-tiptap vanilla host</title>
+    <style>
+      body { font: 14px/1.5 system-ui, sans-serif; margin: 24px; max-width: 960px; }
+      .toolbar { margin-bottom: 12px; display: flex; gap: 8px; }
+      .toolbar button { padding: 6px 12px; cursor: pointer; }
+      .ProseMirror { border: 1px solid #ddd; padding: 16px; min-height: 400px; }
+    </style>
+  </head>
+  <body>
+    <h1>designer-tiptap vanilla host</h1>
+    <div class="toolbar">
+      <button data-testid="insert-simple">Insert Simple</button>
+      <button data-testid="insert-tabs">Insert Tabs</button>
+      <button data-testid="insert-modal">Insert Modal</button>
+      <button data-testid="dump-html">Dump HTML</button>
+      <button data-testid="reload-from-html">Reload</button>
+    </div>
+    <div id="editor"></div>
+    <pre id="dump" data-testid="dump-output" style="background:#f7f7f7; padding:12px"></pre>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

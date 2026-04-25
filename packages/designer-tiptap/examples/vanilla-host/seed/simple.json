@@ -1,0 +1,7 @@
+{
+  "type": "default",
+  "components": [
+    { "type": "textfield", "key": "name", "label": "이름" },
+    { "type": "textfield", "key": "email", "label": "이메일" }
+  ]
+}
