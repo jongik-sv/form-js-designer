@@ -1,4 +1,5 @@
 import { Node, mergeAttributes } from '@tiptap/core';
+import { createFormJsViewerNodeView } from './nodeview/viewer';
 
 export interface FormJsBlockAttrs {
   schema: Record<string, unknown> | null;
@@ -68,5 +69,9 @@ export const FormJsBlock = Node.create({
         ({ commands }) =>
           commands.updateAttributes(this.name, { schema }),
     };
+  },
+
+  addNodeView() {
+    return createFormJsViewerNodeView;
   },
 });
