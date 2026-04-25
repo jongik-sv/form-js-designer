@@ -15,6 +15,7 @@
 
 import * as vscode from 'vscode';
 import { editSessionRegistry } from './editSession';
+import { formatEditorTitle } from './customEditorProvider';
 
 /** 커맨드 인자 형식 */
 export interface OpenBlockEditorArgs {
@@ -68,12 +69,49 @@ export async function openBlockEditorCommand(
     }
   }
 
-  // single-editor lock: 이미 활성 세션이 있으면 reveal
+  // single-editor lock: 문서 URI당 패널 1개만 유지.
+  //   - 같은 블록 클릭(mdStart/mdEnd 일치): 기존 패널을 reveal만 한다.
+  //   - 다른 블록 클릭: 기존 패널을 재사용하여 새 블록 schema로 `edit-opened` 재전송.
+  //     (supportsMultipleEditorsPerDocument=false 이므로 패널을 새로 열 수 없다)
   const existing = editSessionRegistry.getActive(uri);
   if (existing) {
+    const panel = existing.panel as {
+      reveal?: (col?: number) => void;
+      webview?: { postMessage(m: unknown): void };
+      dispose(): void;
+      title?: string;
+    };
+
+    const sameBlock = existing.mdStart === mdStart && existing.mdEnd === mdEnd;
+
+    if (!sameBlock) {
+      // 다른 블록: 세션 블록 정보 갱신 + 새 schema로 edit-opened 재전송
+      existing.mdStart = mdStart;
+      existing.mdEnd = mdEnd;
+      try {
+        const doc = await vscode.workspace.openTextDocument(vscode.Uri.parse(uri));
+        existing.openedDocVersion = doc.version;
+        existing.lastKnownDocVersion = doc.version;
+        // 탭 타이틀 갱신 (블록 라인 범위 변경 반영)
+        try {
+          panel.title = formatEditorTitle(doc.uri, mdStart, mdEnd, false);
+        } catch {
+          // title 설정 실패는 무시
+        }
+        panel.webview?.postMessage({
+          type: 'edit-opened',
+          schema,
+          uri,
+          mdStart,
+          mdEnd,
+          docVersion: doc.version,
+        });
+      } catch {
+        // postMessage 또는 doc 열기 실패는 무시 — reveal은 시도한다
+      }
+    }
+
     try {
-      // panel 객체가 reveal 메서드를 가지고 있으면 호출
-      const panel = existing.panel as { reveal?: (col?: number) => void; dispose(): void };
       if (typeof panel.reveal === 'function') {
         // column을 지정하지 않으면 현재 column에서 reveal하여 새 탭이 생기지 않는다
         panel.reveal();
