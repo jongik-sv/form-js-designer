@@ -1,0 +1,11 @@
+src/
+e2e/
+examples/
+scripts/
+test-results/
+playwright-report/
+*.test.ts
+tsconfig.json
+vitest.config.ts
+playwright.config.ts
+tsup.config.ts
