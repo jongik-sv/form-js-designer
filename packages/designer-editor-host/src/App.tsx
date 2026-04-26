@@ -40,6 +40,7 @@ import { ValidationBadge } from './components/ValidationBadge';
 import { PanelSplitter } from './components/PanelSplitter';
 import { SidePanelToggle } from './components/SidePanelToggle';
 import { ComponentResizeOverlay } from './components/ComponentResizeOverlay';
+import { LeftRailTabs, type LeftRailTab } from './components/LeftRailTabs';
 import { usePanelResize } from './hooks/usePanelResize';
 import { installPropsPanelFocusGuard } from './hooks/usePropsPanelFocusGuard';
 import { useSidePanelTab } from './router';
@@ -63,6 +64,7 @@ export function App(): h.JSX.Element {
   const editorRef = useRef<HTMLDivElement>(null);
   const nativePropsPanelRef = useRef<HTMLDivElement>(null);
   const outlineRef = useRef<HTMLDivElement>(null);
+  const paletteSlotRef = useRef<HTMLDivElement>(null);
   const editorInstanceRef = useRef<InstanceType<typeof FormEditor> | null>(null);
 
   // 서비스 상태 — 에디터 초기화 완료 후 setState로 리렌더 트리거
@@ -82,7 +84,7 @@ export function App(): h.JSX.Element {
 
   const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
   const [tab, setTab] = useSidePanelTab();
-  const [outlineCollapsed, setOutlineCollapsed] = useState<boolean>(false);
+  const [leftTab, setLeftTab] = useState<LeftRailTab>('components');
 
   // 패널 max 너비는 viewport 기반(최소 900, 최대 1600, 좌측 영역 400px 확보)
   const computeMaxPanelWidth = (): number => {
@@ -164,6 +166,14 @@ export function App(): h.JSX.Element {
           } catch { /* outlinePanel 서비스가 없는 경우 무시 */ }
         }
 
+        // 팔레트 DOM을 left-rail components 슬롯으로 옮긴다.
+        // form-js dragula는 element 자체에 listener를 박으므로 reparent 안전.
+        const paletteEl = container.querySelector('.fjs-palette-container');
+        const paletteSlot = paletteSlotRef.current;
+        if (paletteEl && paletteSlot && paletteEl.parentElement !== paletteSlot) {
+          paletteSlot.appendChild(paletteEl);
+        }
+
         // DI 서비스 획득
         if (editor) {
           try {
@@ -240,34 +250,31 @@ export function App(): h.JSX.Element {
 
         <div class="editor-main">
           <div
-            class={`outline-container${outlineCollapsed ? ' outline-container--collapsed' : ''}`}
-            data-outline-container
+            class="left-rail"
+            data-active-panel={leftTab}
           >
-            <div class="outline-header">
-              <button
-                class="outline-toggle-btn"
-                type="button"
-                aria-expanded={!outlineCollapsed}
-                aria-controls="outline-root"
-                aria-label={outlineCollapsed ? '아웃라인 열기' : '아웃라인 닫기'}
-                data-testid="outline-toggle"
-                onClick={() => setOutlineCollapsed((c) => !c)}
-              >
-                <span aria-hidden="true">☰</span>
-              </button>
-              <h3>아웃라인</h3>
+            <LeftRailTabs activeTab={leftTab} onTabChange={setLeftTab} />
+            <div class="left-rail__panels">
+              <div
+                id="left-rail-panel-components"
+                class="left-rail__panel"
+                data-panel="components"
+                role="tabpanel"
+                aria-labelledby="left-tab-components"
+                ref={paletteSlotRef}
+              />
+              <div
+                id="left-rail-panel-outline"
+                class="left-rail__panel"
+                data-panel="outline"
+                data-outline-container
+                role="tabpanel"
+                aria-labelledby="left-tab-outline"
+                ref={outlineRef}
+              />
             </div>
-            <div
-              ref={outlineRef}
-              id="outline-root"
-              data-testid="outline-root"
-              class="outline-root"
-            />
           </div>
           <div class="editor-container" ref={editorRef} data-testid="editor-root" />
-          {/* TSK-12-02: 컴포넌트 높이 리사이즈 핸들 — editor 기준 absolute 포지셔닝
-              services.eventBus 를 조건으로 사용: setServices()가 트리거한 리렌더 시점에
-              editorInstanceRef.current 도 반드시 채워져 있음이 보장된다. */}
           {services.eventBus && editorInstanceRef.current && (
             <ComponentResizeOverlay editor={editorInstanceRef.current} />
           )}
