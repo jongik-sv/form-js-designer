@@ -20,6 +20,9 @@ packages/*/spike/*/tests/artifacts/
 *.log
 *.tsbuildinfo
 
+# VS Code extension build artifacts (vsce package output)
+*.vsix
+
 .env
 .env.*
 !.env.example
