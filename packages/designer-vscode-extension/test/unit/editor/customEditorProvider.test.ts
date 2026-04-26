@@ -109,6 +109,16 @@ describe('buildHtml', () => {
     const html = buildHtml(opts);
     expect(html).toContain(`href="${opts.styleUri}"`);
   });
+
+  it('renders left-rail and editor-host containers in body', () => {
+    const html = buildHtml(opts);
+    expect(html).toContain('id="left-rail"');
+    expect(html).toContain('data-active-panel="components"');
+    expect(html).toContain('id="left-rail-panel-components"');
+    expect(html).toContain('id="left-rail-panel-outline"');
+    expect(html).toContain('data-outline-container');
+    expect(html).toContain('id="editor-host"');
+  });
 });
 
 /**

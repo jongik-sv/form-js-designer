@@ -426,7 +426,16 @@ ${extraLinks}
   <title>form-js Block Editor</title>
 </head>
 <body>
-  <div id="app"></div>
+  <div id="app">
+    <div id="left-rail" class="left-rail" data-active-panel="components">
+      <div id="left-rail-tabs"></div>
+      <div class="left-rail__panels">
+        <div id="left-rail-panel-components" class="left-rail__panel" data-panel="components" role="tabpanel" aria-labelledby="left-tab-components"></div>
+        <div id="left-rail-panel-outline" class="left-rail__panel" data-panel="outline" data-outline-container role="tabpanel" aria-labelledby="left-tab-outline"></div>
+      </div>
+    </div>
+    <div id="editor-host" class="editor-container"></div>
+  </div>
   <script nonce="${nonce}" src="${scriptUri}"></script>
 </body>
 </html>`;
