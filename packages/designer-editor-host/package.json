@@ -5,7 +5,8 @@
   "description": "form-js editor host app with Palette + Outline modules",
   "type": "module",
   "exports": {
-    "./embedded": "./src/embeddedDesigner.tsx"
+    "./embedded": "./src/embeddedDesigner.tsx",
+    "./modules/outline": "./src/modules/OutlineModule.ts"
   },
   "scripts": {
     "dev": "vite",
