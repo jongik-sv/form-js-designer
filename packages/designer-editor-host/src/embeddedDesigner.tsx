@@ -15,6 +15,17 @@ import { ValidateModule } from './modules/ValidateModule';
 import { ExportModule } from './modules/ExportModule';
 import { installPropsPanelFocusGuard } from './hooks/usePropsPanelFocusGuard';
 
+// Layout CSS — replicates host App.tsx imports so form-js editor + outline +
+// properties panel render correctly inside the modal. Without these the
+// palette stretches horizontally, outline doesn't render, props panel is
+// offscreen, and the 3-column layout collapses.
+import '@bpmn-io/form-js-viewer/dist/assets/form-js.css';
+import '@bpmn-io/form-js-editor/dist/assets/form-js-editor-base.css';
+import '@bpmn-io/form-js-editor/dist/assets/form-js-editor.css';
+import '@bpmn-io/form-js-editor/dist/assets/properties-panel.css';
+import '@bpmn-io/form-js-editor/dist/assets/dragula.css';
+import './app.css';
+
 export type FormSchema = { type: string; components: unknown[]; [k: string]: unknown };
 
 export interface MountEmbeddedEditorModalOptions {
@@ -46,6 +57,7 @@ interface FormEditorInstance {
   importSchema: (schema: FormSchema) => Promise<void>;
   saveSchema: () => Promise<{ schema: FormSchema }>;
   destroy: () => void;
+  get?: (key: string, optional?: boolean) => unknown;
 }
 
 const ROOT_CLASS = 'fjd-embedded-designer-root';
@@ -53,6 +65,12 @@ const HEADER_CLASS = 'fjd-embedded-designer-header';
 const CONTENT_CLASS = 'fjd-embedded-designer-content';
 const CLOSE_BTN_CLASS = 'fjd-embedded-designer-close';
 const CANVAS_CLASS = 'fjd-embedded-designer-canvas';
+const LAYOUT_CLASS = 'fjd-embedded-designer-layout';
+const AREA_CLASS = 'fjd-embedded-designer-area';
+const MAIN_CLASS = 'fjd-embedded-designer-main';
+const OUTLINE_CLASS = 'fjd-embedded-designer-outline';
+const PROPS_CLASS = 'fjd-embedded-designer-props';
+const PROPS_NATIVE_CLASS = 'fjd-embedded-designer-props-native';
 
 /**
  * Imperative mount of the form-js editor inside a fullscreen modal shell.
@@ -62,6 +80,11 @@ const CANVAS_CLASS = 'fjd-embedded-designer-canvas';
  * [닫기] button both funnel into triggerClose, which awaits onSave then
  * cleans up. handle.destroy() is for external force-close (e.g. tiptap
  * editor.destroy()) and skips onSave but still fires onClose.
+ *
+ * The inner layout replicates host App.tsx — Outline (left) + form-js canvas
+ * (center) + form-js native properties panel (right) — but intentionally
+ * omits Sidebar tabs / Live Preview / Validate / Export toolbar (the
+ * embedded version is simpler than the standalone host).
  */
 export async function mountEmbeddedEditorModal(
   opts: MountEmbeddedEditorModalOptions,
@@ -92,14 +115,18 @@ export async function mountEmbeddedEditorModal(
 
   // 3. Mount Preact app + form-js editor
   let editorInstance: FormEditorInstance | null = null;
+  let attachedPropsPanel: { detach?: () => void } | null = null;
   let currentSchema: FormSchema = initialSchema;
   let closing = false;
 
   const App = () => {
     const editorRef = useRef<HTMLDivElement>(null);
+    const outlineRef = useRef<HTMLDivElement>(null);
+    const propsRef = useRef<HTMLDivElement>(null);
+
     useLayoutEffect(() => {
-      const el = editorRef.current;
-      if (!el) return;
+      const editorEl = editorRef.current;
+      if (!editorEl) return;
       const additionalModules: unknown[] = [
         DesignerContainerModule,
         DesignerComponentsModule,
@@ -113,26 +140,90 @@ export async function mountEmbeddedEditorModal(
         ExportModule,
         LayoutHeightModule,
       ];
+      // form-js 의 propertiesPanel.parent 를 offscreen 으로 만들어두면
+      // 내부의 fjs-editor-properties-container 가 detached 상태로 생성된다.
+      // 이후 propertiesPanel.attachTo() 로 우측 .props-panel-native 슬롯에 마운트한다.
       const offscreenPropsParent = document.createElement('div');
       try {
         const editor = new FormEditor({
-          container: el,
+          container: editorEl,
           additionalModules,
           propertiesPanel: { parent: offscreenPropsParent },
         } as ConstructorParameters<typeof FormEditor>[0]) as unknown as FormEditorInstance;
         editorInstance = editor;
-        editor.importSchema(migrateLegacyTabsSchema(initialSchema)).catch((err: Error) => {
-          console.error('[embedded-designer] importSchema failed:', err);
-        });
+        editor
+          .importSchema(migrateLegacyTabsSchema(initialSchema))
+          .then(() => {
+            // wire outline + props panel after schema imports — same as App.tsx
+            const outlineEl = outlineRef.current;
+            if (outlineEl && typeof editor.get === 'function') {
+              try {
+                const outlinePanel = editor.get('outlinePanel', false) as
+                  | { mount?: (el: HTMLElement) => void }
+                  | undefined;
+                outlinePanel?.mount?.(outlineEl);
+              } catch { /* ignore */ }
+            }
+            const propsEl = propsRef.current;
+            if (propsEl && typeof editor.get === 'function') {
+              try {
+                const propsPanel = editor.get('propertiesPanel', false) as
+                  | { attachTo?: (el: HTMLElement) => void; detach?: () => void }
+                  | undefined;
+                if (propsPanel?.attachTo) {
+                  propsPanel.attachTo(propsEl);
+                  attachedPropsPanel = propsPanel;
+                }
+              } catch { /* ignore */ }
+            }
+          })
+          .catch((err: Error) => {
+            console.error('[embedded-designer] importSchema failed:', err);
+          });
       } catch (err) {
         console.error('[embedded-designer] FormEditor construction failed:', err);
       }
       return () => {
+        // detach propertiesPanel before destroy to avoid stale-DOM warnings
+        try { attachedPropsPanel?.detach?.(); } catch { /* ignore */ }
+        attachedPropsPanel = null;
         try { editorInstance?.destroy(); } catch { /* ignore */ }
         editorInstance = null;
       };
     }, []);
-    return h('div', { class: CANVAS_CLASS, ref: editorRef });
+
+    return h(
+      'div',
+      { class: `${LAYOUT_CLASS} app-layout` },
+      h(
+        'div',
+        { class: `${AREA_CLASS} editor-area` },
+        h(
+          'div',
+          { class: `${MAIN_CLASS} editor-main` },
+          h(
+            'div',
+            { class: `${OUTLINE_CLASS} outline-container`, 'data-outline-container': '' },
+            h(
+              'div',
+              { class: 'outline-header' },
+              h('h3', null, '아웃라인'),
+            ),
+            h('div', { class: 'outline-root', ref: outlineRef }),
+          ),
+          h('div', { class: `${CANVAS_CLASS} editor-container`, ref: editorRef }),
+        ),
+      ),
+      h(
+        'div',
+        { class: `${PROPS_CLASS} side-panel` },
+        h(
+          'div',
+          { class: 'props-panel-stack' },
+          h('div', { class: `${PROPS_NATIVE_CLASS} props-panel-native`, ref: propsRef }),
+        ),
+      ),
+    );
   };
 
   render(h(App, {}), content);
