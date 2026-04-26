@@ -275,6 +275,9 @@ export function App(): h.JSX.Element {
             </div>
           </div>
           <div class="editor-container" ref={editorRef} data-testid="editor-root" />
+          {/* TSK-12-02: 컴포넌트 높이 리사이즈 핸들 — editor 기준 absolute 포지셔닝
+              services.eventBus 를 조건으로 사용: setServices()가 트리거한 리렌더 시점에
+              editorInstanceRef.current 도 반드시 채워져 있음이 보장된다. */}
           {services.eventBus && editorInstanceRef.current && (
             <ComponentResizeOverlay editor={editorInstanceRef.current} />
           )}
