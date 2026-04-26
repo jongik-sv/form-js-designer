@@ -13,8 +13,8 @@ description: "스키마 파일의 유효성을 검증한다. designer-cli valida
 
 예시:
 ```
-/design-validate schemas/drafts/login-page.schema.json
-/design-validate schemas/drafts/dashboard.schema.json
+/design-validate schemas/drafts/login-page.form-js
+/design-validate schemas/drafts/dashboard.form-js
 ```
 
 ## 처리 절차
@@ -47,7 +47,7 @@ description: "스키마 파일의 유효성을 검증한다. designer-cli valida
 ### 유효한 경우
 ```
 [validate] 유효합니다.
-파일: schemas/drafts/login-page.schema.json
+파일: schemas/drafts/login-page.form-js
 schemaVersion: 19 ✓
 컴포넌트 수: 3
 ```
@@ -55,7 +55,7 @@ schemaVersion: 19 ✓
 ### 오류가 있는 경우
 ```
 [validate] 오류 발견 (2건):
-파일: schemas/drafts/bad-schema.schema.json
+파일: schemas/drafts/bad-schema.form-js
 
 오류 목록:
   1. [UNKNOWN_COMPONENT_TYPE] components[id=unknown-1234]: Component type "nonexistent-component" is not registered in the component registry.

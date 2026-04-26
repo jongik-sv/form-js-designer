@@ -17,7 +17,7 @@ vi.mock('vscode', () => ({
     }),
     parse: (s: string) => ({ toString: () => s, fsPath: s }),
   },
-  ViewColumn: { Beside: 2 },
+  ViewColumn: { Active: -1, Beside: -2 },
   window: { registerCustomEditorProvider: vi.fn() },
   commands: { registerCommand: vi.fn(), executeCommand: vi.fn() },
 }));

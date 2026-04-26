@@ -8,6 +8,9 @@
     "designer-cli": "./bin/designer-cli.mjs"
   },
   "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "prepare": "tsc -p tsconfig.build.json",
+    "clean": "rm -rf dist",
     "test:unit": "vitest run",
     "test:unit:watch": "vitest",
     "test:e2e": "playwright test --config playwright.config.ts",

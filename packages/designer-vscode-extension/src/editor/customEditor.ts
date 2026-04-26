@@ -14,15 +14,21 @@
  * - 커스텀 컴포넌트 모듈(`customComponentsModule`) 주입 (TSK-05-04)
  */
 
+import { h, render } from 'preact';
 import { createFormEditor } from '@bpmn-io/form-js-editor';
 import { customComponentsModule } from '../components';
 // Tabs/Card 등 커스텀 container의 자식 row를 얻으려면 form-js 기본 formLayouter를
 // DesignerFormLayouter로 교체해야 한다. preview.ts와 동일한 모듈 조합 유지.
 import { DesignerContainerModule } from '@form-js-designer/designer-core';
+// 대상 타입(textarea/html/table/group/card/modal/tabs/tabPanel/iframe/image/text)에
+// layout.height inline style을 자동 주입하는 form-js 모듈 (TSK-12-02 포팅).
+import { LayoutHeightModule } from '@form-js-designer/designer-runtime/modules';
 // context-pad에 "행으로 복사 / 세로로 복사" 버튼 주입 (웹 호스트의 OutlineModule 경량 포팅)
 import { ContextPadExtrasModule } from './contextPadExtras';
 // form-js 기본 properties panel에 "Custom properties" 그룹을 추가하는 provider
 import { PropsPanelModule } from './propsPanel/PropsPanelService';
+// 선택된 대상 컴포넌트 하단에 height resize 핸들을 띄우는 Preact 오버레이.
+import { ComponentResizeOverlay } from './resize/ComponentResizeOverlay';
 import type { EditOpenedMessage, SaveSchemaMessage } from '../shared/messages';
 
 // TSK-04-02: axe-core 스캔 테스트 모드 플래그 (esbuild define)
@@ -55,7 +61,20 @@ const EDITOR_MODULES = [
   customComponentsModule,
   ContextPadExtrasModule,
   PropsPanelModule,
+  LayoutHeightModule,
 ];
+
+const RESIZE_OVERLAY_ROOT_ID = 'component-resize-overlay-root';
+
+function ensureResizeOverlayRoot(): HTMLElement {
+  let root = document.getElementById(RESIZE_OVERLAY_ROOT_ID);
+  if (!root) {
+    root = document.createElement('div');
+    root.id = RESIZE_OVERLAY_ROOT_ID;
+    document.body.appendChild(root);
+  }
+  return root;
+}
 
 /**
  * initCustomEditor — 주어진 container에 form-js editor를 마운트한다 (TSK-05-04).
@@ -119,6 +138,11 @@ export async function mountEditor(schema: unknown): Promise<void> {
       // destroy 실패 무시
     }
     editorInstance = null;
+    // resize overlay도 함께 unmount — 다음 render() 호출에서 새 editor 인스턴스로 교체됨
+    const existing = document.getElementById(RESIZE_OVERLAY_ROOT_ID);
+    if (existing) {
+      try { render(null, existing); } catch { /* unmount 실패 무시 */ }
+    }
   }
   if (unsubscribeChange) {
     try {
@@ -144,6 +168,11 @@ export async function mountEditor(schema: unknown): Promise<void> {
     container.textContent = `편집기 초기화 실패: ${err instanceof Error ? err.message : String(err)}`;
     return;
   }
+
+  // 컴포넌트 height resize 핸들 — body 직속 root에 Preact render. position:fixed 라
+  // 좌표는 viewport 기준이며 #app 레이아웃과 무관.
+  const overlayRoot = ensureResizeOverlayRoot();
+  render(h(ComponentResizeOverlay, { editor: editorInstance as unknown as { get: (svc: string, required?: boolean) => unknown } }), overlayRoot);
 
   // 초기 스키마 JSON 기록 (동일 내용 재전송 방지용 기준점)
   lastSyncedSchemaJson = serializeCurrentSchema();
@@ -329,6 +358,10 @@ export function init(): void {
         // 무시
       }
       editorInstance = null;
+    }
+    const overlayRoot = document.getElementById(RESIZE_OVERLAY_ROOT_ID);
+    if (overlayRoot) {
+      try { render(null, overlayRoot); } catch { /* 무시 */ }
     }
   });
 

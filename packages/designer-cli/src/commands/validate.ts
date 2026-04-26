@@ -198,7 +198,7 @@ function validateDataStores(schema: FormSchema): ValidateError[] {
     }
 
     // source 화이트리스트
-    if (!SUPPORTED_DATASTORE_SOURCES.includes(source)) {
+    if (!(SUPPORTED_DATASTORE_SOURCES as ReadonlyArray<string>).includes(source)) {
       errors.push({
         code: 'DATASTORE_UNSUPPORTED_SOURCE',
         message: `Unsupported dataStore source "${source}" for key "${key}". Supported: ${JSON.stringify(SUPPORTED_DATASTORE_SOURCES)}`,

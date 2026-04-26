@@ -4,8 +4,8 @@
 
 ## 파일명 규칙
 
-- 형식: `<kebab-case-page-name>.schema.json`
-- 예시: `login-page.schema.json`, `dashboard.schema.json`, `user-profile.schema.json`
+- 형식: `<kebab-case-page-name>.form-js`
+- 예시: `login-page.form-js`, `dashboard.form-js`, `user-profile.form-js`
 
 ## 필수 구조
 
@@ -23,10 +23,10 @@
 
 ## 검증 의무
 
-이 디렉토리의 모든 `.schema.json` 파일은 저장 전 검증을 통과해야 한다:
+이 디렉토리의 모든 `.form-js` 파일은 저장 전 검증을 통과해야 한다:
 
 ```bash
-/design-validate schemas/drafts/<파일명>.schema.json
+/design-validate schemas/drafts/<파일명>.form-js
 ```
 
 또는:
@@ -49,7 +49,7 @@ npm --prefix packages/designer-cli run test:skill
 
 ```bash
 # (TSK-08-01 완료 후) designer-cli import 명령 사용
-node packages/designer-cli/src/cli.js import schemas/drafts/<파일>.schema.json --to <project-path>
+node packages/designer-cli/src/cli.js import schemas/drafts/<파일>.form-js --to <project-path>
 ```
 
 import 명령은 중복 컴포넌트 id 방지 및 경로 정규화를 처리한다.

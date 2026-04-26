@@ -10,7 +10,8 @@
     ".": "./src/index.ts",
     "./transport": "./src/transport/index.ts",
     "./boot": "./src/boot/index.ts",
-    "./watermark": "./src/watermark/index.ts"
+    "./watermark": "./src/watermark/index.ts",
+    "./modules": "./src/modules/index.ts"
   },
   "scripts": {
     "dev": "vite --config vite.config.ts",

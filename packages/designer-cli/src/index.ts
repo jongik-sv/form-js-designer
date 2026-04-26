@@ -1,5 +1,5 @@
 /**
  * designer-cli barrel export
  */
-export { validate, runValidateCli } from './commands/validate';
-export type { ValidateOptions } from './commands/validate';
+export { validate, runValidate } from './commands/validate.js';
+export type { ValidateOptions, ValidateError, ValidatePureResult } from './commands/validate.js';

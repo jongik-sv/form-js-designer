@@ -6,7 +6,7 @@ import * as vscode from 'vscode';
 // openBlockEditorCommand는 내부에서 import * as vscode from 'vscode'를 사용한다.
 // vi.mock 팩토리는 호이스팅되므로 외부 변수 참조 금지 — vi.fn()을 직접 사용한다.
 vi.mock('vscode', () => ({
-  ViewColumn: { Beside: 2 },
+  ViewColumn: { Active: -1, Beside: -2 },
   Uri: {
     parse: (s: string) => ({ toString: () => s, fsPath: s }),
     file: (s: string) => ({ toString: () => `file://${s}`, fsPath: s }),
@@ -85,15 +85,15 @@ describe('openBlockEditorCommand', () => {
       'vscode.openWith',
       expect.anything(),
       'form-js.block-editor',
-      2 // ViewColumn.Beside
+      -1 // ViewColumn.Active
     );
   });
 
-  it('viewColumn은 반드시 ViewColumn.Beside(2)이다', async () => {
+  it('viewColumn은 반드시 ViewColumn.Active(-1)이다 — preview pane이 split되지 않고 같은 column에서 editor가 열림', async () => {
     const cmd = await importCmd();
     await cmd(baseArgs);
     const callArgs = getExecuteCommandMock().mock.calls[0];
-    expect(callArgs?.[3]).toBe(2);
+    expect(callArgs?.[3]).toBe(-1);
   });
 
   it('이미 활성 세션이 있으면 vscode.openWith를 호출하지 않는다 (single-editor lock)', async () => {

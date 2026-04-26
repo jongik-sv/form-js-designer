@@ -6,9 +6,9 @@
  *   designer-cli validate <file>
  *   designer-cli import <file> --to <project-path>
  */
-import { runValidate } from '../src/commands/validate.js';
-import { runImport } from '../src/commands/import.js';
-import { runPublish } from '../src/commands/publish.js';
+import { runValidate } from '../dist/commands/validate.js';
+import { runImport } from '../dist/commands/import.js';
+import { runPublish } from '../dist/commands/publish.js';
 
 const argv = process.argv.slice(2);
 const subcommand = argv[0];

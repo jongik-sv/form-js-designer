@@ -9,7 +9,9 @@
  * 흐름:
  * 1. EditSessionRegistry.getActive(uri) → 이미 세션이 있으면 해당 패널을 reveal하고 종료
  * 2. PendingEditSchema 맵에 schema stash
- * 3. vscode.commands.executeCommand('vscode.openWith', uri, 'form-js.block-editor', ViewColumn.Beside)
+ * 3. vscode.commands.executeCommand('vscode.openWith', uri, 'form-js.block-editor', ViewColumn.Active)
+ *    - Active를 사용하여 preview pane이 split되어 좁아지는 현상을 방지하고, editor가
+ *      preview의 column을 인계받아 full-width로 열린다 (preview는 같은 column의 background tab으로 이동).
  * 4. provider가 resolveCustomTextEditor에서 stash를 consume
  */
 
@@ -138,7 +140,7 @@ export async function openBlockEditorCommand(
       'vscode.openWith',
       vscode.Uri.parse(uri),
       'form-js.block-editor',
-      vscode.ViewColumn.Beside
+      vscode.ViewColumn.Active
     );
     // vscode.openWith 반환 후에도 resolveCustomTextEditor가 아직 실행 중일 수 있다.
     // opening 상태는 unmarkOpening에서 정리한다.

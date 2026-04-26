@@ -17,6 +17,7 @@ import { h } from 'preact';
 import type { ComponentType, JSX } from 'preact';
 import { propsSchemaToPanel, createDefaultRegistry } from '@form-js-designer/designer-core';
 import type { PanelEntry, PanelWidgetRegistry } from '@form-js-designer/designer-core';
+import { LAYOUT_HEIGHT_TARGET_TYPES } from '@form-js-designer/designer-runtime/modules';
 
 interface PropertiesPanelLike {
   registerProvider(provider: unknown, priority?: number): void;
@@ -81,33 +82,77 @@ export class PropsPanelService {
     return (groups) => {
       if (!field || !field.type) return groups;
 
+      const next = [...groups];
+
       const formFields = this.injector.get('formFields') as FormFieldsLike | undefined;
       const definition = formFields?.get(field.type);
       const propsSchema = (definition?.config?.propsSchema ?? definition?.propsSchema) as
         | Parameters<typeof propsSchemaToPanel>[0]
         | undefined;
-      if (!propsSchema) return groups;
 
-      let entries: PanelEntry[] = [];
-      try {
-        entries = propsSchemaToPanel(propsSchema, this.widgetRegistry);
-      } catch (err) {
-        console.warn('[PropsPanelService] propsSchemaToPanel 실패:', err);
-        return groups;
+      if (propsSchema) {
+        let entries: PanelEntry[] = [];
+        try {
+          entries = propsSchemaToPanel(propsSchema, this.widgetRegistry);
+        } catch (err) {
+          console.warn('[PropsPanelService] propsSchemaToPanel 실패:', err);
+          entries = [];
+        }
+        if (entries.length > 0) {
+          const bioEntries = entries.map((entry) =>
+            this.#buildEntry(entry, field as Record<string, unknown>, editField),
+          );
+          next.push({
+            id: 'designer-custom-props',
+            label: 'Custom properties',
+            entries: bioEntries,
+          });
+        }
       }
-      if (entries.length === 0) return groups;
 
-      const bioEntries = entries.map((entry) =>
-        this.#buildEntry(entry, field as Record<string, unknown>, editField),
-      );
+      // 대상 타입(textarea/html/table/group/card/modal/tabs/tabPanel/iframe/image/text)에
+      // height 숫자 입력 그룹을 추가한다 (TSK-12-02 포팅).
+      if ((LAYOUT_HEIGHT_TARGET_TYPES as readonly string[]).includes(field.type)) {
+        next.push(this.#buildLayoutGroup(field as Record<string, unknown>, editField));
+      }
 
-      const customGroup: BioGroup = {
-        id: 'designer-custom-props',
-        label: 'Custom properties',
-        entries: bioEntries,
-      };
+      return next;
+    };
+  }
 
-      return [...groups, customGroup];
+  #buildLayoutGroup(field: Record<string, unknown>, editField: EditField): BioGroup {
+    const getLayout = (): Record<string, unknown> =>
+      (field['layout'] ?? {}) as Record<string, unknown>;
+    const toNum = (v: unknown): number | undefined =>
+      v === '' || v === null || v === undefined ? undefined : Number(v);
+    const setHeight = (v: unknown): void => {
+      editField(field, 'layout', { ...getLayout(), height: toNum(v) });
+    };
+
+    const HeightInput: ComponentType<Record<string, unknown>> = () => {
+      const current = (getLayout()['height'] ?? '') as number | string;
+      return h('input', {
+        type: 'number',
+        'data-testid': 'props-entry-layout.height-input',
+        value: current,
+        min: 36,
+        max: 2000,
+        onInput: (e: Event) => setHeight((e.target as HTMLInputElement).value),
+        onChange: (e: Event) => setHeight((e.target as HTMLInputElement).value),
+        style: 'width:100%;box-sizing:border-box;',
+      }) as JSX.Element;
+    };
+
+    return {
+      id: 'designer-layout',
+      label: 'Layout',
+      entries: [
+        {
+          id: 'designer-layout-height',
+          component: HeightInput,
+          isEdited: () => getLayout()['height'] != null,
+        },
+      ],
     };
   }
 

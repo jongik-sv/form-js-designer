@@ -3,7 +3,7 @@
  *
  * FormJsBlockEditorProvider: `form-js.block-editor` viewType의 Custom Text Editor Provider.
  *
- * VSCode가 `vscode.openWith(uri, 'form-js.block-editor', ViewColumn.Beside)` 를 실행할 때
+ * VSCode가 `vscode.openWith(uri, 'form-js.block-editor', ViewColumn.Active)` 를 실행할 때
  * `resolveCustomTextEditor`가 호출된다.
  *
  * 책임:

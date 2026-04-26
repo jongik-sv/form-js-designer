@@ -1,7 +1,7 @@
 {
   "name": "@form-js-designer/designer-vscode-extension",
   "displayName": "Form.js Designer",
-  "version": "0.1.16",
+  "version": "0.1.21",
   "private": true,
   "description": "VSCode extension for editing form-js form schemas in Markdown",
   "publisher": "form-js-designer",
@@ -119,6 +119,7 @@
     "@form-js-designer/designer-components": "*",
     "@form-js-designer/designer-core": "*",
     "@form-js-designer/designer-i18n": "*",
+    "@form-js-designer/designer-runtime": "*",
     "preact": "^10.19.3",
     "zod": "^3.25.76"
   }
