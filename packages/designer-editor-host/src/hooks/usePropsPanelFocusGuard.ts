@@ -8,12 +8,18 @@
  * 우회책: 전역 HTMLElement.prototype.focus 를 래핑하여, 대상이 .fjs-editor-selected 이고
  * 현재 활성 요소가 .props-panel 내부에 있을 때 focus 호출을 무시한다.
  *
- * 적용 범위가 미니멀(특정 클래스 + 활성 요소 조건) 이므로 다른 포커스 흐름을 방해하지 않는다.
+ * @param scope (v0.2 추가) — 기본 document. Element를 넘기면 그 element 안의
+ *              fjs-editor-selected 요소에만 패치를 적용한다. 외부 요소의 focus
+ *              호출은 원본 동작 그대로. 사용처: 임베디드 디자이너 모달이 자기
+ *              스코프 내부 패치만 활성화.
  */
-export function installPropsPanelFocusGuard(): () => void {
+export function installPropsPanelFocusGuard(
+  scope: Element | Document = document,
+): () => void {
   const orig = HTMLElement.prototype.focus;
   HTMLElement.prototype.focus = function (this: HTMLElement, ...args: unknown[]) {
-    if (this.classList && this.classList.contains('fjs-editor-selected')) {
+    const inScope = scope === document || (scope as Element).contains(this);
+    if (inScope && this.classList && this.classList.contains('fjs-editor-selected')) {
       const active = document.activeElement;
       if (active && (active as HTMLElement).closest?.('.props-panel')) {
         // props-panel input 에서 타이핑 중 — canvas 가 focus 를 훔치려는 시도 차단

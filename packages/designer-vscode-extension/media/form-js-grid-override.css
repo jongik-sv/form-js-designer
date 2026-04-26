@@ -1,0 +1,104 @@
+/**
+ * form-js-grid-override.css — Carbon grid breakpoint fix for narrow panes
+ *
+ * form-js-viewer emits `.cds--col-lg-{N}` classes whose percentage widths are
+ * only active inside Carbon's `@media (min-width: 66rem)` (≥ 1056px). On top
+ * of that, form-js ships `@media (max-width: 66rem) { .cds--col { flex-basis: unset !important; } }`
+ * which reinforces the stacking behavior below 1056px.
+ *
+ * VS Code markdown preview panes and custom editor panes are routinely narrower
+ * than 1056px, so users see every form field stacked in a single column even
+ * when the schema has multi-column rows.
+ *
+ * This override re-applies Carbon's lg-N column widths without a media-query
+ * gate so grid rows stay grid rows regardless of pane width.
+ *
+ * Selectors cover BOTH DOM roots:
+ *   - `.fjs-container`        → viewer (markdown preview)
+ *   - `.fjs-editor-container` → editor (custom editor canvas)
+ */
+.fjs-container .cds--col,
+.fjs-container .cds--col-lg,
+.fjs-editor-container .cds--col,
+.fjs-editor-container .cds--col-lg {
+  flex-basis: 0 !important;
+  flex-grow: 1 !important;
+  max-inline-size: 100% !important;
+}
+
+.fjs-container .cds--col--auto,
+.fjs-container .cds--col-lg--auto,
+.fjs-editor-container .cds--col--auto,
+.fjs-editor-container .cds--col-lg--auto {
+  flex: 1 0 0% !important;
+  inline-size: auto !important;
+  max-inline-size: 100% !important;
+}
+
+.fjs-container .cds--col-lg-0,
+.fjs-editor-container .cds--col-lg-0 { display: none !important; }
+
+.fjs-container .cds--col-lg-1,
+.fjs-editor-container .cds--col-lg-1 { display: block !important; flex: 0 0 6.25%  !important; max-inline-size: 6.25%  !important; }
+
+.fjs-container .cds--col-lg-2,
+.fjs-editor-container .cds--col-lg-2 { display: block !important; flex: 0 0 12.5%  !important; max-inline-size: 12.5%  !important; }
+
+.fjs-container .cds--col-lg-3,
+.fjs-editor-container .cds--col-lg-3 { display: block !important; flex: 0 0 18.75% !important; max-inline-size: 18.75% !important; }
+
+.fjs-container .cds--col-lg-4,
+.fjs-editor-container .cds--col-lg-4 { display: block !important; flex: 0 0 25%    !important; max-inline-size: 25%    !important; }
+
+.fjs-container .cds--col-lg-5,
+.fjs-editor-container .cds--col-lg-5 { display: block !important; flex: 0 0 31.25% !important; max-inline-size: 31.25% !important; }
+
+.fjs-container .cds--col-lg-6,
+.fjs-editor-container .cds--col-lg-6 { display: block !important; flex: 0 0 37.5%  !important; max-inline-size: 37.5%  !important; }
+
+.fjs-container .cds--col-lg-7,
+.fjs-editor-container .cds--col-lg-7 { display: block !important; flex: 0 0 43.75% !important; max-inline-size: 43.75% !important; }
+
+.fjs-container .cds--col-lg-8,
+.fjs-editor-container .cds--col-lg-8 { display: block !important; flex: 0 0 50%    !important; max-inline-size: 50%    !important; }
+
+.fjs-container .cds--col-lg-9,
+.fjs-editor-container .cds--col-lg-9 { display: block !important; flex: 0 0 56.25% !important; max-inline-size: 56.25% !important; }
+
+.fjs-container .cds--col-lg-10,
+.fjs-editor-container .cds--col-lg-10 { display: block !important; flex: 0 0 62.5%  !important; max-inline-size: 62.5%  !important; }
+
+.fjs-container .cds--col-lg-11,
+.fjs-editor-container .cds--col-lg-11 { display: block !important; flex: 0 0 68.75% !important; max-inline-size: 68.75% !important; }
+
+.fjs-container .cds--col-lg-12,
+.fjs-editor-container .cds--col-lg-12 { display: block !important; flex: 0 0 75%    !important; max-inline-size: 75%    !important; }
+
+.fjs-container .cds--col-lg-13,
+.fjs-editor-container .cds--col-lg-13 { display: block !important; flex: 0 0 81.25% !important; max-inline-size: 81.25% !important; }
+
+.fjs-container .cds--col-lg-14,
+.fjs-editor-container .cds--col-lg-14 { display: block !important; flex: 0 0 87.5%  !important; max-inline-size: 87.5%  !important; }
+
+.fjs-container .cds--col-lg-15,
+.fjs-editor-container .cds--col-lg-15 { display: block !important; flex: 0 0 93.75% !important; max-inline-size: 93.75% !important; }
+
+.fjs-container .cds--col-lg-16,
+.fjs-editor-container .cds--col-lg-16 { display: block !important; flex: 0 0 100%   !important; max-inline-size: 100%   !important; }
+
+/**
+ * 좁은 pane 에서 grid row 가 넘칠 때 가로 스크롤로 접근 가능하도록 한다.
+ *
+ * 각 컬럼에 최소 너비(120px)를 주면 `flex-shrink: 0` 과 합쳐 row 가 부모보다 넓어질 수 있고,
+ * 부모에 `overflow-x: auto` 를 주면 사용자가 가로로 스크롤해 가려진 컬럼을 볼 수 있다.
+ * 넓은 pane 에서는 자연스럽게 row 가 부모 안에 들어오므로 스크롤이 나타나지 않는다.
+ */
+.fjs-container .fjs-layout-column,
+.fjs-editor-container .fjs-layout-column {
+  min-inline-size: 120px;
+}
+
+.fjs-container,
+.fjs-editor-container {
+  overflow-x: auto;
+}

@@ -45,9 +45,9 @@ function validateAndSanitize(field: TabsSchema): {
 
   if (tabPanels.length > 0 && !ids.includes(effectiveDefaultValue)) {
     console.warn(
-      `[Tabs] defaultValue "${effectiveDefaultValue}" not found in tabPanel ids [${ids.join(', ')}] — falling back to "${tabPanels[0].id}"`,
+      `[Tabs] defaultValue "${effectiveDefaultValue}" not found in tabPanel ids [${ids.join(', ')}] — falling back to "${tabPanels[0]!.id}"`,
     );
-    effectiveDefaultValue = tabPanels[0].id;
+    effectiveDefaultValue = tabPanels[0]!.id;
   }
 
   return { tabPanels, effectiveDefaultValue, orientation };
@@ -71,17 +71,9 @@ function TabsRender(props: PureRenderProps<TabsSchema>) {
   const { tabPanels, effectiveDefaultValue, orientation } = validateAndSanitize(field);
   const panelIds = tabPanels.map((tp) => tp.id);
 
-  // tabHeight 해석:
-  //   > 0 : 컨테이너 최소 높이(min-height) — 컴포넌트가 더 많으면 자동 증가
-  //   = 0 : 부모(캔버스/폼 영역)에 꽉 차게 (height:100%)
-  //   undefined/누락 : 자연 높이 (content-based)
-  const tabHeight = typeof field.tabHeight === 'number' ? field.tabHeight : undefined;
-  const containerStyle =
-    tabHeight === 0
-      ? ({ height: '100%' } as Record<string, string>)
-      : tabHeight !== undefined && tabHeight > 0
-        ? ({ minHeight: `${tabHeight}px` } as Record<string, string>)
-        : undefined;
+  // 높이는 layout.height(LayoutHeightModule)가 wrapper `.fjs-element` 의 min-height 로 주입하고,
+  // `.dc-tabs-container { min-height: inherit }` 가 받아 쓴다 — 여기서는 어떤 높이도 인라인으로
+  // 지정하지 않는다. (tabHeight 는 legacy 필드로 migrateLegacyTabsSchema 가 layout.height 로 흡수한다.)
 
   const [activeId, setActiveId] = useState<string>(effectiveDefaultValue);
 
@@ -119,7 +111,6 @@ function TabsRender(props: PureRenderProps<TabsSchema>) {
       data-component="tabs"
       data-orientation={orientation}
       id={props.domId}
-      style={containerStyle}
     >
       <TabsPrimitive.Root
         class="dc-tabs"
@@ -215,7 +206,7 @@ export const TabsComponent = defineComponent<TabsSchema>({
       components: [tabA, tabB],
       defaultValue: tabA.id,
       orientation: 'horizontal',
-      tabHeight: 300,
+      layout: { height: 300 },
       ...options,
     };
   },

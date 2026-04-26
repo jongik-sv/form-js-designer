@@ -31,5 +31,11 @@
   "designer.table.filter.placeholder":    "필터 입력",
   "designer.table.empty":                 "데이터가 없습니다.",
   "designer.common.loading":              "불러오는 중...",
-  "designer.common.error":                "오류가 발생했습니다."
+  "designer.common.error":                "오류가 발생했습니다.",
+  "components.modal.closeLabel":          "닫기",
+  "components.modal.defaultTriggerLabel": "열기",
+  "components.card.name":                 "카드",
+  "components.stack.name":                "스택",
+  "components.tabs.name":                 "탭",
+  "components.modal.name":                "모달"
 }

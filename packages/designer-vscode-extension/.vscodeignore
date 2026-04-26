@@ -1,0 +1,15 @@
+src/
+esbuild.config.mjs
+scripts/
+*.ts
+!*.d.ts
+tsconfig.json
+tsconfig*.json
+node_modules/
+.gitignore
+.eslintrc*
+vitest.config.*
+test/
+coverage/
+**/*.map
+.vscode/

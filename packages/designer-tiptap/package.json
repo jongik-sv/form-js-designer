@@ -1,0 +1,54 @@
+{
+  "name": "@form-js-designer/designer-tiptap",
+  "version": "0.2.0",
+  "private": false,
+  "description": "Tiptap extension for form-js-designer schemas (Tabs/Card/Modal aware)",
+  "type": "module",
+  "main": "./dist/viewer.js",
+  "types": "./dist/viewer.d.ts",
+  "exports": {
+    ".": { "import": "./dist/viewer.js", "types": "./dist/viewer.d.ts" },
+    "./editor": { "import": "./dist/editor.js", "types": "./dist/editor.d.ts" },
+    "./editor.css": "./dist/editor.css",
+    "./styles": "./dist/designer-tiptap.css"
+  },
+  "files": ["dist", "README.md", "LICENSE", "CHANGELOG.md"],
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com",
+    "access": "restricted"
+  },
+  "scripts": {
+    "dev": "vite --config examples/vanilla-host/vite.config.ts",
+    "build": "tsup && node scripts/copy-css.mjs",
+    "typecheck": "tsc --noEmit",
+    "test:unit": "vitest run",
+    "test:unit:watch": "vitest",
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "playwright test --headed"
+  },
+  "peerDependencies": {
+    "@tiptap/core": "^2",
+    "@tiptap/pm": "^2",
+    "@bpmn-io/form-js-viewer": "^1.21.2",
+    "preact": "^10.19.3"
+  },
+  "dependencies": {
+    "@form-js-designer/designer-core": "*",
+    "@form-js-designer/designer-components": "*",
+    "@form-js-designer/designer-runtime": "*",
+    "@form-js-designer/designer-editor-host": "*"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.11.0",
+    "@playwright/test": "^1.47.2",
+    "@tiptap/core": "^2.6.6",
+    "@tiptap/pm": "^2.6.6",
+    "@tiptap/starter-kit": "^2.6.6",
+    "@types/node": "^20.16.10",
+    "happy-dom": "^15.7.4",
+    "tsup": "^8.3.0",
+    "typescript": "^5.6.0",
+    "vite": "^5.4.8",
+    "vitest": "^2.1.2"
+  }
+}

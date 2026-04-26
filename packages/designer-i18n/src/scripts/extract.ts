@@ -8,7 +8,7 @@
  */
 
 import * as ts from 'typescript';
-import { readFileSync, readdirSync, statSync } from 'fs';
+import { readFileSync, readdirSync, statSync, type Dirent } from 'fs';
 import { resolve, join, extname } from 'path';
 import type { ExtractOptions, ExtractResult, KeyOccurrence, Warning } from './extractTypes';
 
@@ -32,9 +32,9 @@ function shouldExclude(filePath: string): boolean {
 function collectFiles(root: string): string[] {
   const files: string[] = [];
   function walk(dir: string) {
-    let entries: ReturnType<typeof readdirSync>;
+    let entries: Dirent<string>[];
     try {
-      entries = readdirSync(dir, { withFileTypes: true });
+      entries = readdirSync(dir, { withFileTypes: true, encoding: 'utf8' });
     } catch {
       return;
     }
@@ -211,9 +211,9 @@ export function extractKeys(
  */
 export function scanPackages(repoRoot: string): ExtractResult {
   const packagesDir = resolve(repoRoot, 'packages');
-  let entries: ReturnType<typeof readdirSync>;
+  let entries: Dirent<string>[];
   try {
-    entries = readdirSync(packagesDir, { withFileTypes: true });
+    entries = readdirSync(packagesDir, { withFileTypes: true, encoding: 'utf8' });
   } catch {
     return {
       keys: new Set(),

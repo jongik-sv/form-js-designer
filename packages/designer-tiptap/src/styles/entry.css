@@ -1,0 +1,20 @@
+@import '@bpmn-io/form-js-viewer/dist/assets/form-js-base.css';
+@import '@bpmn-io/form-js-viewer/dist/assets/form-js.css';
+@import '@form-js-designer/designer-components/src/container-base.css';
+
+.form-js-tiptap-block {
+  border: 1px solid var(--fjs-border-color, #e5e7eb);
+  border-radius: 6px;
+  padding: 12px;
+  margin: 8px 0;
+  position: relative;
+}
+
+.form-js-tiptap-block__inner {
+  pointer-events: auto;
+}
+
+.form-js-tiptap-block.ProseMirror-selectednode {
+  outline: 2px solid var(--fjs-primary, #2563eb);
+  outline-offset: 2px;
+}

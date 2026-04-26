@@ -8,7 +8,7 @@
 import { FormLayouter } from '@bpmn-io/form-js-viewer';
 
 /** 커스텀 컨테이너 타입 목록 — designer-components 등록 타입과 동기화 유지 */
-const DESIGNER_CONTAINER_TYPES = new Set<string>(['card', 'tabs', 'modal', 'tabPanel']);
+const DESIGNER_CONTAINER_TYPES = new Set<string>(['card', 'stack', 'tabs', 'modal', 'tabPanel']);
 
 const BUILTIN_GROUPLIKE = new Set<string>(['default', 'group', 'dynamiclist']);
 

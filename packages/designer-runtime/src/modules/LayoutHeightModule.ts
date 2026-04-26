@@ -21,32 +21,61 @@ interface FormFieldRegistryLike {
 }
 
 /**
+ * form-js `Form` / `FormEditor` 인스턴스의 공통 shape. 두 클래스 모두
+ * `_container` 를 갖는 `.fjs-container` div 를 들고 있고, 해당 인스턴스가
+ * 담당하는 form 의 root DOM 노드다. editor 와 preview 가 같은 페이지에
+ * 공존할 때 document 전역 selector 는 첫 번째 인스턴스만 집어서 preview
+ * 쪽에 style 이 주입되지 않는다 — per-instance root 로 분리.
+ */
+interface FormLike {
+  _container?: HTMLElement | null;
+  /** form-js Form/FormEditor 모두 public `_id` 를 노출한다 (Ids.next()). */
+  _id?: string;
+}
+
+interface InjectorLike {
+  get<T = unknown>(name: string, strict?: boolean): T | null;
+}
+
+/**
  * LayoutHeightService — DI 서비스 클래스.
- * $inject: ['eventBus', 'formFieldRegistry']
+ * $inject: ['eventBus', 'formFieldRegistry', 'injector']
+ *
+ * 'form' DI 는 form-js-viewer 에만 등록되어 있고 form-js-editor 는
+ * 'formEditor' 로 등록한다. 둘 다 `_container` 를 노출하므로 injector 에서
+ * strict=false 로 둘 중 먼저 발견되는 것을 쓴다 — 양쪽 컨텍스트에서 안전.
  */
 export class LayoutHeightService {
-  static $inject = ['eventBus', 'formFieldRegistry'];
+  static $inject = ['eventBus', 'formFieldRegistry', 'injector'];
 
   private readonly eventBus: EventBusLike;
   private readonly formFieldRegistry: FormFieldRegistryLike;
-  // form-js config.container 또는 fallback
-  private readonly root: ParentNode;
+  private readonly formLike: FormLike | null;
 
   constructor(
     eventBus: EventBusLike,
     formFieldRegistry: FormFieldRegistryLike,
+    injector: InjectorLike,
   ) {
     this.eventBus = eventBus;
     this.formFieldRegistry = formFieldRegistry;
-
-    // DOM root: .fjs-container 우선, 없으면 document fallback
-    this.root = (
-      typeof document !== 'undefined'
-        ? (document.querySelector('.fjs-container') ?? document)
-        : null
-    ) as ParentNode;
+    this.formLike =
+      (injector.get<FormLike>('form', false) ??
+        injector.get<FormLike>('formEditor', false)) || null;
 
     this._registerHooks();
+  }
+
+  /**
+   * 이 서비스 인스턴스가 담당하는 form 의 DOM root 를 매 apply 마다 resolve.
+   * form._container 가 attach 전이거나 없으면 document 로 fallback.
+   * 주의: 전역 selector('.fjs-container') 는 페이지에 form 인스턴스가
+   * 여러 개 있을 때 엉뚱한 트리를 가리키므로 쓰지 않는다.
+   */
+  private _resolveRoot(): ParentNode {
+    const container = this.formLike?._container ?? null;
+    if (container) return container;
+    return typeof document !== 'undefined' ? document : ({} as ParentNode);
   }
 
   private _registerHooks(): void {
@@ -86,7 +115,7 @@ export class LayoutHeightService {
 
   private _applyAll(): void {
     const fields = this.formFieldRegistry.getAll();
-    applyLayoutHeight(this.root, fields);
+    applyLayoutHeight(this._resolveRoot(), fields, this.formLike?._id);
   }
 }
 

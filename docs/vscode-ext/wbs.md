@@ -15,7 +15,7 @@
 | domain | description | unit-test | e2e-test | e2e-server | e2e-url |
 |--------|-------------|-----------|----------|------------|---------|
 | backend | Extension host (Node) logic — blockLocator, formatJson, WorkspaceEdit wiring | `npm -w @form-js-designer/designer-vscode-extension run test:unit` | - | - | - |
-| frontend | Webview UI (Preact + form-js viewer/editor, preview scripts, Custom Editor webview) | `npm -w @form-js-designer/designer-vscode-extension run test:unit` | - | - | - |
+| frontend | Webview UI (Preact + form-js viewer/editor, preview scripts, Custom Editor webview) | `npm -w @form-js-designer/designer-vscode-extension run test:unit` | `npm -w @form-js-designer/designer-vscode-extension run test:e2e` | - | - |
 | fullstack | VSCode extension full path — extension host ↔ webview messaging, Custom Editor, markdown preview integration | - | `npm -w @form-js-designer/designer-vscode-extension run test:e2e` | - | - |
 | infra | Build pipeline, esbuild bundle, `.vsix` packaging, CI hooks | - | - | - | - |
 | test | Test harness, Vitest config, `@vscode/test-electron` runner | - | - | - | - |
@@ -39,7 +39,7 @@ node, vitest
 
 ---
 
-## WP-00: 프로젝트 초기화
+## WP-00: 프로젝트 초기화 ✅
 - schedule: 2026-04-20 ~ 2026-04-22
 - description: `packages/designer-vscode-extension/` 패키지 스캐폴드, esbuild 이중 타깃(extension host + webview) 빌드, 공유 유틸·타입, CI smoke.
 
@@ -47,7 +47,7 @@ node, vitest
 - category: infrastructure
 - domain: infra
 - model: sonnet
-- status: [ ]
+- status: [xx]
 - priority: critical
 - assignee: -
 - schedule: 2026-04-20 ~ 2026-04-20
@@ -83,7 +83,7 @@ node, vitest
 - category: infrastructure
 - domain: infra
 - model: sonnet
-- status: [ ]
+- status: [xx]
 - priority: high
 - assignee: -
 - schedule: 2026-04-21 ~ 2026-04-21
@@ -118,7 +118,7 @@ node, vitest
 - category: infrastructure
 - domain: infra
 - model: sonnet
-- status: [ ]
+- status: [xx]
 - priority: high
 - assignee: -
 - schedule: 2026-04-22 ~ 2026-04-22
@@ -148,7 +148,7 @@ node, vitest
 
 ---
 
-## WP-01: Markdown 미리보기 렌더 (M1 MVP)
+## WP-01: Markdown 미리보기 렌더 (M1 MVP) ✅
 - schedule: 2026-04-23 ~ 2026-04-29
 - description: ` ```form-js ` 코드블록을 VSCode Markdown 미리보기에서 form-js-viewer로 렌더. read-only, submit no-op.
 
@@ -156,7 +156,7 @@ node, vitest
 - category: development
 - domain: fullstack
 - model: sonnet
-- status: [ ]
+- status: [xx]
 - priority: critical
 - assignee: -
 - schedule: 2026-04-23 ~ 2026-04-23
@@ -191,7 +191,7 @@ node, vitest
 - category: development
 - domain: frontend
 - model: sonnet
-- status: [ ]
+- status: [xx]
 - priority: critical
 - assignee: -
 - schedule: 2026-04-24 ~ 2026-04-27
@@ -228,7 +228,7 @@ node, vitest
 - category: development
 - domain: frontend
 - model: sonnet
-- status: [ ]
+- status: [xx]
 - priority: high
 - assignee: -
 - schedule: 2026-04-28 ~ 2026-04-28
@@ -261,7 +261,7 @@ node, vitest
 - category: infrastructure
 - domain: test
 - model: sonnet
-- status: [ ]
+- status: [xx]
 - priority: high
 - assignee: -
 - schedule: 2026-04-29 ~ 2026-04-29
@@ -303,7 +303,7 @@ node, vitest
 - category: development
 - domain: fullstack
 - model: opus
-- status: [ ]
+- status: [xx]
 - priority: critical
 - assignee: -
 - schedule: 2026-04-30 ~ 2026-05-01
@@ -340,7 +340,7 @@ node, vitest
 - category: development
 - domain: backend
 - model: sonnet
-- status: [ ]
+- status: [xx]
 - priority: high
 - assignee: -
 - schedule: 2026-05-01 ~ 2026-05-01
@@ -374,7 +374,7 @@ node, vitest
 - category: development
 - domain: frontend
 - model: sonnet
-- status: [ ]
+- status: [xx]
 - priority: high
 - assignee: -
 - schedule: 2026-05-04 ~ 2026-05-04
@@ -409,7 +409,7 @@ node, vitest
 - category: development
 - domain: fullstack
 - model: opus
-- status: [ ]
+- status: [xx]
 - priority: critical
 - assignee: -
 - schedule: 2026-05-05 ~ 2026-05-06
@@ -449,7 +449,7 @@ node, vitest
 - category: infrastructure
 - domain: test
 - model: sonnet
-- status: [ ]
+- status: [xx]
 - priority: high
 - assignee: -
 - schedule: 2026-05-07 ~ 2026-05-08
@@ -493,7 +493,7 @@ node, vitest
 - category: infrastructure
 - domain: infra
 - model: sonnet
-- status: [ ]
+- status: [xx]
 - priority: critical
 - assignee: -
 - schedule: 2026-05-04 ~ 2026-05-05
@@ -524,7 +524,7 @@ node, vitest
 - category: development
 - domain: fullstack
 - model: opus
-- status: [ ]
+- status: [xx]
 - priority: high
 - assignee: -
 - schedule: 2026-05-06 ~ 2026-05-07
@@ -555,7 +555,7 @@ node, vitest
 - category: development
 - domain: fullstack
 - model: sonnet
-- status: [ ]
+- status: [xx]
 - priority: high
 - assignee: -
 - schedule: 2026-05-08 ~ 2026-05-12
@@ -589,7 +589,7 @@ node, vitest
 - category: infrastructure
 - domain: test
 - model: sonnet
-- status: [ ]
+- status: [xx]
 - priority: medium
 - assignee: -
 - schedule: 2026-05-13 ~ 2026-05-14
@@ -626,7 +626,7 @@ node, vitest
 - category: infrastructure
 - domain: infra
 - model: sonnet
-- status: [ ]
+- status: [xx]
 - priority: high
 - assignee: -
 - schedule: 2026-05-11 ~ 2026-05-12
@@ -659,7 +659,7 @@ node, vitest
 - category: infrastructure
 - domain: test
 - model: sonnet
-- status: [ ]
+- status: [xx]
 - priority: high
 - assignee: -
 - schedule: 2026-05-13 ~ 2026-05-14
@@ -689,7 +689,7 @@ node, vitest
 - category: infrastructure
 - domain: test
 - model: sonnet
-- status: [ ]
+- status: [xx]
 - priority: medium
 - assignee: -
 - schedule: 2026-05-15 ~ 2026-05-15
@@ -715,6 +715,176 @@ node, vitest
 #### 기술 스펙 (TRD)
 - tech-spec:
   - Playwright performance API, `bytes` 측정 스크립트
+- api-spec: -
+- data-model: -
+- ui-spec: -
+
+---
+
+## WP-05: 신규 컴포넌트 (§3.2 Card/Stack/Tabs/Modal)
+- schedule: 2026-05-09 ~ 2026-05-16
+- description: form-js-viewer 빌트인 외 레이아웃 컴포넌트 4종(Card, Stack, Tabs/TabPanel, Modal)을 `defineComponent` 계약으로 추가. viewer·editor 양쪽 파이프라인에 `additionalModules`로 주입해 Phase 1 §3.2 / PRD AC#1·AC#4-1 충족. 기본 Button은 form-js 내장이므로 §3.2 중 대상 4종만 이 WP에서 다룬다.
+
+### TSK-05-01: defineComponent 계약 + 커스텀 모듈 스캐폴드
+- category: development
+- domain: frontend
+- model: opus
+- status: [xx]
+- priority: critical
+- assignee: -
+- schedule: 2026-05-09 ~ 2026-05-10
+- tags: components, module, registry
+- depends: TSK-01-04
+- blocked-by: -
+- entry-point: -
+- note: 이후 TSK-05-02/03이 이 계약을 사용. viewer·editor 공통.
+
+#### PRD 요구사항
+- prd-ref: PRD §6 F1, AC#1, AC#4-1, ADR-0001
+- requirements:
+  - `src/components/defineComponent.ts` — `{ type, renderer, propsSchema, layout, i18nKeys, icon }` 시그니처 + Zod 스키마 검증
+  - `src/components/index.ts` — 본 WP의 모든 컴포넌트를 form-js `Module`(FormFields registry contribution) 형태로 묶어 export
+  - viewer(`preview.ts`)와 editor(`customEditor.ts`)가 동일 모듈을 공유 — single source of truth
+- acceptance:
+  - `createForm({ container, schema, additionalModules: [customComponents] })` 호출이 타입/런타임 에러 없이 동작
+  - 빈 스키마 + 본 모듈 주입 상태에서 WP-01 M1 fixture 3종 회귀 0
+  - defineComponent 계약 위반 시(필수 필드 누락) 빌드 타임 탐지
+- constraints:
+  - Preact 단일 인스턴스 규약 유지 (`preact/compat` 금지)
+  - 외부 UI lib 금지 — Preact + form-js primitives만 사용
+  - CSS는 신규 `media/form-js-components.css`에 분리하여 `contributes["markdown.previewStyles"]`에 추가
+
+#### 기술 스펙 (TRD)
+- tech-spec:
+  - `@bpmn-io/form-js-viewer` FormFields registry, Module DI 컨테이너
+  - Zod ^3 — propsSchema 정적 검증
+- api-spec: -
+- data-model:
+  - 공통 스키마: `{ type: 'tabs'|'tabPanel'|'card'|'stack'|'modal', id, label?, components?: [...], layout?: { row, columns } }`
+- ui-spec:
+  - 각 컴포넌트 최소 높이 40px, VSCode 테마 토큰(`--vscode-editor-foreground`/`--vscode-editor-background`) 기반
+
+### TSK-05-02: Tabs / TabPanel 렌더러
+- category: development
+- domain: frontend
+- model: sonnet
+- status: [xx]
+- priority: critical
+- assignee: -
+- schedule: 2026-05-11 ~ 2026-05-12
+- tags: tabs, layout, a11y
+- depends: TSK-05-01
+- blocked-by: -
+- entry-point: form-js 블록 내 `type: tabs` 스키마
+- note: schemaVersion 19 호환, 현재 form.md 샘플 스키마가 직접 수혜
+
+#### PRD 요구사항
+- prd-ref: PRD §6 F1, AC#1, AC#4-1
+- requirements:
+  - `tabs` 컨테이너: 헤더 바 + 활성 패널 영역, Arrow Left/Right 탐색, Home/End 지원
+  - `tabPanel`: 자식 `components[]`를 form-js 기존 row/columns layout에 위임
+  - ARIA: `role=tablist` / `role=tab` (+ `aria-selected`, `aria-controls`) / `role=tabpanel`
+  - 초기 활성 탭: 첫 번째 tabPanel. 스키마 `activeTab` 문자열(id)로 override 가능
+- acceptance:
+  - 탭 3개 × 각 패널 필드 2개 fixture가 viewer에서 탭 전환·키보드 탐색 모두 정상
+  - axe violation 0 (serious/critical)
+  - round-trip(스키마 → render → import) 무손실, WP-01 LRU 캐시와 충돌 없음
+- constraints:
+  - inactive 패널의 필드 값도 form data에 포함(form-js 기본 동작 유지)
+  - 탭 헤더 sticky 또는 scrollable 결정은 본 Task에서 확정 후 문서화
+
+#### 기술 스펙 (TRD)
+- tech-spec:
+  - Preact `useState` activeIndex, `useRef` panel DOM, `useEffect` focus 관리
+- api-spec: -
+- data-model:
+  - `{ type: 'tabs', id, components: [{ type: 'tabPanel', id, label, components: [...] }] }`
+- ui-spec:
+  - 헤더 바: 밑줄 indicator 2px, 활성 탭 굵게, 호버 시 `--vscode-list-hoverBackground`
+
+### TSK-05-03: Card / Stack / Modal 렌더러
+- category: development
+- domain: frontend
+- model: sonnet
+- status: [xx]
+- priority: high
+- assignee: -
+- schedule: 2026-05-13 ~ 2026-05-14
+- tags: card, stack, modal, portal
+- depends: TSK-05-01
+- blocked-by: -
+- entry-point: form-js 블록 내 `type: card|stack|modal` 스키마
+- note: TSK-05-02와 병렬 진행 가능
+
+#### PRD 요구사항
+- prd-ref: PRD §6 F1, AC#1, AC#4-1
+- requirements:
+  - Card: 상단 `label` + 본문 `components[]` + (옵션) 하단 action row(`actions[]`)
+  - Stack: `direction` (vertical/horizontal), `gap` (px), `wrap` 지원. children은 자식 컴포넌트
+  - Modal: trigger 요소(button/link) + 포털 렌더, Esc/backdrop 닫기, focus trap, 복귀 시 trigger로 포커스 반환
+- acceptance:
+  - 각 컴포넌트 단일 블록 fixture가 viewer에서 렌더 + axe 0
+  - Modal 포털이 `.form-js-block` 루트 밖으로 새지 않음 — 블록 내부 portal root 제공
+  - Tabs × Card × Stack × Modal 혼합 스키마에서 기존 layout.row/columns 회귀 0
+- constraints:
+  - 외부 포털·다이얼로그 라이브러리 추가 금지 — Preact `createPortal`과 `<dialog>` 요소만 사용
+  - Modal 오픈 시 `document.body` scroll lock 없음(VSCode webview 정책 준수)
+  - High Contrast 테마에서 border/outline 가시성 유지
+
+#### 기술 스펙 (TRD)
+- tech-spec:
+  - Preact `createPortal` + native `<dialog showModal()>` 조합. Electron 호환 확인
+- api-spec: -
+- data-model:
+  - `{ type: 'card', id, label?, components: [...], actions?: [...] }`
+  - `{ type: 'stack', id, direction: 'vertical'|'horizontal', gap: number, wrap?: boolean, components: [...] }`
+  - `{ type: 'modal', id, trigger: { label, variant }, components: [...] }`
+- ui-spec:
+  - Card: border 1px `--vscode-panel-border`, radius 4px, padding 12px
+  - Stack: flex gap, min-height 0 overflow 방지
+  - Modal: overlay dim 40%, max-width 640px, 화면 중앙
+
+### TSK-05-04: viewer·editor 파이프라인 주입 + i18n + 픽셀 파리티 테스트
+- category: development
+- domain: fullstack
+- model: sonnet
+- status: [xx]
+- priority: high
+- assignee: -
+- schedule: 2026-05-15 ~ 2026-05-16
+- tags: integration, i18n, pixel-parity, test
+- depends: TSK-05-02, TSK-05-03, TSK-02-01
+- blocked-by: -
+- entry-point: -
+- note: WP-05 완료 게이트. AC#1·AC#4-1·AC#5·AC#10 동시 검증.
+
+#### PRD 요구사항
+- prd-ref: PRD §6 F1, AC#1, AC#4-1, AC#5, AC#10
+- requirements:
+  - `preview.ts`의 `createForm(...)`에 `additionalModules: [customComponents]` 주입
+  - `customEditor.ts`의 `createFormEditor(...)`에도 동일 주입 (WP-02 편집 경로에서 팔레트 노출)
+  - 모든 가시 문자열을 `t('components.<path>')` 추출, `designer-i18n` ko 사전 100% 커버 — CI 누락 게이트
+  - 통합 테스트 fixture 5종: (1) tabs 단독, (2) card+stack 중첩, (3) modal trigger+open, (4) tabs 내부 card+stack 혼합, (5) 기존 WP-01 fixture 회귀 확인
+- acceptance:
+  - CI `test:e2e` 5 fixture 전부 렌더 성공, axe violation 0
+  - `form field of type <tabs|card|stack|modal> not supported` 오류 소멸 확인
+  - ko 사전 누락 키 0 (CI gate fail로 보호)
+  - 디자이너 ↔ viewer 픽셀 파리티(ADR-0001) — 동일 스키마 768×576 캡처 SSIM ≥ 0.99
+  - 저장 경로(WP-02)에서 커스텀 컴포넌트 편집 후 round-trip 무손실
+- constraints:
+  - 기존 WP-01 M1 fixture 3종 + WP-02 편집 fixture 4종 회귀 0
+  - 픽셀 diff는 1% 허용, anti-aliasing 무시 옵션
+- test-criteria:
+  - tabs 스키마 단일 블록 렌더·탭 전환
+  - card+stack 중첩 렌더
+  - modal trigger 클릭 → open 상태 스냅샷 + Esc 닫기
+  - 혼합(tabs 안에 card, card 안에 stack) 렌더
+  - 픽셀 파리티 샘플 SSIM ≥ 0.99
+
+#### 기술 스펙 (TRD)
+- tech-spec:
+  - `@vscode/test-electron` + Playwright, `pixelmatch` 또는 `ssim.js`
+  - i18n 추출: 기존 designer-i18n 정적 추출기 재사용
 - api-spec: -
 - data-model: -
 - ui-spec: -

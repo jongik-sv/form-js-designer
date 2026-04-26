@@ -1,0 +1,34 @@
+/**
+ * form-js-editor-host.css — Custom Editor webview 전용 최소 스타일.
+ * form-js Block Editor 패널(ViewColumn.Beside)에서만 로드된다.
+ */
+
+/* ── 루트 레이아웃 ─────────────────────────────────── */
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: var(--vscode-editor-background, #1e1e1e);
+  color: var(--vscode-editor-foreground, #d4d4d4);
+  font-family: var(--vscode-font-family, sans-serif);
+}
+
+/* ── #app 컨테이너 ─────────────────────────────────── */
+
+#app {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* form-js-editor가 내부에서 높이를 채우도록 강제 */
+#app > * {
+  flex: 1 1 auto;
+  min-height: 0;
+}

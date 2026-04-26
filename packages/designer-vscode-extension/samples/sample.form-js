@@ -1,0 +1,43 @@
+{
+  "components": [
+    {
+      "label": "Text field",
+      "type": "textfield",
+      "layout": {
+        "row": "Row_0me6jv0",
+        "columns": null
+      },
+      "id": "Field_0hn5966",
+      "key": "textfield_2ejfr"
+    },
+    {
+      "label": "Select",
+      "values": [
+        {
+          "label": "Value",
+          "value": "value"
+        }
+      ],
+      "type": "select",
+      "layout": {
+        "row": "Row_1aozo9i",
+        "columns": null
+      },
+      "id": "Field_0zzk5we",
+      "key": "select_ylsj8i"
+    },
+    {
+      "label": "Text area",
+      "type": "textarea",
+      "layout": {
+        "row": "Row_0pb7jul",
+        "columns": null
+      },
+      "id": "Field_0zwse89",
+      "key": "textarea_jidvn8"
+    }
+  ],
+  "type": "default",
+  "id": "Form_0xlefrh",
+  "schemaVersion": 19
+}

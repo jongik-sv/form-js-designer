@@ -171,6 +171,67 @@ describe('migrateLegacyTabsSchema — recursive schema', () => {
   });
 });
 
+describe('migrateLegacyTabsSchema — tabHeight → layout.height consolidation', () => {
+  it('absorbs legacy tabHeight into layout.height on legacy schemas', () => {
+    const input = {
+      type: 'tabs',
+      tabHeight: 420,
+      tabs: [{ value: 'a', label: 'Tab A', components: [] }],
+    };
+    const result = migrateLegacyTabsSchema(input) as Record<string, unknown> & {
+      layout?: { height?: number };
+    };
+    expect(result.tabHeight).toBeUndefined();
+    expect(result.layout?.height).toBe(420);
+  });
+
+  it('absorbs legacy tabHeight on already-new-format schemas', () => {
+    const input = {
+      type: 'tabs',
+      tabHeight: 500,
+      components: [
+        { id: 'tabPanel_x', type: 'tabPanel', label: 'A', components: [] },
+      ],
+    };
+    const result = migrateLegacyTabsSchema(input) as Record<string, unknown> & {
+      layout?: { height?: number };
+    };
+    expect(result.tabHeight).toBeUndefined();
+    expect(result.layout?.height).toBe(500);
+  });
+
+  it('keeps existing layout.height when both are present (layout wins)', () => {
+    const input = {
+      type: 'tabs',
+      tabHeight: 200,
+      layout: { height: 640 },
+      components: [
+        { id: 'tabPanel_x', type: 'tabPanel', label: 'A', components: [] },
+      ],
+    };
+    const result = migrateLegacyTabsSchema(input) as Record<string, unknown> & {
+      layout?: { height?: number };
+    };
+    expect(result.tabHeight).toBeUndefined();
+    expect(result.layout?.height).toBe(640);
+  });
+
+  it('drops tabHeight=0 (legacy "fill parent") without setting layout.height', () => {
+    const input = {
+      type: 'tabs',
+      tabHeight: 0,
+      components: [
+        { id: 'tabPanel_x', type: 'tabPanel', label: 'A', components: [] },
+      ],
+    };
+    const result = migrateLegacyTabsSchema(input) as Record<string, unknown> & {
+      layout?: { height?: number };
+    };
+    expect(result.tabHeight).toBeUndefined();
+    expect(result.layout?.height).toBeUndefined();
+  });
+});
+
 describe('migrateLegacyTabsSchema — top-level schema (form root)', () => {
   it('migrates tabs inside a form root schema', () => {
     const schema = {

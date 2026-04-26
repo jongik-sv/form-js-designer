@@ -1,0 +1,125 @@
+{
+  "name": "@form-js-designer/designer-vscode-extension",
+  "displayName": "Form.js Designer",
+  "version": "0.1.16",
+  "private": true,
+  "description": "VSCode extension for editing form-js form schemas in Markdown",
+  "publisher": "form-js-designer",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bpmn-io/form-js-designer"
+  },
+  "engines": {
+    "vscode": "^1.85.0",
+    "node": ">=20"
+  },
+  "categories": [
+    "Other"
+  ],
+  "type": "commonjs",
+  "main": "./dist/extension.cjs",
+  "activationEvents": [
+    "onLanguage:markdown",
+    "onStartupFinished",
+    "onCustomEditor:form-js.block-editor"
+  ],
+  "contributes": {
+    "markdown.markdownItPlugins": true,
+    "markdown.previewScripts": [
+      "./dist/webview/preview.js"
+    ],
+    "markdown.previewStyles": [
+      "./media/form-js.css",
+      "./media/form-js-base.css",
+      "./media/form-js-grid-override.css",
+      "./media/form-js-block.css",
+      "./media/form-js-components.css",
+      "./dist/webview/preview.css"
+    ],
+    "commands": [
+      {
+        "command": "formJs.openBlockEditor",
+        "title": "form-js: Open Block Editor"
+      },
+      {
+        "command": "formJs.saveBlockEditor",
+        "title": "form-js: Save Block Editor"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "formJs.saveBlockEditor",
+        "key": "ctrl+s",
+        "mac": "cmd+s",
+        "when": "activeCustomEditorId == 'form-js.block-editor'"
+      }
+    ],
+    "customEditors": [
+      {
+        "viewType": "formJsDesigner.formEditor",
+        "displayName": "Form.js Designer",
+        "selector": [
+          {
+            "filenamePattern": "*.form.json"
+          }
+        ],
+        "priority": "option"
+      },
+      {
+        "viewType": "form-js.block-editor",
+        "displayName": "form-js Block Editor",
+        "selector": [
+          {
+            "filenamePattern": "*.__fjs-never-match__"
+          },
+          {
+            "filenamePattern": "*.form-js"
+          }
+        ],
+        "priority": "default"
+      }
+    ]
+  },
+  "scripts": {
+    "build": "node scripts/copy-media.mjs && node esbuild.config.mjs",
+    "build:prod": "NODE_ENV=production node scripts/copy-media.mjs && node esbuild.config.mjs",
+    "build:copy-css": "node scripts/copy-media.mjs",
+    "build:bundle": "node esbuild.config.mjs",
+    "package": "node scripts/package.mjs",
+    "typecheck": "tsc --noEmit",
+    "lint": "echo 'lint: not yet configured'",
+    "test:unit": "../../node_modules/.bin/vitest run --config vitest.config.ts",
+    "test:unit:watch": "../../node_modules/.bin/vitest --config vitest.config.ts",
+    "test:coverage": "../../node_modules/.bin/vitest run --config vitest.config.ts --coverage",
+    "test:e2e": "node scripts/assert-i18n-coverage.mjs && FORM_JS_TEST_MODE=1 node esbuild.config.mjs && FORM_JS_TEST_MODE=1 node dist/test/integration/runTests.js",
+    "test:a11y": "FORM_JS_TEST_MODE=1 node esbuild.config.mjs && FORM_JS_TEST_MODE=1 node dist/test/integration/runTests.js",
+    "test:perf": "node scripts/perf-gate.mjs && node scripts/vsix-size-gate.mjs"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.9.1",
+    "axe-core": "^4.9.1",
+    "@types/markdown-it": "^14.1.2",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^20.16.10",
+    "@types/vscode": "^1.85.0",
+    "@vitest/coverage-v8": "^4.1.4",
+    "@vscode/test-electron": "^2.4.1",
+    "@vscode/vsce": "^3.9.1",
+    "esbuild": "^0.24.0",
+    "glob": "^11.0.0",
+    "markdown-it": "^14.1.0",
+    "mocha": "^11.1.0",
+    "ssim.js": "^3.2.0",
+    "typescript": "^5.6.0",
+    "vitest": "^4.1.4"
+  },
+  "dependencies": {
+    "@bpmn-io/form-js-editor": "^1.21.2",
+    "@bpmn-io/form-js-viewer": "^1.21.2",
+    "@form-js-designer/designer-components": "*",
+    "@form-js-designer/designer-core": "*",
+    "@form-js-designer/designer-i18n": "*",
+    "preact": "^10.19.3",
+    "zod": "^3.25.76"
+  }
+}

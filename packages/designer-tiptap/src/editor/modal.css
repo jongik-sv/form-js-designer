@@ -1,0 +1,62 @@
+/* packages/designer-tiptap/src/editor/modal.css
+ *
+ * Fullscreen modal shell for the embedded form-js designer.
+ * Wrapper element: .fjd-embedded-designer-root (created by host's
+ * mountEmbeddedEditorModal). Header, content, close-btn classes match
+ * what host emits.
+ */
+
+.fjd-embedded-designer-root {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483000;            /* TipTap floating menus typically <= 1000 */
+  background: var(--fjd-modal-bg, #fff);
+  display: flex;
+  flex-direction: column;
+  isolation: isolate;             /* establish stacking context */
+}
+
+.fjd-embedded-designer-header {
+  flex: 0 0 auto;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--fjd-modal-border, #e5e7eb);
+  background: var(--fjd-modal-header-bg, #fafafa);
+}
+.fjd-embedded-designer-header h2 {
+  font-size: 14px;
+  margin: 0;
+  font-weight: 600;
+  color: var(--fjd-modal-title-color, #111);
+}
+
+.fjd-embedded-designer-close {
+  background: var(--fjd-modal-primary-bg, #111);
+  color: var(--fjd-modal-primary-fg, #fff);
+  border: 0;
+  padding: 6px 14px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 1;
+}
+.fjd-embedded-designer-close:hover {
+  background: var(--fjd-modal-primary-bg-hover, #333);
+}
+
+.fjd-embedded-designer-content {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;               /* host designer handles its own scroll */
+  position: relative;
+}
+
+/* host's app.css uses height: 100vh; the modal provides its own height
+ * via flex layout, so override the descendants to fill the content area. */
+.fjd-embedded-designer-content > .fjd-embedded-designer-canvas,
+.fjd-embedded-designer-content .app-layout {
+  height: 100% !important;
+}

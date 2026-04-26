@@ -1,9 +1,12 @@
 {
   "name": "@form-js-designer/designer-editor-host",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": true,
   "description": "form-js editor host app with Palette + Outline modules",
   "type": "module",
+  "exports": {
+    "./embedded": "./src/embeddedDesigner.tsx"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",

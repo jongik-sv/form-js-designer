@@ -62,19 +62,20 @@ describe('TabsComponent.create() — new tabPanel structure', () => {
   });
 });
 
-describe('tabsPropsSchema — tabHeight', () => {
-  it('exposes a number widget with 0–4096 range (0=fill, >0=min-height px)', () => {
-    const prop = tabsPropsSchema.properties.tabHeight;
-    expect(prop).toBeDefined();
-    expect(prop!.type).toBe('number');
-    expect(prop!.min).toBe(0);
-    expect(prop!.max).toBe(4096);
+describe('tabsPropsSchema — height consolidation', () => {
+  it('no longer exposes the tabHeight property (migrated to layout.height)', () => {
+    expect(tabsPropsSchema.properties.tabHeight).toBeUndefined();
   });
 });
 
-describe('TabsComponent.create() — default tabHeight', () => {
-  it('sets tabHeight to 300 by default', () => {
-    const created = TabsComponent.create!();
-    expect(created.tabHeight).toBe(300);
+describe('TabsComponent.create() — default layout.height', () => {
+  it('sets layout.height to 300 by default (unified height)', () => {
+    const created = TabsComponent.create!() as { layout?: { height?: number }; tabHeight?: unknown };
+    expect(created.layout?.height).toBe(300);
+  });
+
+  it('does not emit a tabHeight property', () => {
+    const created = TabsComponent.create!() as { tabHeight?: unknown };
+    expect(created.tabHeight).toBeUndefined();
   });
 });
