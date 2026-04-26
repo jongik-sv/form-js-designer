@@ -1,6 +1,6 @@
 {
   "name": "@form-js-designer/designer-tiptap",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": false,
   "description": "Tiptap extension for form-js-designer schemas (Tabs/Card/Modal aware)",
   "type": "module",
@@ -34,7 +34,8 @@
   "dependencies": {
     "@form-js-designer/designer-core": "*",
     "@form-js-designer/designer-components": "*",
-    "@form-js-designer/designer-runtime": "*"
+    "@form-js-designer/designer-runtime": "*",
+    "@form-js-designer/designer-editor-host": "*"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.0",
