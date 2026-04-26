@@ -31,7 +31,14 @@ export interface MountEmbeddedEditorModalOptions {
 export interface EmbeddedEditorHandle {
   /** 외부 강제 종료 — onSave 호출 없이 즉시 cleanup. onClose는 fire */
   destroy(): void;
-  /** 현재(미저장) schema 조회 */
+  /**
+   * 현재 schema 조회 (sync).
+   *
+   * 주의 — 라이브 편집 중간값은 반영되지 않는다. 반환값은
+   * `initialSchema` (모달 오픈 시점) 또는 `triggerClose`가
+   * `editor.saveSchema()`로 갱신한 마지막 저장 스키마이다. 편집 중인
+   * 라이브 스키마가 필요하면 `editor.saveSchema()`를 외부에서 직접 호출.
+   */
   getSchema(): FormSchema;
 }
 
@@ -130,7 +137,14 @@ export async function mountEmbeddedEditorModal(
 
   render(h(App, {}), content);
 
-  // 4. Install focus guard scoped to this modal
+  // 4. Install focus guard scoped to this modal.
+  //    NOTE: installPropsPanelFocusGuard mutates HTMLElement.prototype.focus.
+  //    Stacking two concurrent modals would corrupt the patch chain because
+  //    each call captures the current prototype as `orig` and restores to it.
+  //    Concurrent instances are intentionally prevented at the consumer side
+  //    (designer-tiptap modalPortal enforces single-instance) — do not lift
+  //    that constraint without first making the focus-guard install a
+  //    refcount-aware operation.
   const uninstallFocusGuard = installPropsPanelFocusGuard(wrapper);
 
   // 5. Schema accessor — returns last-known schema (sync)
