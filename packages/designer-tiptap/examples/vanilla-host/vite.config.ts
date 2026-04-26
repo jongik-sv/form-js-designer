@@ -15,6 +15,10 @@ export default defineConfig({
         replacement: resolve(__dirname, '../../src/styles/entry.css'),
       },
       {
+        find: '@form-js-designer/designer-tiptap/editor',
+        replacement: resolve(__dirname, '../../src/editor/index.ts'),
+      },
+      {
         find: '@form-js-designer/designer-tiptap',
         replacement: resolve(__dirname, '../../src/index.ts'),
       },

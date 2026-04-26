@@ -1,7 +1,10 @@
 import { Editor } from '@tiptap/core';
 import StarterKit from '@tiptap/starter-kit';
-import { FormJsBlock } from '@form-js-designer/designer-tiptap';
+import { FormJsBlock as RawFormJsBlock } from '@form-js-designer/designer-tiptap';
+import { withDesigner } from '@form-js-designer/designer-tiptap/editor';
 import '@form-js-designer/designer-tiptap/styles';
+
+const FormJsBlock = withDesigner(RawFormJsBlock);
 
 import simple from './seed/simple.json';
 import tabs from './seed/tabs.json';
