@@ -57,12 +57,24 @@ export function withDesigner(node: typeof FormJsBlock): typeof FormJsBlock {
                     .run();
                 },
                 onClose: () => {
+                  // Host has already torn down the modal DOM by the time onClose
+                  // fires (see embeddedDesigner.tsx finishClose flow). Calling
+                  // active.destroy() here would re-enter finishClose which is
+                  // closing-guarded as a no-op — clearActiveModal() alone is
+                  // sufficient to free the singleton slot.
                   clearActiveModal();
                 },
               });
               const rootEl = document.querySelector<HTMLElement>('.fjd-embedded-designer-root');
               if (handle && rootEl) {
                 setActiveModal(handle, rootEl);
+              } else if (handle) {
+                // Defensive: handle resolved but root element wasn't found in
+                // the document (shouldn't happen — host appends synchronously
+                // before resolving). Tear down to avoid an orphan modal that
+                // can't be reached via the portal.
+                console.warn('[designer-tiptap] .fjd-embedded-designer-root not found; tearing down orphan modal');
+                try { handle.destroy(); } catch { /* ignore */ }
               }
             } catch (err) {
               console.error('[designer-tiptap] mountEmbeddedEditorModal failed:', err);
