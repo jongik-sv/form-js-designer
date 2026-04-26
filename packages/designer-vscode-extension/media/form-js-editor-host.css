@@ -55,8 +55,10 @@ body {
 }
 
 #editor-host {
+  /* canvas (1024) + form-js properties panel sibling (300) = 1324 inside .fjs-editor-container.
+     Palette는 relocatePalette로 left-rail로 빠져나가 budget에서 제외. */
   flex: 1 1 auto;
-  min-width: 1024px;
+  min-width: 1324px;
   height: 100%;
 }
 
