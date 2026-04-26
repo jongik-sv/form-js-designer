@@ -39,20 +39,25 @@ body {
 /* ── #app 컨테이너 ─────────────────────────────────── */
 
 #app {
-  /* form-js가 #app에 .fjs-editor-container div를 render한다. 그 컨테이너는 width:100%로
-     부모 너비에 cap되므로 자식 .fjs-form-editor의 min-width:1024px만으로는 body 가로
-     스크롤이 활성화되지 않는다. #app 자체에 min-width 합(palette 270 + canvas 1024 +
-     properties 300 = 1594)을 직접 박아서 webview pane이 좁으면 body가 강제로 grow하도록. */
+  /* New flex-row layout: left-rail (260) + editor-host (1024+) + reserved properties (300).
+     Total min-width: 260 + 1024 + 300 = 1584px to ensure horizontal scrolling when pane
+     is narrower. Left-rail tabs and outline/components panels sit at fixed width; editor-host
+     expands to fill available space (flex: 1 1 auto). */
   height: 100%;
-  min-width: 1594px;
+  min-width: 1584px;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
 }
 
-/* form-js-editor가 내부에서 높이를 채우도록 강제 */
 #app > * {
-  flex: 1 1 auto;
+  flex-shrink: 0;
   min-height: 0;
+}
+
+#editor-host {
+  flex: 1 1 auto;
+  min-width: 1024px;
+  height: 100%;
 }
 
 /* ── 캔버스 최소 너비 ───────────────────────────────── */
@@ -97,4 +102,85 @@ body {
 .fjs-designer-component-resize__handle:focus {
   background: var(--cds-border-interactive, #3b82f6);
   outline: none;
+}
+
+/* ── 좌측 rail ─────────────────────────────────── */
+
+.left-rail {
+  width: 260px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--vscode-panel-border, #2d2d2d);
+  background: var(--vscode-sideBar-background, #252526);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+}
+
+.left-rail__tabs {
+  display: flex;
+  flex-direction: row;
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--vscode-panel-border, #2d2d2d);
+  background: var(--vscode-tab-inactiveBackground, #2d2d2d);
+  padding: 0 8px;
+  gap: 2px;
+}
+
+.left-rail__tab {
+  flex: 0 0 auto;
+  background: transparent;
+  border: 1px solid transparent;
+  border-bottom: none;
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
+  padding: 8px 14px;
+  margin-bottom: -1px;
+  color: var(--vscode-tab-inactiveForeground, #969696);
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.left-rail__tab:hover {
+  background: var(--vscode-tab-hoverBackground, #2a2d2e);
+  color: var(--vscode-tab-hoverForeground, #ffffff);
+}
+
+.left-rail__tab:focus-visible {
+  outline: 2px solid var(--vscode-focusBorder, #007fd4);
+  outline-offset: -2px;
+}
+
+.left-rail__tab--active {
+  background: var(--vscode-tab-activeBackground, #1e1e1e);
+  color: var(--vscode-tab-activeForeground, #ffffff);
+  border-color: var(--vscode-panel-border, #2d2d2d);
+  border-bottom-color: var(--vscode-tab-activeBackground, #1e1e1e);
+}
+
+.left-rail__panels {
+  flex: 1 1 auto;
+  min-height: 0;
+  position: relative;
+  overflow: hidden;
+}
+
+.left-rail__panel {
+  display: none;
+  height: 100%;
+  overflow: auto;
+}
+
+.left-rail[data-active-panel="components"] .left-rail__panel[data-panel="components"],
+.left-rail[data-active-panel="outline"] .left-rail__panel[data-panel="outline"] {
+  display: block;
+}
+
+.left-rail__panel[data-panel="components"] .fjs-palette-container {
+  width: 100%;
+  max-width: 100%;
+  border-right: none;
 }
