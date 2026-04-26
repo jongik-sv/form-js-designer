@@ -14,6 +14,20 @@
 
 import { test, expect } from '@playwright/test';
 
+/** 좌측 탭을 아웃라인으로 전환 (idempotent — 이미 활성이면 빠르게 통과) */
+async function activateOutlineTab(page: import('@playwright/test').Page): Promise<void> {
+  const tab = page.locator('[data-testid="left-tab-outline"]');
+  await tab.click();
+  await page.locator('.left-rail[data-active-panel="outline"]').waitFor({ timeout: 5000 });
+}
+
+/** 좌측 탭을 컴포넌트(팔레트)로 전환 (idempotent) */
+async function activateComponentsTab(page: import('@playwright/test').Page): Promise<void> {
+  const tab = page.locator('[data-testid="left-tab-components"]');
+  await tab.click();
+  await page.locator('.left-rail[data-active-panel="components"]').waitFor({ timeout: 5000 });
+}
+
 /** 팔레트 아이템 헬퍼 */
 function paletteItem(page: import('@playwright/test').Page, fieldType: string) {
   return page.locator(`.fjs-palette-field[data-field-type="${fieldType}"]`).first();
@@ -21,6 +35,8 @@ function paletteItem(page: import('@playwright/test').Page, fieldType: string) {
 
 /** 팔레트 → 캔버스 드롭 헬퍼 */
 async function dropToCanvas(page: import('@playwright/test').Page, fieldType: string) {
+  // 팔레트가 보이도록 컴포넌트 탭 활성화
+  await activateComponentsTab(page);
   const item = paletteItem(page, fieldType);
   await expect(item).toBeVisible({ timeout: 10000 });
   await item.scrollIntoViewIfNeeded();
@@ -83,6 +99,9 @@ test.describe('멀티 선택 — Shift-click → 일괄 삭제 → Undo 복구',
     await dropToCanvas(page, 'button');
     await dropToCanvas(page, 'button');
 
+    // 아웃라인 탭 활성화 후 노드 상호작용
+    await activateOutlineTab(page);
+
     const outlineNodes = page.locator(
       '[data-outline-id]:not([data-outline-id="__outline_root__"])',
     );
@@ -130,6 +149,9 @@ test.describe('멀티 선택 — Shift-click → 일괄 삭제 → Undo 복구',
     await dropToCanvas(page, 'button');
     await dropToCanvas(page, 'button');
 
+    // 아웃라인 탭 활성화 후 노드 상호작용
+    await activateOutlineTab(page);
+
     const outlineNodes = page.locator(
       '[data-outline-id]:not([data-outline-id="__outline_root__"])',
     );
@@ -169,6 +191,9 @@ test.describe('멀티 선택 — Ctrl+A → Escape', () => {
     await dropToCanvas(page, 'button');
     await dropToCanvas(page, 'button');
 
+    // 아웃라인 탭 활성화 후 노드 상호작용
+    await activateOutlineTab(page);
+
     const outlineNodes = page.locator(
       '[data-outline-id]:not([data-outline-id="__outline_root__"])',
     );
@@ -206,6 +231,9 @@ test.describe('멀티 선택 — Ctrl+A → Escape', () => {
     await dropToCanvas(page, 'button');
     await dropToCanvas(page, 'button');
 
+    // 아웃라인 탭 활성화 후 노드 상호작용
+    await activateOutlineTab(page);
+
     const outlineNodes = page.locator(
       '[data-outline-id]:not([data-outline-id="__outline_root__"])',
     );
@@ -234,6 +262,9 @@ test.describe('멀티 선택 — Ctrl+A → Escape', () => {
   test('Escape가 INPUT에 포커스된 상태에서 no-op 처리된다 (에러 없음)', async ({ page }) => {
     // 에디터 내부 input에 포커스 후 Escape → 선택 해제 no-op 확인
     await dropToCanvas(page, 'button');
+
+    // 아웃라인 탭 활성화 후 노드 상호작용
+    await activateOutlineTab(page);
 
     const outlineNodes = page.locator(
       '[data-outline-id]:not([data-outline-id="__outline_root__"])',
@@ -279,6 +310,9 @@ test.describe('멀티 선택 — 마퀴(rubber-band) 드래그 → 일괄 삭제
     await dropToCanvas(page, 'button');
     await dropToCanvas(page, 'button');
     await dropToCanvas(page, 'button');
+
+    // 아웃라인 탭 활성화 (노드 수 확인용)
+    await activateOutlineTab(page);
 
     const outlineNodes = page.locator(
       '[data-outline-id]:not([data-outline-id="__outline_root__"])',
@@ -453,6 +487,9 @@ test.describe('멀티 선택 — 3개 선택 → Insert → 6개 → Undo 1회 �
     await dropToCanvas(page, 'textfield');
     await dropToCanvas(page, 'textfield');
 
+    // 아웃라인 탭 활성화 후 노드 상호작용
+    await activateOutlineTab(page);
+
     const outlineNodes = page.locator(
       '[data-outline-id]:not([data-outline-id="__outline_root__"])',
     );
@@ -511,6 +548,9 @@ test.describe('멀티 선택 — 3개 선택 → Insert → 6개 → Undo 1회 �
     await dropToCanvas(page, 'button');
     await dropToCanvas(page, 'button');
 
+    // 아웃라인 탭 활성화 후 노드 상호작용
+    await activateOutlineTab(page);
+
     const outlineNodes = page.locator(
       '[data-outline-id]:not([data-outline-id="__outline_root__"])',
     );
@@ -557,6 +597,9 @@ test.describe('멀티 DnD 이동 → Undo 복구 (TSK-11-04)', () => {
     await dropToCanvas(page, 'textfield');
     await dropToCanvas(page, 'textfield');
     await dropToCanvas(page, 'textfield');
+
+    // 아웃라인 탭 활성화 후 노드 상호작용
+    await activateOutlineTab(page);
 
     const outlineNodes = page.locator(
       '[data-outline-id]:not([data-outline-id="__outline_root__"])',
@@ -627,6 +670,9 @@ test.describe('Range 선택 — A 클릭 → shift+E 클릭 → 5개 모두 선�
     await dropToCanvas(page, 'textfield');
     await dropToCanvas(page, 'textfield');
 
+    // 아웃라인 탭 활성화 후 노드 상호작용
+    await activateOutlineTab(page);
+
     const outlineNodes = page.locator(
       '[data-outline-id]:not([data-outline-id="__outline_root__"])',
     );
@@ -681,6 +727,9 @@ test.describe('Range 선택 — A 클릭 → shift+E 클릭 → 5개 모두 선�
     await dropToCanvas(page, 'textfield');
     await dropToCanvas(page, 'textfield');
 
+    // 아웃라인 탭 활성화 후 노드 상호작용
+    await activateOutlineTab(page);
+
     const outlineNodes = page.locator(
       '[data-outline-id]:not([data-outline-id="__outline_root__"])',
     );
@@ -725,6 +774,9 @@ test.describe('Range 선택 — A 클릭 → shift+E 클릭 → 5개 모두 선�
     await dropToCanvas(page, 'textfield');
     await dropToCanvas(page, 'textfield');
     await dropToCanvas(page, 'textfield');
+
+    // 아웃라인 탭 활성화 후 노드 상호작용
+    await activateOutlineTab(page);
 
     const outlineNodes = page.locator(
       '[data-outline-id]:not([data-outline-id="__outline_root__"])',
