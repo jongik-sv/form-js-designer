@@ -22,6 +22,7 @@ export function installPropsPanelFocusGuard(
     if (inScope && this.classList && this.classList.contains('fjs-editor-selected')) {
       const active = document.activeElement;
       if (active && (active as HTMLElement).closest?.('.props-panel')) {
+        // props-panel input 에서 타이핑 중 — canvas 가 focus 를 훔치려는 시도 차단
         return;
       }
     }
