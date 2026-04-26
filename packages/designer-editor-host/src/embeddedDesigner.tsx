@@ -15,6 +15,7 @@ import { LivePreviewModule } from './modules/LivePreviewModule';
 import { ValidateModule } from './modules/ValidateModule';
 import { ExportModule } from './modules/ExportModule';
 import { PropsPanelContainer } from './components/PropsPanelContainer';
+import { LeftRailTabs, type LeftRailTab } from './components/LeftRailTabs';
 import { installPropsPanelFocusGuard } from './hooks/usePropsPanelFocusGuard';
 
 type EventBusLike = {
@@ -79,7 +80,6 @@ const CANVAS_CLASS = 'fjd-embedded-designer-canvas';
 const LAYOUT_CLASS = 'fjd-embedded-designer-layout';
 const AREA_CLASS = 'fjd-embedded-designer-area';
 const MAIN_CLASS = 'fjd-embedded-designer-main';
-const OUTLINE_CLASS = 'fjd-embedded-designer-outline';
 const PROPS_CLASS = 'fjd-embedded-designer-props';
 const PROPS_NATIVE_CLASS = 'fjd-embedded-designer-props-native';
 
@@ -140,6 +140,7 @@ export async function mountEmbeddedEditorModal(
   const App = () => {
     const editorRef = useRef<HTMLDivElement>(null);
     const outlineRef = useRef<HTMLDivElement>(null);
+    const paletteSlotRef = useRef<HTMLDivElement>(null);
     const propsRef = useRef<HTMLDivElement>(null);
     // designer-components 전용 props 서비스 — importSchema 완료 후 setState로
     // 채워서 PropsPanelContainer 가 selection.changed 를 수신하도록 한다.
@@ -147,6 +148,7 @@ export async function mountEmbeddedEditorModal(
       propsPanel: PropsPanelService | null;
       eventBus: EventBusLike | null;
     }>({ propsPanel: null, eventBus: null });
+    const [leftTab, setLeftTab] = useState<LeftRailTab>('components');
 
     useLayoutEffect(() => {
       const editorEl = editorRef.current;
@@ -187,6 +189,13 @@ export async function mountEmbeddedEditorModal(
                   | undefined;
                 outlinePanel?.mount?.(outlineEl);
               } catch { /* ignore */ }
+            }
+            // 팔레트 DOM을 left-rail components 슬롯으로 옮긴다.
+            // form-js dragula는 element 자체에 listener를 박으므로 reparent 안전.
+            const paletteEl = editorEl.querySelector('.fjs-palette-container');
+            const paletteSlot = paletteSlotRef.current;
+            if (paletteEl && paletteSlot && paletteEl.parentElement !== paletteSlot) {
+              paletteSlot.appendChild(paletteEl);
             }
             const propsEl = propsRef.current;
             if (propsEl && typeof editor.get === 'function') {
@@ -242,13 +251,29 @@ export async function mountEmbeddedEditorModal(
           { class: `${MAIN_CLASS} editor-main` },
           h(
             'div',
-            { class: `${OUTLINE_CLASS} outline-container`, 'data-outline-container': '' },
+            { class: 'left-rail', 'data-active-panel': leftTab },
+            h(LeftRailTabs, { activeTab: leftTab, onTabChange: setLeftTab }),
             h(
               'div',
-              { class: 'outline-header' },
-              h('h3', null, '아웃라인'),
+              { class: 'left-rail__panels' },
+              h('div', {
+                id: 'left-rail-panel-components',
+                class: 'left-rail__panel',
+                'data-panel': 'components',
+                role: 'tabpanel',
+                'aria-labelledby': 'left-tab-components',
+                ref: paletteSlotRef,
+              }),
+              h('div', {
+                id: 'left-rail-panel-outline',
+                class: 'left-rail__panel',
+                'data-panel': 'outline',
+                'data-outline-container': '',
+                role: 'tabpanel',
+                'aria-labelledby': 'left-tab-outline',
+                ref: outlineRef,
+              }),
             ),
-            h('div', { class: 'outline-root', ref: outlineRef }),
           ),
           h('div', { class: `${CANVAS_CLASS} editor-container`, ref: editorRef }),
         ),

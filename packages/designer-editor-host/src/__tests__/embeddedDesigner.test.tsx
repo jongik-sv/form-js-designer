@@ -94,4 +94,18 @@ describe('mountEmbeddedEditorModal', () => {
     expect(onSave).not.toHaveBeenCalled();
     expect(onClose).toHaveBeenCalledTimes(1);
   });
+
+  it('embedded modal renders left-rail with components/outline tabs', async () => {
+    const handle = await mountEmbeddedEditorModal({
+      container,
+      initialSchema: { type: 'default', components: [] },
+      onSave: () => {},
+    });
+    const rail = container.querySelector('.left-rail') as HTMLElement;
+    expect(rail).toBeTruthy();
+    expect(rail.getAttribute('data-active-panel')).toBe('components');
+    expect(container.querySelector('[data-testid="left-tab-outline"]')).toBeTruthy();
+    expect(container.querySelector('.left-rail__panel[data-panel="outline"][data-outline-container]')).toBeTruthy();
+    handle.destroy();
+  });
 });
