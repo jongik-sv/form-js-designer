@@ -9,6 +9,20 @@
 
 import { test, expect } from '@playwright/test';
 
+/** 좌측 탭을 아웃라인으로 전환 (idempotent — 이미 활성이면 빠르게 통과) */
+async function activateOutlineTab(page: import('@playwright/test').Page): Promise<void> {
+  const tab = page.locator('[data-testid="left-tab-outline"]');
+  await tab.click();
+  await page.locator('.left-rail[data-active-panel="outline"]').waitFor({ timeout: 5000 });
+}
+
+/** 좌측 탭을 컴포넌트(팔레트)로 전환 (idempotent) */
+async function activateComponentsTab(page: import('@playwright/test').Page): Promise<void> {
+  const tab = page.locator('[data-testid="left-tab-components"]');
+  await tab.click();
+  await page.locator('.left-rail[data-active-panel="components"]').waitFor({ timeout: 5000 });
+}
+
 /** 팔레트 아이템 찾기 헬퍼 */
 function paletteItem(page: import('@playwright/test').Page, fieldType: string) {
   return page.locator(`.fjs-palette-field[data-field-type="${fieldType}"]`).first();
@@ -84,6 +98,9 @@ test.describe('Outline DnD — 드래그앤드롭 이동', () => {
     // Step 2: 두 번째 button 드롭
     await dropToCanvas(page, 'button');
 
+    // 아웃라인 탭으로 전환 후 노드 확인
+    await activateOutlineTab(page);
+
     // 아웃라인에 2개 이상 노드가 표시되는지 확인
     const outlineNodes = page.locator('[data-outline-id]:not([data-outline-id="__outline_root__"])');
     const count = await outlineNodes.count();
@@ -94,6 +111,9 @@ test.describe('Outline DnD — 드래그앤드롭 이동', () => {
     // 진입: 팔레트 클릭 경로
     await dropToCanvas(page, 'button');
     await dropToCanvas(page, 'button');
+
+    // 아웃라인 탭으로 전환 (DnD 대상 트리 노드 보이도록)
+    await activateOutlineTab(page);
 
     // 아웃라인 노드 목록 수집
     const outlineNodes = page.locator('[data-outline-id]:not([data-outline-id="__outline_root__"])');
@@ -143,6 +163,9 @@ test.describe('Outline DnD — 드래그앤드롭 이동', () => {
     await dropToCanvas(page, 'button');
     await dropToCanvas(page, 'button');
 
+    // 아웃라인 탭으로 전환
+    await activateOutlineTab(page);
+
     const outlineNodes = page.locator('[data-outline-id]:not([data-outline-id="__outline_root__"])');
     const count = await outlineNodes.count();
     if (count < 2) { test.skip(); return; }
@@ -175,6 +198,9 @@ test.describe('Outline DnD — 드래그앤드롭 이동', () => {
   });
 
   test('가상 루트 노드(__outline_root__)는 드래그 불가능하다', async ({ page }) => {
+    // 아웃라인 탭으로 전환 (가상 루트 노드는 outline 패널에 위치)
+    await activateOutlineTab(page);
+
     // 가상 루트 노드 버튼에는 draggable 속성이 없어야 함
     const virtualRootNode = page.locator('[data-testid="outline-virtual-root"]');
     await expect(virtualRootNode).toBeVisible({ timeout: 5000 });
@@ -187,6 +213,9 @@ test.describe('Outline DnD — 드래그앤드롭 이동', () => {
   test('노드를 자기 자신 위로 드롭하면 이동 없이 원래 위치 유지', async ({ page }) => {
     await dropToCanvas(page, 'button');
     await dropToCanvas(page, 'button');
+
+    // 아웃라인 탭으로 전환
+    await activateOutlineTab(page);
 
     const outlineNodes = page.locator('[data-outline-id]:not([data-outline-id="__outline_root__"])');
     const count = await outlineNodes.count();
@@ -219,6 +248,9 @@ test.describe('Outline Clipboard — 복사/붙여넣기', () => {
   test('(reachability) button 드롭 → 아웃라인 노드 선택 → Cmd+C/V 후 노드 수 증가', async ({ page }) => {
     // 클릭 경로로 진입
     await dropToCanvas(page, 'button');
+
+    // 아웃라인 탭으로 전환 (outline-panel 노출)
+    await activateOutlineTab(page);
 
     const outlinePanel = page.locator('[data-testid="outline-panel"]');
     const isPanelVisible = await outlinePanel.isVisible().catch(() => false);
@@ -258,6 +290,9 @@ test.describe('Outline Clipboard — 복사/붙여넣기', () => {
   });
 
   test('클립보드가 비어있을 때 Cmd+V는 에러 없이 no-op 처리된다', async ({ page }) => {
+    // 아웃라인 탭으로 전환 (outline-panel 노출)
+    await activateOutlineTab(page);
+
     const outlinePanel = page.locator('[data-testid="outline-panel"]');
     await expect(outlinePanel).toBeVisible({ timeout: 10000 });
 
@@ -270,12 +305,16 @@ test.describe('Outline Clipboard — 복사/붙여넣기', () => {
     await page.keyboard.press(`${modifier}+v`);
     await page.waitForTimeout(300);
 
-    // 페이지가 크래시하지 않음 확인
+    // 페이지가 크래시하지 않음 확인 — 컴포넌트 탭으로 전환해 팔레트 가시성 확인
+    await activateComponentsTab(page);
     await expect(page.locator('.fjs-palette')).toBeVisible({ timeout: 3000 });
   });
 
   test('같은 노드를 Cmd+V 두 번 누르면 다른 ID를 가진 복사본 2개 추가', async ({ page }) => {
     await dropToCanvas(page, 'button');
+
+    // 아웃라인 탭으로 전환 (outline-panel 노출)
+    await activateOutlineTab(page);
 
     const outlinePanel = page.locator('[data-testid="outline-panel"]');
     const isPanelVisible = await outlinePanel.isVisible().catch(() => false);
@@ -325,6 +364,9 @@ test.describe('Outline DnD — 통합: collapsible과 공존', () => {
   test('DnD 이동 후 Undo(Cmd+Z)하면 이전 순서로 복원된다', async ({ page }) => {
     await dropToCanvas(page, 'button');
     await dropToCanvas(page, 'button');
+
+    // 아웃라인 탭으로 전환
+    await activateOutlineTab(page);
 
     const outlineNodes = page.locator('[data-outline-id]:not([data-outline-id="__outline_root__"])');
     const count = await outlineNodes.count();
