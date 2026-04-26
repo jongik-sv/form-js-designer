@@ -42,8 +42,17 @@ export function withDesigner(node: typeof FormJsBlock): typeof FormJsBlock {
           void (async () => {
             let handle: EmbeddedEditorHandle | null = null;
             try {
+              // Read the LATEST schema from the live doc — pmNode is captured
+              // at NodeView creation and may be stale after a prior save (the
+              // viewer NodeView's update() returns true so the same NodeView is
+              // reused, but the closure-captured pmNode reference doesn't
+              // update with attr changes).
+              const livePos = typeof getPos === 'function' ? getPos() : null;
+              const liveNode = livePos != null ? editor.state.doc.nodeAt(livePos) : null;
+              const liveSchema = (liveNode?.attrs?.schema ?? pmNode.attrs.schema) as FormSchema;
+              const typeName = (liveNode?.type?.name ?? pmNode.type.name);
               handle = await mountEmbeddedEditorModal({
-                initialSchema: pmNode.attrs.schema as FormSchema,
+                initialSchema: liveSchema,
                 onSave: (newSchema: FormSchema) => {
                   const pos = typeof getPos === 'function' ? getPos() : null;
                   if (pos == null) {
@@ -53,7 +62,7 @@ export function withDesigner(node: typeof FormJsBlock): typeof FormJsBlock {
                   editor
                     .chain()
                     .setNodeSelection(pos)
-                    .updateAttributes(pmNode.type.name, { schema: newSchema })
+                    .updateAttributes(typeName, { schema: newSchema })
                     .run();
                 },
                 onClose: () => {

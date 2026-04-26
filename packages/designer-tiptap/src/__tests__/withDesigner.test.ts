@@ -112,13 +112,19 @@ function simulateNodeView(
     updateAttributes: vi.fn().mockReturnThis(),
     run: vi.fn().mockReturnValue(true),
   };
+  const fakeNode = {
+    attrs: { schema: { type: 'default', components: [] }, formId: 'test' },
+    type: { name: 'formJsBlock' },
+  };
   const fakeContext = {
-    node: {
-      attrs: { schema: { type: 'default', components: [] }, formId: 'test' },
-      type: { name: 'formJsBlock' },
-    },
+    node: fakeNode,
     getPos: () => (opts.getPosReturn === undefined ? 0 : opts.getPosReturn),
-    editor: { chain: () => chainObj },
+    editor: {
+      chain: () => chainObj,
+      // withDesigner reads the latest node from the live doc on dblclick
+      // and on save — provide a minimal stub returning the same fakeNode.
+      state: { doc: { nodeAt: () => fakeNode } },
+    },
   } as any;
 
   const config = (nodeExtension as unknown as { config: { addNodeView?: () => unknown } }).config;

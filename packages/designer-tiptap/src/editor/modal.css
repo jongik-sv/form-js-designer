@@ -33,6 +33,30 @@
   color: var(--fjd-modal-title-color, #111);
 }
 
+.fjd-embedded-designer-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.fjd-embedded-designer-save {
+  background: var(--fjd-modal-secondary-bg, #2563eb);
+  color: var(--fjd-modal-secondary-fg, #fff);
+  border: 0;
+  padding: 6px 14px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  line-height: 1;
+}
+.fjd-embedded-designer-save:hover {
+  background: var(--fjd-modal-secondary-bg-hover, #1d4ed8);
+}
+.fjd-embedded-designer-save:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .fjd-embedded-designer-close {
   background: var(--fjd-modal-primary-bg, #111);
   color: var(--fjd-modal-primary-fg, #fff);

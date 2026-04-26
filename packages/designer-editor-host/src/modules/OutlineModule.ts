@@ -179,6 +179,14 @@ class OutlinePanelService {
     }
 
     this._startContextPadObserver();
+
+    // form-js editor.destroy() 시 본 서비스의 destroy()를 호출해야 한다.
+    // 그렇지 않으면 document 레벨 click 리스너와 _contextPadObserver가
+    // 누수되어, 임베디드 디자이너 모달 재오픈 시 stale 인스턴스가 새 모달의
+    // context-pad에 먼저 버튼을 주입하고(closure는 destroyed registry/modeling을 참조)
+    // "행으로 복사" 같은 DOM-주입 버튼이 silent no-op가 된다 (delete는 form-js
+    // 내부 preact 핸들러라 영향 없음).
+    eventBus.on('diagram.destroy', () => this.destroy());
   }
 
   private _render() {

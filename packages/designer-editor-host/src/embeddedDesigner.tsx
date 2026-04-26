@@ -1,5 +1,5 @@
 import { h, render } from 'preact';
-import { useLayoutEffect, useRef } from 'preact/hooks';
+import { useLayoutEffect, useRef, useState } from 'preact/hooks';
 // @ts-ignore — form-js-editor has no bundled type declarations
 import { FormEditor } from '@bpmn-io/form-js-editor';
 import { DesignerContainerModule } from '@form-js-designer/designer-core';
@@ -10,10 +10,17 @@ import { OutlineModule } from './modules/OutlineModule';
 import { MarqueeModule } from './modules/MarqueeModule';
 import { ShortcutModule } from './modules/ShortcutModule';
 import { PropsPanelModule } from './modules/PropsPanelModule';
+import { PropsPanelService } from './modules/PropsPanelService';
 import { LivePreviewModule } from './modules/LivePreviewModule';
 import { ValidateModule } from './modules/ValidateModule';
 import { ExportModule } from './modules/ExportModule';
+import { PropsPanelContainer } from './components/PropsPanelContainer';
 import { installPropsPanelFocusGuard } from './hooks/usePropsPanelFocusGuard';
+
+type EventBusLike = {
+  on: (event: string, handler: (...args: unknown[]) => void) => void;
+  off: (event: string, handler: (...args: unknown[]) => void) => void;
+};
 
 // Layout CSS — replicates host App.tsx imports so form-js editor + outline +
 // properties panel render correctly inside the modal. Without these the
@@ -55,7 +62,9 @@ export interface EmbeddedEditorHandle {
 
 interface FormEditorInstance {
   importSchema: (schema: FormSchema) => Promise<void>;
-  saveSchema: () => Promise<{ schema: FormSchema }>;
+  // form-js editor.saveSchema() returns the schema object directly,
+  // not wrapped in { schema }. (See customEditor.ts and e2e/tabs-tabpanel.spec.ts.)
+  saveSchema: () => Promise<FormSchema>;
   destroy: () => void;
   get?: (key: string, optional?: boolean) => unknown;
 }
@@ -63,6 +72,8 @@ interface FormEditorInstance {
 const ROOT_CLASS = 'fjd-embedded-designer-root';
 const HEADER_CLASS = 'fjd-embedded-designer-header';
 const CONTENT_CLASS = 'fjd-embedded-designer-content';
+const ACTIONS_CLASS = 'fjd-embedded-designer-actions';
+const SAVE_BTN_CLASS = 'fjd-embedded-designer-save';
 const CLOSE_BTN_CLASS = 'fjd-embedded-designer-close';
 const CANVAS_CLASS = 'fjd-embedded-designer-canvas';
 const LAYOUT_CLASS = 'fjd-embedded-designer-layout';
@@ -99,11 +110,18 @@ export async function mountEmbeddedEditorModal(
   header.className = HEADER_CLASS;
   const title = document.createElement('h2');
   title.textContent = 'Form Designer';
+  const actions = document.createElement('div');
+  actions.className = ACTIONS_CLASS;
+  const saveBtn = document.createElement('button');
+  saveBtn.type = 'button';
+  saveBtn.className = SAVE_BTN_CLASS;
+  saveBtn.textContent = '저장';
   const closeBtn = document.createElement('button');
   closeBtn.type = 'button';
   closeBtn.className = CLOSE_BTN_CLASS;
   closeBtn.textContent = '닫기';
-  header.append(title, closeBtn);
+  actions.append(saveBtn, closeBtn);
+  header.append(title, actions);
   const content = document.createElement('div');
   content.className = CONTENT_CLASS;
   wrapper.append(header, content);
@@ -123,6 +141,12 @@ export async function mountEmbeddedEditorModal(
     const editorRef = useRef<HTMLDivElement>(null);
     const outlineRef = useRef<HTMLDivElement>(null);
     const propsRef = useRef<HTMLDivElement>(null);
+    // designer-components 전용 props 서비스 — importSchema 완료 후 setState로
+    // 채워서 PropsPanelContainer 가 selection.changed 를 수신하도록 한다.
+    const [services, setServices] = useState<{
+      propsPanel: PropsPanelService | null;
+      eventBus: EventBusLike | null;
+    }>({ propsPanel: null, eventBus: null });
 
     useLayoutEffect(() => {
       const editorEl = editorRef.current;
@@ -176,6 +200,21 @@ export async function mountEmbeddedEditorModal(
                 }
               } catch { /* ignore */ }
             }
+            // DI 서비스 획득 — designer-components 전용 props 패널 (host App.tsx 와 동일)
+            if (typeof editor.get === 'function') {
+              try {
+                const propsPanelSvc = editor.get('propsPanel', false) as
+                  | PropsPanelService
+                  | undefined;
+                const eventBus = editor.get('eventBus', false) as EventBusLike | undefined;
+                setServices({
+                  propsPanel: propsPanelSvc ?? null,
+                  eventBus: eventBus ?? null,
+                });
+              } catch (err) {
+                console.warn('[embedded-designer] DI 서비스 획득 실패:', err);
+              }
+            }
           })
           .catch((err: Error) => {
             console.error('[embedded-designer] importSchema failed:', err);
@@ -221,6 +260,11 @@ export async function mountEmbeddedEditorModal(
           'div',
           { class: 'props-panel-stack' },
           h('div', { class: `${PROPS_NATIVE_CLASS} props-panel-native`, ref: propsRef }),
+          // designer-components 전용 속성 (padding, orientation, ...) — host App.tsx 와 동일
+          h(PropsPanelContainer, {
+            propsPanelService: services.propsPanel,
+            eventBus: services.eventBus,
+          }),
         ),
       ),
     );
@@ -249,10 +293,33 @@ export async function mountEmbeddedEditorModal(
     render(null, content); // unmount Preact (also runs editor cleanup)
     wrapper.removeEventListener('keydown', keyHandler, true);
     closeBtn.removeEventListener('click', closeBtnHandler);
+    saveBtn.removeEventListener('click', saveBtnHandler);
     uninstallFocusGuard();
     wrapper.remove();
     document.body.style.overflow = prevBodyOverflow;
     onClose?.();
+  };
+
+  // 6a. saveOnly — persist current schema via onSave, keep modal open.
+  //     Reentry-guarded to prevent double-click races; saveBtn is disabled
+  //     during the in-flight save and re-enabled on completion.
+  let saving = false;
+  const saveOnly = async () => {
+    if (closing || saving) return;
+    if (!editorInstance || typeof editorInstance.saveSchema !== 'function') return;
+    saving = true;
+    saveBtn.disabled = true;
+    try {
+      const saved = await editorInstance.saveSchema();
+      const schemaToSave: FormSchema = saved ?? currentSchema;
+      currentSchema = schemaToSave;
+      await onSave(schemaToSave);
+    } catch (err) {
+      console.error('[embedded-designer] onSave failed:', err);
+    } finally {
+      saving = false;
+      saveBtn.disabled = false;
+    }
   };
 
   // 7. triggerClose — auto-save then cleanup
@@ -262,7 +329,7 @@ export async function mountEmbeddedEditorModal(
       let schemaToSave: FormSchema = currentSchema;
       if (editorInstance && typeof editorInstance.saveSchema === 'function') {
         const saved = await editorInstance.saveSchema();
-        schemaToSave = saved?.schema ?? currentSchema;
+        schemaToSave = saved ?? currentSchema;
         currentSchema = schemaToSave;
       }
       await onSave(schemaToSave);
@@ -284,8 +351,12 @@ export async function mountEmbeddedEditorModal(
   const closeBtnHandler = () => {
     void triggerClose();
   };
+  const saveBtnHandler = () => {
+    void saveOnly();
+  };
   wrapper.addEventListener('keydown', keyHandler, true);
   closeBtn.addEventListener('click', closeBtnHandler);
+  saveBtn.addEventListener('click', saveBtnHandler);
 
   // 9. Focus the wrapper so ESC works immediately
   wrapper.focus();
