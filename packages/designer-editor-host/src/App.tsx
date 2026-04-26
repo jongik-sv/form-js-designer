@@ -7,7 +7,7 @@
  * additionalModules로 주입한다. Table 은 form-js native 컴포넌트를 그대로 사용한다.
  *
  * 레이아웃:
- *   [Outline + EditorHost] [side-panel: Sidebar(탭) + PropsPanelContainer | LivePreviewPanel]
+ *   [LeftRail(컴포넌트|아웃라인) + EditorHost] [side-panel: Sidebar(탭) + PropsPanelContainer | LivePreviewPanel]
  *   상단 툴바: Validate / Export JSON / Copy CLI 버튼
  *   상태바: ValidationBadge
  */
