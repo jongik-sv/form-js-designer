@@ -12,6 +12,7 @@ const sources = [
   resolve(root, '../../node_modules/@bpmn-io/form-js-viewer/dist/assets/form-js.css'),
   resolve(root, '../designer-components/src/container-base.css'),
   resolve(root, 'src/styles/entry.css'),
+  resolve(root, 'src/editor/modal.css'),
 ];
 
 const out = resolve(root, 'dist/designer-tiptap.css');
