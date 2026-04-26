@@ -1,11 +1,10 @@
-import { FormJsBlock } from '../node';
+// packages/designer-tiptap/src/editor/index.ts
+//
+// v0.2 editor entry — provides withDesigner(FormJsBlock) HOC that adds
+// double-click → embedded designer modal behavior to the FormJsBlock node.
 
-export { FormJsBlock };
+import './modal.css';
 
-/**
- * v0.2 — wraps FormJsBlock with double-click → designer modal.
- * In v0.1 this is a passthrough; consumers using ./editor get the same node as ./.
- */
-export function withDesigner(node: typeof FormJsBlock): typeof FormJsBlock {
-  return node;
-}
+export { FormJsBlock } from '../node';
+export { withDesigner } from './withDesigner';
+export type { FormJsBlockAttrs } from '../node';
