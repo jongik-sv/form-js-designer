@@ -5,7 +5,7 @@ components) as atomic blocks inside a Tiptap document.
 
 ## Status
 
-v0.1 — viewer-only NodeView. Modal designer arrives in v0.2.
+v0.2 — `./editor` entry adds the embedded designer modal. v0.1 viewer-only flow remains supported.
 
 ## Install (private — GitHub Packages)
 
@@ -40,14 +40,49 @@ const editor = new Editor({
 editor.commands.insertFormJsBlock(mySchema, 'optional-form-id');
 ```
 
+## Use — editor (v0.2)
+
+```ts
+import { Editor } from '@tiptap/core';
+import StarterKit from '@tiptap/starter-kit';
+import { FormJsBlock as RawFormJsBlock } from '@form-js-designer/designer-tiptap';
+import { withDesigner } from '@form-js-designer/designer-tiptap/editor';
+import '@form-js-designer/designer-tiptap/styles';
+
+const FormJsBlock = withDesigner(RawFormJsBlock);
+
+const editor = new Editor({
+  element: document.querySelector('#editor')!,
+  extensions: [StarterKit, FormJsBlock],
+});
+
+// Double-click any inserted form-js block to open the fullscreen designer modal.
+// ESC or the [닫기] button auto-saves and closes (single-instance modal).
+editor.commands.insertFormJsBlock(mySchema, 'optional-form-id');
+```
+
 ## Roadmap
 
 | Version | Scope |
 |---|---|
 | v0.1 | viewer-only NodeView, insertFormJsBlock command, GH Packages |
-| v0.2 | `./editor` entry, modal designer, updateFormJsBlock |
+| v0.2 | ✅ `./editor` entry with `withDesigner` HOC, fullscreen embedded designer modal, single-instance + auto-save lifecycle |
 | v0.3 (optional) | React wrapper, VS Code webview variant, Tiptap v3 |
 | v1.0 (optional) | npm public, OSS license, Yjs collaboration guide |
+
+## Compatibility
+
+| `@form-js-designer/designer-tiptap` | bundled `@form-js-designer/designer-editor-host` |
+|--------------------------------------|---------------------------------------------------|
+| `0.1.x`                              | (independent — viewer-only, no host needed)      |
+| `0.2.x`                              | `0.1.x` (bundled at build time via tsup `noExternal`) |
+
+> Note: `designer-editor-host` is currently a private workspace package
+> (`"private": true`). Its source is **inlined into the published
+> designer-tiptap dist** at build time — there is no runtime peer
+> dependency. If you fork the project and want the host as a true peer,
+> flip its `package.json` to `"private": false` and adjust the tsup
+> `external` list.
 
 ## Yjs collaboration
 
