@@ -91,4 +91,25 @@ describe('customEditor: 기본 계약', () => {
     expect(typeof editor?.destroy).toBe('function');
     document.body.removeChild(container);
   });
+
+  it('initCustomEditor 결과는 outline 슬롯을 노출한다', async () => {
+    document.body.innerHTML = `
+      <div id="app">
+        <div id="left-rail" class="left-rail" data-active-panel="components">
+          <div id="left-rail-tabs"></div>
+          <div class="left-rail__panels">
+            <div id="left-rail-panel-components" class="left-rail__panel" data-panel="components"></div>
+            <div id="left-rail-panel-outline" class="left-rail__panel" data-panel="outline" data-outline-container></div>
+          </div>
+        </div>
+        <div id="editor-host" class="editor-container"></div>
+      </div>
+    `;
+    const editorHost = document.getElementById('editor-host')!;
+    const { initCustomEditor } = await import('../../src/editor/customEditor');
+    const editor = await initCustomEditor(editorHost, { type: 'default', components: [] });
+    expect(editor).toBeDefined();
+    expect(document.querySelector('.left-rail__panel[data-panel="outline"]')).toBeTruthy();
+    editor.destroy();
+  });
 });

@@ -29,6 +29,9 @@ import { ContextPadExtrasModule } from './contextPadExtras';
 import { PropsPanelModule } from './propsPanel/PropsPanelService';
 // 선택된 대상 컴포넌트 하단에 height resize 핸들을 띄우는 Preact 오버레이.
 import { ComponentResizeOverlay } from './resize/ComponentResizeOverlay';
+import { OutlineModule } from '@form-js-designer/designer-editor-host/modules/outline';
+import { LeftRailTabs, type LeftRailTab } from './leftRail/LeftRailTabs';
+import { relocatePalette } from './leftRail/relocatePalette';
 import type { EditOpenedMessage, SaveSchemaMessage } from '../shared/messages';
 
 // TSK-04-02: axe-core 스캔 테스트 모드 플래그 (esbuild define)
@@ -62,6 +65,7 @@ const EDITOR_MODULES = [
   ContextPadExtrasModule,
   PropsPanelModule,
   LayoutHeightModule,
+  OutlineModule,
 ];
 
 const RESIZE_OVERLAY_ROOT_ID = 'component-resize-overlay-root';
@@ -124,9 +128,9 @@ interface FormEventBus {
  * Custom properties 그룹을 form-js 기본 properties panel에 추가한다.
  */
 export async function mountEditor(schema: unknown): Promise<void> {
-  const container = document.getElementById('app');
-  if (!container) {
-    console.error('[form-js editor] #app 컨테이너를 찾을 수 없습니다.');
+  const editorHost = document.getElementById('editor-host');
+  if (!editorHost) {
+    console.error('[form-js editor] #editor-host 컨테이너를 찾을 수 없습니다.');
     return;
   }
 
@@ -159,14 +163,56 @@ export async function mountEditor(schema: unknown): Promise<void> {
 
   try {
     editorInstance = (await createFormEditor({
-      container,
+      container: editorHost,
       schema,
       additionalModules: EDITOR_MODULES,
     })) as FormEditorInstance;
   } catch (err) {
     console.error('[form-js editor] createFormEditor 실패:', err);
-    container.textContent = `편집기 초기화 실패: ${err instanceof Error ? err.message : String(err)}`;
+    editorHost.textContent = `편집기 초기화 실패: ${err instanceof Error ? err.message : String(err)}`;
     return;
+  }
+
+  // outline mount — left-rail outline slot
+  const outlineSlot = document.querySelector(
+    '#left-rail-panel-outline'
+  ) as HTMLElement | null;
+  if (outlineSlot && typeof editorInstance.get === 'function') {
+    try {
+      const outlinePanel = editorInstance.get('outlinePanel', false) as
+        | { mount?: (el: HTMLElement) => void }
+        | undefined;
+      outlinePanel?.mount?.(outlineSlot);
+    } catch {
+      /* outline 서비스 없으면 무시 */
+    }
+  }
+
+  // 팔레트 reparent — form-js editor 팔레트를 components 슬롯으로 이동
+  const paletteSlot = document.querySelector(
+    '#left-rail-panel-components'
+  ) as HTMLElement | null;
+  if (paletteSlot) relocatePalette(editorHost, paletteSlot);
+
+  // left-rail 탭 wiring (Preact mount)
+  const tabsRoot = document.getElementById('left-rail-tabs');
+  const rail = document.getElementById('left-rail');
+  if (tabsRoot && rail) {
+    let tab: LeftRailTab = (rail.getAttribute('data-active-panel') as LeftRailTab) ?? 'components';
+    const renderTabs = (): void => {
+      render(
+        h(LeftRailTabs, {
+          activeTab: tab,
+          onTabChange: (next: LeftRailTab) => {
+            tab = next;
+            rail.setAttribute('data-active-panel', next);
+            renderTabs();
+          },
+        }),
+        tabsRoot,
+      );
+    };
+    renderTabs();
   }
 
   // 컴포넌트 height resize 핸들 — body 직속 root에 Preact render. position:fixed 라
