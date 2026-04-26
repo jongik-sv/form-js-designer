@@ -48,6 +48,9 @@ import StarterKit from '@tiptap/starter-kit';
 import { FormJsBlock as RawFormJsBlock } from '@form-js-designer/designer-tiptap';
 import { withDesigner } from '@form-js-designer/designer-tiptap/editor';
 import '@form-js-designer/designer-tiptap/styles';
+// v0.2 추가 — 임베디드 디자이너 모달 + form-js editor 레이아웃 CSS.
+// ./styles는 viewer 전용이므로 editor 사용자는 이 줄을 추가로 import.
+import '@form-js-designer/designer-tiptap/editor.css';
 
 const FormJsBlock = withDesigner(RawFormJsBlock);
 

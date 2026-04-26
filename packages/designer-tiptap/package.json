@@ -9,6 +9,7 @@
   "exports": {
     ".": { "import": "./dist/viewer.js", "types": "./dist/viewer.d.ts" },
     "./editor": { "import": "./dist/editor.js", "types": "./dist/editor.d.ts" },
+    "./editor.css": "./dist/editor.css",
     "./styles": "./dist/designer-tiptap.css"
   },
   "files": ["dist", "README.md", "LICENSE", "CHANGELOG.md"],
