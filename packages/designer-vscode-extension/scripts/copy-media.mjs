@@ -39,6 +39,14 @@ const viewerAssetCandidates = (file) => [
   path.join(pkgRoot, `../../node_modules/@bpmn-io/form-js-editor/dist/assets/${file}`),
 ];
 
+/**
+ * monorepo 내부 designer-components 패키지의 공유 CSS.
+ * pnpm/npm workspace 환경에서는 packages/designer-components 가 직접 존재.
+ */
+const designerComponentsCandidates = (file) => [
+  path.join(pkgRoot, `../designer-components/src/${file}`),
+];
+
 /** @type {{ css: string; candidates: string[] }[]} */
 const fileCandidates = [
   { css: 'form-js.css', candidates: viewerAssetCandidates('form-js.css') },
@@ -47,6 +55,7 @@ const fileCandidates = [
   { css: 'form-js-editor-base.css', candidates: editorAssetCandidates('form-js-editor-base.css') },
   { css: 'properties-panel.css', candidates: editorAssetCandidates('properties-panel.css') },
   { css: 'draggle.css', candidates: editorAssetCandidates('draggle.css') },
+  { css: 'canvas-spacing.css', candidates: designerComponentsCandidates('canvas-spacing.css') },
 ];
 
 let allFound = true;

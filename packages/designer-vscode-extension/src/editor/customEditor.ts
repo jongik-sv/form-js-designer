@@ -23,8 +23,6 @@ import { DesignerContainerModule } from '@form-js-designer/designer-core';
 // 대상 타입(textarea/html/table/group/card/modal/tabs/tabPanel/iframe/image/text)에
 // layout.height inline style을 자동 주입하는 form-js 모듈 (TSK-12-02 포팅).
 import { LayoutHeightModule } from '@form-js-designer/designer-runtime/modules';
-// context-pad에 "행으로 복사 / 세로로 복사" 버튼 주입 (웹 호스트의 OutlineModule 경량 포팅)
-import { ContextPadExtrasModule } from './contextPadExtras';
 // form-js 기본 properties panel에 "Custom properties" 그룹을 추가하는 provider
 import { PropsPanelModule } from './propsPanel/PropsPanelService';
 // 선택된 대상 컴포넌트 하단에 height resize 핸들을 띄우는 Preact 오버레이.
@@ -32,6 +30,7 @@ import { ComponentResizeOverlay } from './resize/ComponentResizeOverlay';
 import { OutlineModule } from '@form-js-designer/designer-editor-host/modules/outline';
 import { LeftRailTabs, type LeftRailTab } from './leftRail/LeftRailTabs';
 import { relocatePalette } from './leftRail/relocatePalette';
+import { mountPanelResize, reattachRightHandle } from './leftRail/PanelResizeModule';
 import type { EditOpenedMessage, SaveSchemaMessage } from '../shared/messages';
 
 // TSK-04-02: axe-core 스캔 테스트 모드 플래그 (esbuild define)
@@ -62,7 +61,6 @@ export interface FormEditorInstance {
 const EDITOR_MODULES = [
   DesignerContainerModule,
   customComponentsModule,
-  ContextPadExtrasModule,
   PropsPanelModule,
   LayoutHeightModule,
   OutlineModule,
@@ -116,6 +114,9 @@ let unsubscribeChange: (() => void) | null = null;
 
 /** form-js 편집 이벤트 → 자동 sync 간격 (ms) */
 const SYNC_DEBOUNCE_MS = 250;
+
+/** 좌측 rail 핸들이 한 번 부착되면 true — 재마운트 시 우측 핸들만 reattach. */
+let panelResizeMounted = false;
 
 interface FormEventBus {
   on(event: string, handler: (...args: unknown[]) => void): void;
@@ -219,6 +220,15 @@ export async function mountEditor(schema: unknown): Promise<void> {
   // 좌표는 viewport 기준이며 #app 레이아웃과 무관.
   const overlayRoot = ensureResizeOverlayRoot();
   render(h(ComponentResizeOverlay, { editor: editorInstance as unknown as { get: (svc: string, required?: boolean) => unknown } }), overlayRoot);
+
+  // 좌측 rail / 우측 properties 패널 가장자리에 split-handle 삽입 (drag로 폭 조절).
+  // editor 재마운트 시 properties 컨테이너가 새로 생성되므로 reattach.
+  if (panelResizeMounted) {
+    reattachRightHandle(vscodeApi);
+  } else {
+    mountPanelResize(vscodeApi);
+    panelResizeMounted = true;
+  }
 
   // 초기 스키마 JSON 기록 (동일 내용 재전송 방지용 기준점)
   lastSyncedSchemaJson = serializeCurrentSchema();

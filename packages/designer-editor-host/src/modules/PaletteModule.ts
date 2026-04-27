@@ -20,7 +20,7 @@ const GROUP_LABELS: Record<string, string> = {
 class PaletteGroupLabels {
   groupLabels: Record<string, string>;
 
-  static inject = ['formFields'];
+  static $inject = ['formFields'];
 
   constructor(formFields: { getAll?: () => Array<{ config?: { group?: string } }> }) {
     this.groupLabels = { ...GROUP_LABELS };

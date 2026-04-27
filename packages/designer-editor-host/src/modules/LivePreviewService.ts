@@ -41,7 +41,7 @@ interface FormEditorLike {
 const CHANGE_EVENTS = ['commandStack.changed', 'elements.changed'];
 
 export class LivePreviewService {
-  static inject = ['eventBus', 'formEditor'];
+  static $inject = ['eventBus', 'formEditor'];
 
   private readonly eventBus: EventBusLike;
   private readonly formEditor: FormEditorLike;

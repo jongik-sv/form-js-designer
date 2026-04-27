@@ -39,18 +39,19 @@ export function collectKeys(field: FieldSchema, set: Set<string> = new Set()): S
 }
 
 /**
- * `baseKey`와 충돌하지 않는 key를 생성한다.
- * 패턴: `baseKey`가 비어있으면 그대로, 충돌 시 `baseKey_copy`, `baseKey_copy_2`, ...
+ * form-js 새 필드 발급 형식의 신규 key를 생성한다.
+ * 형식: `${prefix}_${6-char-hex}` (예: `textfield_a3b9f2`)
+ * 반복 복제 시 `_copy`가 누적되어 길어지는 문제를 막기 위해 매번 새 key를 발급한다.
+ * 충돌 시 재시도(현실적으로 발생하지 않음).
  * 반환값은 caller가 existingKeys에 추가할 책임(재귀 호출 간 상호 충돌 방지).
  */
-export function generateUniqueKey(baseKey: string, existingKeys: Set<string>): string {
-  if (!existingKeys.has(baseKey)) return baseKey;
-  let candidate = `${baseKey}_copy`;
-  let i = 1;
-  while (existingKeys.has(candidate)) {
-    i += 1;
-    candidate = `${baseKey}_copy_${i}`;
-  }
+export function generateFreshKey(prefix: string, existingKeys: Set<string>): string {
+  const safePrefix = prefix && prefix.length > 0 ? prefix : 'field';
+  let candidate: string;
+  do {
+    const rand = crypto.randomUUID().replace(/-/g, '').slice(0, 6);
+    candidate = `${safePrefix}_${rand}`;
+  } while (existingKeys.has(candidate));
   return candidate;
 }
 
@@ -81,8 +82,10 @@ export function deepCloneWithNewIds(
   cloned.id = generateId(prefix);
 
   // key 재할당 (existingKeys 제공 + 원본에 key가 있을 때만)
+  // duplicate/paste 시 항상 신규 발급하여 `_copy_copy_2_copy_2…` 누적을 방지한다.
+  // 사용자가 의미 있는 key를 명명한 경우라도 label은 그대로 유지되므로 식별에는 영향 없음.
   if (existingKeys && typeof field.key === 'string') {
-    const uniqueKey = generateUniqueKey(field.key, existingKeys);
+    const uniqueKey = generateFreshKey(prefix, existingKeys);
     cloned.key = uniqueKey;
     existingKeys.add(uniqueKey);
   }

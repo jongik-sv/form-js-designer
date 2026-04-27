@@ -817,3 +817,7 @@
     outline: none;
   }
 }
+
+/* NOTE: 캔버스 컴포넌트 spacing override 는
+ * `@form-js-designer/designer-components/canvas-spacing.css` (단일 source of truth)
+ * 로 분리되었다. App.tsx / embeddedDesigner.tsx 에서 이 파일 다음 순서로 import. */

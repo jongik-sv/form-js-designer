@@ -11,7 +11,7 @@ export const tabPanelPropsSchema: PropsSchema = {
   properties: {
     label: {
       type: 'string',
-      label: 'designer.components.tabPanel.label',
+      label: '탭 이름',
     },
   },
 };

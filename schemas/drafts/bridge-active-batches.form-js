@@ -1,107 +1,271 @@
 {
-  "schemaVersion": 19,
-  "type": "default",
   "components": [
     {
       "type": "card",
-      "id": "card-1",
       "padding": "md",
       "elevation": 1,
+      "components": [
+        {
+          "text": "Enterprise SCM",
+          "type": "text",
+          "id": "text-1",
+          "layout": {
+            "row": "Row_13hqd7l"
+          }
+        },
+        {
+          "type": "separator",
+          "id": "separator-1",
+          "layout": {
+            "row": "Row_025mou8"
+          }
+        },
+        {
+          "text": "**Batches**",
+          "type": "text",
+          "id": "text-2",
+          "layout": {
+            "row": "Row_0jem2vn"
+          }
+        },
+        {
+          "text": "Active",
+          "type": "text",
+          "id": "text-3",
+          "layout": {
+            "row": "Row_1i5nf0o"
+          }
+        },
+        {
+          "text": "Sold",
+          "type": "text",
+          "id": "text-4",
+          "layout": {
+            "row": "Row_0w99jaf"
+          }
+        },
+        {
+          "text": "Distributors",
+          "type": "text",
+          "id": "text-5",
+          "layout": {
+            "row": "Row_0vg84dk"
+          }
+        },
+        {
+          "text": "Documentation",
+          "type": "text",
+          "id": "text-6",
+          "layout": {
+            "row": "Row_186e617"
+          }
+        },
+        {
+          "height": 320,
+          "type": "spacer",
+          "id": "spacer-1",
+          "layout": {
+            "row": "Row_00q6czg"
+          }
+        },
+        {
+          "type": "separator",
+          "id": "separator-2",
+          "layout": {
+            "row": "Row_1gau0ku"
+          }
+        },
+        {
+          "text": "0xf39fd...82286",
+          "type": "text",
+          "id": "text-7",
+          "layout": {
+            "row": "Row_1qv1oaf"
+          }
+        },
+        {
+          "text": "Producer",
+          "type": "text",
+          "id": "text-8",
+          "layout": {
+            "row": "Row_0q13b6p"
+          }
+        }
+      ],
+      "id": "card-1",
       "header": "Bridge",
       "headerTag": "h2",
-      "layout": { "row": "row-1", "columns": 4, "height": 800 },
-      "components": [
-        { "type": "text", "id": "text-1", "text": "Enterprise SCM" },
-        { "type": "separator", "id": "separator-1" },
-        { "type": "text", "id": "text-2", "text": "**Batches**" },
-        { "type": "text", "id": "text-3", "text": "Active" },
-        { "type": "text", "id": "text-4", "text": "Sold" },
-        { "type": "text", "id": "text-5", "text": "Distributors" },
-        { "type": "text", "id": "text-6", "text": "Documentation" },
-        { "type": "spacer", "id": "spacer-1", "height": 320 },
-        { "type": "separator", "id": "separator-2" },
-        { "type": "text", "id": "text-7", "text": "0xf39fd...82286" },
-        { "type": "text", "id": "text-8", "text": "Producer" }
-      ]
+      "layout": {
+        "row": "Row_04q7j1e",
+        "columns": 4,
+        "height": 800
+      }
     },
     {
-      "type": "card",
-      "id": "card-2",
-      "padding": "md",
-      "elevation": 1,
-      "header": "",
-      "headerTag": "h3",
-      "layout": { "row": "row-1", "columns": 12, "height": 800 },
+      "type": "tabs",
       "components": [
         {
-          "type": "text",
-          "id": "text-9",
-          "text": "## Active Batches (13)",
-          "layout": { "row": "row-1", "columns": 10 }
-        },
-        {
-          "type": "button",
-          "id": "button-1",
-          "label": "+ Produce New Batch",
-          "action": "submit",
-          "layout": { "row": "row-1", "columns": 6 }
-        },
-        {
-          "type": "textfield",
-          "id": "textfield-1",
-          "key": "filters.search",
-          "label": "Search",
-          "description": "Search by name, ID, etc.",
-          "layout": { "row": "row-2", "columns": 12 }
-        },
-        {
-          "type": "select",
-          "id": "select-1",
-          "key": "filters.status",
-          "label": "Status",
-          "values": [
-            { "label": "All statuses", "value": "all" },
-            { "label": "Produced", "value": "produced" },
-            { "label": "Picked up", "value": "pickedUp" },
-            { "label": "Ready for pickup", "value": "ready" }
+          "id": "tabPanel_4a5c503e-69af-4ae1-a42b-a52fbc39b43a",
+          "type": "tabPanel",
+          "label": "page1",
+          "components": [
+            {
+              "type": "card",
+              "padding": "md",
+              "elevation": 1,
+              "components": [
+                {
+                  "text": "## Active Batches (13)",
+                  "type": "text",
+                  "id": "text-9",
+                  "layout": {
+                    "row": "row-1",
+                    "columns": 10
+                  }
+                },
+                {
+                  "label": "+ Produce New Batch",
+                  "action": "submit",
+                  "type": "button",
+                  "id": "button-1",
+                  "layout": {
+                    "row": "row-1",
+                    "columns": 6
+                  }
+                },
+                {
+                  "label": "Search",
+                  "type": "textfield",
+                  "id": "textfield-1",
+                  "key": "filters.search",
+                  "description": "Search by name, ID, etc.",
+                  "layout": {
+                    "row": "row-2",
+                    "columns": 12
+                  }
+                },
+                {
+                  "label": "Status",
+                  "values": [
+                    {
+                      "label": "All statuses",
+                      "value": "all"
+                    },
+                    {
+                      "label": "Produced",
+                      "value": "Produced"
+                    },
+                    {
+                      "label": "Ready for pickup",
+                      "value": "Ready for pickup"
+                    },
+                    {
+                      "label": "Picked up",
+                      "value": "Picked up"
+                    }
+                  ],
+                  "type": "select",
+                  "id": "select-1",
+                  "key": "filters.status",
+                  "layout": {
+                    "row": "row-2",
+                    "columns": 4
+                  }
+                },
+                {
+                  "type": "table",
+                  "label": "Batches",
+                  "dataSource": "= [{name:\"Emerald Green Tea Leaves\",productId:\"#134239GGUW\",price:\"$44.10\",status:\"Produced\"}, {name:\"Dragon Fruit Powder\",productId:\"#4467KCCHY8Z\",price:\"$112.30\",status:\"Produced\"}, {name:\"Cold-Pressed Virgin Maruia Oil\",productId:\"#7813HGBWMM\",price:\"$124.00\",status:\"Ready for pickup\"}, {name:\"Organic Madagascar Vanilla Beans\",productId:\"#647K1ZWCCQ\",price:\"$165.00\",status:\"Produced\"}, {name:\"Artisanal Smoked Paprika\",productId:\"#91987YEDB\",price:\"$38.50\",status:\"Ready for pickup\"}, {name:\"Toasted Sesame Oil\",productId:\"#1398BFGROUT\",price:\"$89.95\",status:\"Ready for pickup\"}, {name:\"Biodegradable Bamboo Fiber\",productId:\"#284K1KH7CEE\",price:\"$62.40\",status:\"Produced\"}, {name:\"Cold-Pressed Chia Seed Oil\",productId:\"#5372D1LYKLH\",price:\"$198.00\",status:\"Picked up\"}, {name:\"Himalayan Pink Salt\",productId:\"#10804FT9MJJ\",price:\"$88.40\",status:\"Produced\"}, {name:\"Fermented Pea Protein\",productId:\"#37950CCCSF28\",price:\"$74.20\",status:\"Produced\"}]",
+                  "layout": {
+                    "row": "row-3",
+                    "columns": 16,
+                    "height": 520
+                  },
+                  "rowCount": 10,
+                  "id": "table-1",
+                  "columns": [
+                    {
+                      "label": "Name",
+                      "key": "name"
+                    },
+                    {
+                      "label": "Product ID",
+                      "key": "productId"
+                    },
+                    {
+                      "label": "Price",
+                      "key": "price"
+                    },
+                    {
+                      "label": "Status",
+                      "key": "status"
+                    }
+                  ]
+                },
+                {
+                  "text": "0 of 10 row(s) selected.",
+                  "type": "text",
+                  "id": "text-10",
+                  "layout": {
+                    "row": "row-4",
+                    "columns": 8
+                  }
+                },
+                {
+                  "label": "Previous",
+                  "action": "reset",
+                  "type": "button",
+                  "id": "button-2",
+                  "layout": {
+                    "row": "row-4",
+                    "columns": 4
+                  }
+                },
+                {
+                  "label": "Next",
+                  "action": "submit",
+                  "type": "button",
+                  "id": "button-3",
+                  "layout": {
+                    "row": "row-4",
+                    "columns": 4
+                  }
+                }
+              ],
+              "id": "card-2",
+              "header": "",
+              "headerTag": "h3",
+              "layout": {
+                "row": "Row_01axf6f",
+                "columns": 16,
+                "height": 800
+              }
+            }
           ],
-          "layout": { "row": "row-2", "columns": 4 }
+          "layout": {
+            "row": "Row_1d1npk2"
+          }
         },
         {
-          "type": "table",
-          "id": "table-1",
-          "label": "Batches",
-          "rowCount": 10,
-          "columns": [
-            { "label": "Name", "key": "name" },
-            { "label": "Product ID", "key": "productId" },
-            { "label": "Price", "key": "price" },
-            { "label": "Status", "key": "status" }
-          ],
-          "dataSource": "= [{name:\"Emerald Green Tea Leaves\",productId:\"#134239GGUW\",price:\"$44.10\",status:\"Produced\"}, {name:\"Dragon Fruit Powder\",productId:\"#4467KCCHY8Z\",price:\"$112.30\",status:\"Produced\"}, {name:\"Cold-Pressed Virgin Maruia Oil\",productId:\"#7813HGBWMM\",price:\"$124.00\",status:\"Ready for pickup\"}, {name:\"Organic Madagascar Vanilla Beans\",productId:\"#647K1ZWCCQ\",price:\"$165.00\",status:\"Produced\"}, {name:\"Artisanal Smoked Paprika\",productId:\"#91987YEDB\",price:\"$38.50\",status:\"Ready for pickup\"}, {name:\"Toasted Sesame Oil\",productId:\"#1398BFGROUT\",price:\"$89.95\",status:\"Ready for pickup\"}, {name:\"Biodegradable Bamboo Fiber\",productId:\"#284K1KH7CEE\",price:\"$62.40\",status:\"Produced\"}, {name:\"Cold-Pressed Chia Seed Oil\",productId:\"#5372D1LYKLH\",price:\"$198.00\",status:\"Picked up\"}, {name:\"Himalayan Pink Salt\",productId:\"#10804FT9MJJ\",price:\"$88.40\",status:\"Produced\"}, {name:\"Fermented Pea Protein\",productId:\"#37950CCCSF28\",price:\"$74.20\",status:\"Produced\"}]",
-          "layout": { "row": "row-3", "columns": 16, "height": 520 }
-        },
-        {
-          "type": "text",
-          "id": "text-10",
-          "text": "0 of 10 row(s) selected.",
-          "layout": { "row": "row-4", "columns": 8 }
-        },
-        {
-          "type": "button",
-          "id": "button-2",
-          "label": "Previous",
-          "action": "reset",
-          "layout": { "row": "row-4", "columns": 4 }
-        },
-        {
-          "type": "button",
-          "id": "button-3",
-          "label": "Next",
-          "action": "submit",
-          "layout": { "row": "row-4", "columns": 4 }
+          "id": "tabPanel_d812882d-0288-4b07-85cd-7a6d125f91bb",
+          "type": "tabPanel",
+          "label": "Tab 2",
+          "components": [],
+          "layout": {
+            "row": "Row_15av905"
+          }
         }
-      ]
+      ],
+      "defaultValue": "tabPanel_4a5c503e-69af-4ae1-a42b-a52fbc39b43a",
+      "orientation": "horizontal",
+      "layout": {
+        "row": "Row_04q7j1e",
+        "columns": null
+      },
+      "id": "Field_12wi1uc"
     }
-  ]
+  ],
+  "schemaVersion": 19,
+  "type": "default",
+  "id": "Form_12c94dw"
 }

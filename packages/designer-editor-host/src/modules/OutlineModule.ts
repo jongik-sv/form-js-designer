@@ -107,10 +107,12 @@ class OutlinePanelService {
   private _boundOnChanged: () => void;
   private _boundOnSelectionChanged: (event: unknown) => void;
   private _boundOnCanvasClickCapture: (e: MouseEvent) => void;
+  private _boundOnDocKeyDown: (e: KeyboardEvent) => void;
+  private _boundOnDocContextMenu: (e: MouseEvent) => void;
   /** form-js context-pad(삭제 버튼 영역) 감시 — 복제 버튼 주입용 */
   private _contextPadObserver: MutationObserver | null = null;
 
-  static inject = ['eventBus', 'formEditor', 'formFieldRegistry', 'selection', 'modeling', 'formLayouter', 'commandStack'];
+  static $inject = ['eventBus', 'formEditor', 'formFieldRegistry', 'selection', 'modeling', 'formLayouter', 'commandStack'];
 
   constructor(
     eventBus: FormJsEventBus,
@@ -169,6 +171,8 @@ class OutlinePanelService {
     this._boundOnChanged = () => this._onChanged();
     this._boundOnSelectionChanged = (event: unknown) => this._onSelectionChanged(event);
     this._boundOnCanvasClickCapture = (e: MouseEvent) => this._onCanvasClickCapture(e);
+    this._boundOnDocKeyDown = (e: KeyboardEvent) => this._onDocKeyDown(e);
+    this._boundOnDocContextMenu = (e: MouseEvent) => this._onDocContextMenu(e);
 
     eventBus.on('import.done', this._boundOnImportDone);
     eventBus.on('commandStack.changed', this._boundOnChanged);
@@ -176,6 +180,13 @@ class OutlinePanelService {
 
     if (typeof document !== 'undefined') {
       document.addEventListener('click', this._boundOnCanvasClickCapture, true);
+      // 캔버스에 포커스가 있을 때도 Cmd/Ctrl+C/V가 동작하도록 document 레벨에서 청취.
+      // OutlinePanel의 onKeyDown이 stopPropagation하므로 트리 포커스 시에는 중복 발화하지 않는다.
+      document.addEventListener('keydown', this._boundOnDocKeyDown, false);
+      // 캔버스(.fjs-editor-container) 위에서는 브라우저 기본 우클릭 메뉴가 동작하지 않게 차단.
+      // 캔버스의 form 필드는 design-mode라 cut/copy/paste 항목이 모두 no-op이라 사용자 혼란만 유발.
+      // props/outline/palette 등은 .fjs-editor-container 외부이므로 그대로 네이티브 메뉴 유지.
+      document.addEventListener('contextmenu', this._boundOnDocContextMenu, false);
     }
 
     this._startContextPadObserver();
@@ -364,6 +375,50 @@ class OutlinePanelService {
     } else {
       // ctrl/meta: additive 토글
       this._handleSelect(id, { additive: true });
+    }
+  }
+
+  /**
+   * document 레벨 Cmd/Ctrl+C/V 핸들러.
+   * OutlinePanel은 자체 onKeyDown으로 처리하지만, 캔버스(.fjs-editor-container)에
+   * 포커스가 있을 때는 panel 핸들러가 발화하지 않으므로 document 레벨에서 청취한다.
+   * - INPUT/TEXTAREA/SELECT/contentEditable에서는 네이티브 텍스트 copy/paste를 우선
+   * - OutlinePanel 내부 이벤트는 stopPropagation으로 이미 차단되어 여기까지 오지 않음
+   */
+  private _onDocKeyDown(e: KeyboardEvent) {
+    const isMeta = e.metaKey || e.ctrlKey;
+    if (!isMeta) return;
+    if (e.key !== 'c' && e.key !== 'C' && e.key !== 'v' && e.key !== 'V') return;
+
+    const target = e.target as HTMLElement | null;
+    if (target) {
+      const tag = target.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || target.isContentEditable) {
+        return;
+      }
+    }
+
+    if (e.key === 'c' || e.key === 'C') {
+      if (this._selectedIds.length === 0) return;
+      e.preventDefault();
+      this._handleCopy(this._selectedIds[0]!);
+    } else {
+      e.preventDefault();
+      this._handlePaste();
+    }
+  }
+
+  /**
+   * 캔버스 위에서 브라우저 기본 우클릭 메뉴 억제.
+   * .fjs-editor-container 내부 타겟에 한정 — props/outline/palette는 영향 없음.
+   * 캔버스의 form 필드 input은 design-mode이므로 네이티브 cut/copy/paste 항목은
+   * 모두 no-op이라 메뉴 자체를 숨겨 사용자 혼란을 차단한다.
+   */
+  private _onDocContextMenu(e: MouseEvent) {
+    const target = e.target as HTMLElement | null;
+    if (!target?.closest) return;
+    if (target.closest('.fjs-editor-container')) {
+      e.preventDefault();
     }
   }
 
@@ -993,6 +1048,8 @@ class OutlinePanelService {
 
     if (typeof document !== 'undefined') {
       document.removeEventListener('click', this._boundOnCanvasClickCapture, true);
+      document.removeEventListener('keydown', this._boundOnDocKeyDown, false);
+      document.removeEventListener('contextmenu', this._boundOnDocContextMenu, false);
     }
 
     if (this._contextPadObserver) {

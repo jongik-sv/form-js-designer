@@ -38,7 +38,7 @@ interface EventBusLike {
 }
 
 class MarqueeService {
-  static inject = ['eventBus', 'formFieldRegistry', 'outlinePanel'];
+  static $inject = ['eventBus', 'formFieldRegistry', 'outlinePanel'];
 
   private _eventBus: EventBusLike;
   private _formFieldRegistry: FormFieldRegistryLike;

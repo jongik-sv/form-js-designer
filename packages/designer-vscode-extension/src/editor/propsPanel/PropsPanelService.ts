@@ -11,12 +11,20 @@
  *
  * priority 500: form-js 기본 provider(1000)보다 낮아서 reduce에서 후순위로 실행 →
  * Custom properties 그룹이 General/Condition/Layout 등 뒤에 추가된다.
+ *
+ * IMPORTANT — entry component reference 안정화:
+ * bio-properties-panel은 schema 변경마다 모든 provider의 getGroups를 재호출하고
+ * 결과 entries 를 `createElement(entry.component, { ...entry, element, key: id })` 로
+ * 렌더한다. 매 호출마다 새 component 함수를 만들면 Preact 가 type 변화로 보고
+ * input 을 unmount/remount → 사용자 타이핑 중 포커스 손실. 따라서 component 는
+ * 모듈 레벨에서 한 번만 정의하고, 엔트리별 동적 데이터(widget, key, editField …)
+ * 는 entry 객체의 추가 필드(__widget, __entryKey …)로 실어 props 로 전달한다.
  */
 
 import { h } from 'preact';
 import type { ComponentType, JSX } from 'preact';
 import { propsSchemaToPanel, createDefaultRegistry } from '@form-js-designer/designer-core';
-import type { PanelEntry, PanelWidgetRegistry } from '@form-js-designer/designer-core';
+import type { PanelEntry, PanelWidget, PanelWidgetRegistry } from '@form-js-designer/designer-core';
 import { LAYOUT_HEIGHT_TARGET_TYPES } from '@form-js-designer/designer-runtime/modules';
 
 interface PropertiesPanelLike {
@@ -55,6 +63,74 @@ interface BioEntry {
 }
 
 const DESIGNER_PROVIDER_PRIORITY = 500;
+
+const identityT = (k: string): string => k;
+
+/**
+ * 모듈 레벨 stable widget entry component.
+ * bio-properties-panel 이 `{...entry, element}` 를 props 로 spread 해 주므로
+ * 엔트리 데이터는 props 로 받는다.
+ */
+interface WidgetEntryProps extends Record<string, unknown> {
+  element: Record<string, unknown>;
+  __widget: PanelWidget;
+  __entryKey: string;
+  __defaultValue: unknown;
+  __meta?: import('@form-js-designer/designer-core').WidgetMeta;
+  __label?: string;
+  __editField: EditField;
+}
+
+const WidgetEntryComponent: ComponentType<WidgetEntryProps> = (props) => {
+  const { element: field, __widget: widget, __entryKey: key, __defaultValue: dflt, __meta: meta, __label: label, __editField: editField } = props as WidgetEntryProps;
+  const nested = splitPath(key);
+  const readValue = (): unknown => (nested ? getByPath(field, key) : field[key]);
+  const onChange = (value: unknown): void => {
+    if (nested) {
+      const parent = (field[nested.rootKey] ?? {}) as Record<string, unknown>;
+      editField(field, nested.rootKey, { ...parent, [nested.nestedKey]: value });
+    } else {
+      editField(field, key, value);
+    }
+  };
+  const current = readValue() ?? dflt;
+  return widget.edit(
+    current,
+    onChange,
+    { t: identityT, domId: `designer-props-${key}`, label, disabled: false },
+    meta,
+  ) as JSX.Element;
+};
+
+/**
+ * 모듈 레벨 stable layout.height 입력 컴포넌트.
+ */
+interface LayoutHeightProps extends Record<string, unknown> {
+  element: Record<string, unknown>;
+  __editField: EditField;
+}
+
+const LayoutHeightComponent: ComponentType<LayoutHeightProps> = (props) => {
+  const { element: field, __editField: editField } = props as LayoutHeightProps;
+  const getLayout = (): Record<string, unknown> =>
+    (field['layout'] ?? {}) as Record<string, unknown>;
+  const toNum = (v: unknown): number | undefined =>
+    v === '' || v === null || v === undefined ? undefined : Number(v);
+  const setHeight = (v: unknown): void => {
+    editField(field, 'layout', { ...getLayout(), height: toNum(v) });
+  };
+  const current = (getLayout()['height'] ?? '') as number | string;
+  return h('input', {
+    type: 'number',
+    'data-testid': 'props-entry-layout.height-input',
+    value: current,
+    min: 36,
+    max: 2000,
+    onInput: (e: Event) => setHeight((e.target as HTMLInputElement).value),
+    onChange: (e: Event) => setHeight((e.target as HTMLInputElement).value),
+    style: 'width:100%;box-sizing:border-box;',
+  }) as JSX.Element;
+};
 
 export class PropsPanelService {
   static $inject = ['propertiesPanel', 'injector'];
@@ -123,69 +199,38 @@ export class PropsPanelService {
   #buildLayoutGroup(field: Record<string, unknown>, editField: EditField): BioGroup {
     const getLayout = (): Record<string, unknown> =>
       (field['layout'] ?? {}) as Record<string, unknown>;
-    const toNum = (v: unknown): number | undefined =>
-      v === '' || v === null || v === undefined ? undefined : Number(v);
-    const setHeight = (v: unknown): void => {
-      editField(field, 'layout', { ...getLayout(), height: toNum(v) });
-    };
-
-    const HeightInput: ComponentType<Record<string, unknown>> = () => {
-      const current = (getLayout()['height'] ?? '') as number | string;
-      return h('input', {
-        type: 'number',
-        'data-testid': 'props-entry-layout.height-input',
-        value: current,
-        min: 36,
-        max: 2000,
-        onInput: (e: Event) => setHeight((e.target as HTMLInputElement).value),
-        onChange: (e: Event) => setHeight((e.target as HTMLInputElement).value),
-        style: 'width:100%;box-sizing:border-box;',
-      }) as JSX.Element;
-    };
-
     return {
       id: 'designer-layout',
       label: 'Layout',
       entries: [
         {
           id: 'designer-layout-height',
-          component: HeightInput,
+          component: LayoutHeightComponent as ComponentType<Record<string, unknown>>,
+          __editField: editField,
           isEdited: () => getLayout()['height'] != null,
         },
       ],
     };
   }
 
-  /** PanelEntry → bio entry 변환. component는 렌더 시점에 매번 widget.edit으로 JSX를 만든다. */
+  /**
+   * PanelEntry → bio entry 변환.
+   * component 는 모듈 레벨 stable WidgetEntryComponent 를 사용 (re-render 시 input DOM 보존).
+   * 엔트리별 데이터는 __ prefix props 로 전달.
+   */
   #buildEntry(entry: PanelEntry, field: Record<string, unknown>, editField: EditField): BioEntry {
     const { key, widget, defaultValue, meta, label } = entry;
     const nested = splitPath(key);
     const readValue = (): unknown => (nested ? getByPath(field, key) : field[key]);
-
-    const onChange = (value: unknown): void => {
-      if (nested) {
-        const parent = (field[nested.rootKey] ?? {}) as Record<string, unknown>;
-        editField(field, nested.rootKey, { ...parent, [nested.nestedKey]: value });
-      } else {
-        editField(field, key, value);
-      }
-    };
-
-    const identityT = (k: string): string => k;
-
-    const Component: ComponentType<Record<string, unknown>> = () => {
-      const current = readValue() ?? defaultValue;
-      return widget.edit(
-        current,
-        onChange,
-        { t: identityT, domId: `designer-props-${key}`, label, disabled: false },
-        meta,
-      ) as JSX.Element;
-    };
-
     return {
       id: `designer-props-${key}`,
-      component: Component,
+      component: WidgetEntryComponent as ComponentType<Record<string, unknown>>,
+      __widget: widget,
+      __entryKey: key,
+      __defaultValue: defaultValue,
+      __meta: meta,
+      __label: label,
+      __editField: editField,
       isEdited: () => readValue() !== defaultValue,
     };
   }

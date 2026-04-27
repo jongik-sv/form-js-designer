@@ -99,7 +99,8 @@ export class FormJsBlockEditorProvider {
     //   5. properties-panel.css    - 우측 properties panel
     //   6. draggle.css             - drag & drop 시각 효과
     //   7. customEditor.css        - 빌드된 webview 자체 스타일
-    //   8. form-js-editor-host.css - #app flex 레이아웃 override (마지막)
+    //   8. canvas-spacing.css      - 디자이너 캔버스 spacing override (designer-components 공유)
+    //   9. form-js-editor-host.css - #app flex 레이아웃 override (마지막)
     const mediaAsset = (name: string): string =>
       webviewPanel.webview.asWebviewUri(
         vscode.Uri.joinPath(this.extensionUri, 'media', name)
@@ -118,6 +119,7 @@ export class FormJsBlockEditorProvider {
       mediaAsset('properties-panel.css'),
       mediaAsset('draggle.css'),
       distAsset('customEditor.css'),
+      mediaAsset('canvas-spacing.css'),
       mediaAsset('form-js-editor-host.css'),
     ];
 

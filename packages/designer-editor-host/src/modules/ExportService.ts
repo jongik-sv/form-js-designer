@@ -18,7 +18,7 @@ interface ValidateServiceLike {
 }
 
 export class ExportService {
-  static inject = ['formEditor', 'validate'];
+  static $inject = ['formEditor', 'validate'];
 
   private readonly formEditor: FormEditorLike;
   private readonly validateService: ValidateServiceLike;

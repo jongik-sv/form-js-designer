@@ -78,7 +78,7 @@ function isEditableTarget(target: EventTarget | null): boolean {
 }
 
 class ShortcutService {
-  static inject = ['eventBus', 'selection', 'formFieldRegistry', 'modeling', 'outlinePanel', 'formEditor', 'commandStack'];
+  static $inject = ['eventBus', 'selection', 'formFieldRegistry', 'modeling', 'outlinePanel', 'formEditor', 'commandStack'];
 
   private readonly _onKeyDown: (e: KeyboardEvent) => void;
 

@@ -379,28 +379,7 @@ body[data-panel-resizing='true'] .panel-resize-handle {
   opacity: 0.5;
 }
 
-/* ── 컴포넌트 사이 여백 축소 ──────────────────────────── */
-
-/**
- * form-js-base.css / form-js-editor.css / form-js-editor-base.css의
- * 폼 항목 spacing을 약 절반으로 줄여 캔버스가 더 빽빽하게 보이도록 한다.
- * 베이스 CSS는 copy-media.mjs로 vendoring되므로 직접 수정하지 않고 여기서 override.
- * .fjs-editor-container 스코프로 한정 — 마크다운 미리보기(.fjs-container)는 영향 없음.
- */
-
-.fjs-editor-container .fjs-container .fjs-element {
-  margin: 0 2px 2px 2px;
-  padding: 1px 0;
-}
-
-.fjs-editor-container .fjs-container .fjs-element:first-of-type {
-  margin-top: 4px;
-}
-
-.fjs-editor-container .fjs-children .fjs-children {
-  margin: 2px 0;
-}
-
-.fjs-editor-container .fjs-form-field-grouplike .cds--grid {
-  padding: 0 1rem;
-}
+/* NOTE: 캔버스 컴포넌트 spacing override 는
+ * `media/canvas-spacing.css` (designer-components 에서 copy-media.mjs 로 복사)
+ * 가 cascade 직전 순서로 별도 link 된다. 본 파일은 #app/left-rail 등 webview
+ * 전용 layout 만 책임진다. */

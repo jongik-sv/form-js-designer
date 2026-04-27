@@ -51,7 +51,7 @@ const DESIGNER_PROVIDER_PRIORITY = 500;
 export class PropsPanelService {
   // `formFields` = 타입 레지스트리 (form-js의 register(type, component) 대상).
   // 이전에는 `formFieldRegistry` (인스턴스 레지스트리) 를 주입해 타입 조회가 항상 null 이었음.
-  static inject = ['eventBus', 'formFields', 'propertiesPanel', 'modeling'];
+  static $inject = ['eventBus', 'formFields', 'propertiesPanel', 'modeling'];
 
   private readonly eventBus: EventBusLike;
   private readonly formFields: RegistryLike;

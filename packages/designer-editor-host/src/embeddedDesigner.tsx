@@ -33,6 +33,8 @@ import '@bpmn-io/form-js-editor/dist/assets/form-js-editor.css';
 import '@bpmn-io/form-js-editor/dist/assets/properties-panel.css';
 import '@bpmn-io/form-js-editor/dist/assets/dragula.css';
 import './app.css';
+// 캔버스 spacing override — app.css 다음 순서여야 cascade 우선
+import '@form-js-designer/designer-components/canvas-spacing.css';
 
 export type FormSchema = { type: string; components: unknown[]; [k: string]: unknown };
 

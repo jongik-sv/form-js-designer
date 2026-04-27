@@ -22,7 +22,7 @@ interface EventBusLike {
 }
 
 export class ValidateService {
-  static inject = ['formEditor', 'formFieldRegistry', 'eventBus'];
+  static $inject = ['formEditor', 'formFieldRegistry', 'eventBus'];
 
   private readonly formEditor: FormEditorLike;
   private readonly registry: RegistryLike;

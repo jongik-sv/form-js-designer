@@ -77,8 +77,8 @@ describe('OutlineModule', () => {
 
   // ----- 2. DI inject 배열 (modeling, formLayouter, commandStack 포함) -----
   it('OutlinePanelService has inject: [eventBus, formEditor, formFieldRegistry, selection, modeling, formLayouter, commandStack]', () => {
-    const [, Constructor] = OutlineModule.outlinePanel as [string, { inject?: string[] }];
-    expect((Constructor as { inject?: string[] }).inject).toEqual([
+    const [, Constructor] = OutlineModule.outlinePanel as [string, { $inject?: string[] }];
+    expect((Constructor as { $inject?: string[] }).$inject).toEqual([
       'eventBus',
       'formEditor',
       'formFieldRegistry',
@@ -547,10 +547,11 @@ describe('OutlineModule', () => {
 
         expect(mockModeling.addFormField).toHaveBeenCalled();
         const [attrs] = mockModeling.addFormField.mock.calls[0]!;
-        expect((attrs as { key?: string }).key).toBe('first_copy');
+        expect((attrs as { key?: string }).key).toMatch(/^textfield_[0-9a-f]{6}$/);
+        expect((attrs as { key?: string }).key).not.toBe('first');
       });
 
-      it('_handlePaste renames to _copy_2 on second paste to the same schema', () => {
+      it('_handlePaste mints a fresh key on every paste (no chained _copy suffixes)', () => {
         // 1차 paste 후 'first_copy'도 스키마에 존재한다고 가정
         const rootField = { id: 'root', type: 'default', components: [] };
         const tfField = { id: 'tf-1', type: 'textfield', key: 'first', parent: rootField };
@@ -578,7 +579,9 @@ describe('OutlineModule', () => {
         instance._handlePaste();
 
         const [attrs] = mockModeling.addFormField.mock.calls[0]!;
-        expect((attrs as { key?: string }).key).toBe('first_copy_2');
+        const key = (attrs as { key?: string }).key;
+        expect(key).toMatch(/^textfield_[0-9a-f]{6}$/);
+        expect(key).not.toContain('_copy');
       });
     });
 

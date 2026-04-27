@@ -26,8 +26,8 @@ describe('PaletteModule', () => {
 
   // ----- 2. DI inject 배열 -----
   it('PaletteGroupLabels constructor has inject: [formFields]', () => {
-    const [, Constructor] = PaletteModule.paletteGroupLabels as [string, { inject?: string[] }];
-    expect((Constructor as { inject?: string[] }).inject).toEqual(['formFields']);
+    const [, Constructor] = PaletteModule.paletteGroupLabels as [string, { $inject?: string[] }];
+    expect((Constructor as { $inject?: string[] }).$inject).toEqual(['formFields']);
   });
 
   // ----- 3. mock DI 컨테이너로 서비스 초기화 -----

@@ -74,7 +74,7 @@
 - 행 hover 시 노출되는 "View" / "Enable Pickup" 인라인 액션 → `table`이 행별 액션 미지원
 - 컬럼 정렬 화살표, 행별 체크박스, 다중 선택 → 기본 `table` 미지원
 
-## 스키마 본체1
+## 스키마 본체
 
 ```form-js
 {
@@ -88,7 +88,7 @@
           "elevation": 1,
           "components": [
             {
-              "text": "Enterprise SCM",
+              "text": "Enterprise SCM??",
               "type": "text",
               "id": "text-1",
               "layout": {
@@ -224,15 +224,15 @@
                         },
                         {
                           "label": "Produced",
-                          "value": "produced"
-                        },
-                        {
-                          "label": "Picked up",
-                          "value": "pickedUp"
+                          "value": "Produced"
                         },
                         {
                           "label": "Ready for pickup",
-                          "value": "ready"
+                          "value": "Ready for pickup"
+                        },
+                        {
+                          "label": "Picked up",
+                          "value": "Picked up"
                         }
                       ],
                       "type": "select",
@@ -279,7 +279,7 @@
                       "id": "text-10",
                       "layout": {
                         "row": "row-4",
-                        "columns": 9
+                        "columns": 11
                       }
                     },
                     {
@@ -289,7 +289,7 @@
                       "id": "button-2",
                       "layout": {
                         "row": "row-4",
-                        "columns": 3
+                        "columns": 2
                       }
                     },
                     {
@@ -299,7 +299,7 @@
                       "id": "button-3",
                       "layout": {
                         "row": "row-4",
-                        "columns": 3
+                        "columns": 2
                       }
                     }
                   ],
@@ -315,7 +315,7 @@
               ],
               "id": "tabPanel_c12dff60-3db2-4e57-9284-b18d61d87998",
               "type": "tabPanel",
-              "label": "Tab 1",
+              "label": "Tab",
               "layout": {
                 "row": "Row_1lglxjn"
               }
@@ -346,13 +346,60 @@
                       "key": "date"
                     }
                   ]
+                },
+                {
+                  "label": "Text field",
+                  "type": "textfield",
+                  "layout": {
+                    "row": "Row_0sixm5h",
+                    "columns": null
+                  },
+                  "id": "Field_00n62mx",
+                  "key": "textfield_8xf4bl"
+                },
+                {
+                  "label": "Text field",
+                  "type": "textfield",
+                  "layout": {
+                    "row": "Row_0sixm5h",
+                    "columns": null
+                  },
+                  "id": "textfield-78d14d07",
+                  "key": "textfield_8xf4bl_copy"
+                },
+                {
+                  "label": "Text area",
+                  "type": "textarea",
+                  "layout": {
+                    "row": "Row_1an4bkm",
+                    "columns": null
+                  },
+                  "id": "Field_04ycae9",
+                  "key": "textarea_67dulo"
+                },
+                {
+                  "label": "Select11111",
+                  "values": [
+                    {
+                      "label": "Value",
+                      "value": "value"
+                    }
+                  ],
+                  "type": "select",
+                  "layout": {
+                    "row": "Row_05uyvv5",
+                    "columns": null
+                  },
+                  "id": "Field_1jdztxk",
+                  "key": "select_w505seh"
                 }
               ],
               "id": "tabPanel_c28e6617-b9ca-4dcd-ab61-ef197afc0565",
               "type": "tabPanel",
               "label": "Tab 2",
               "layout": {
-                "row": "Row_1waxp8x"
+                "row": "Row_1waxp8x",
+                "height": 528.07421875
               }
             }
           ],
@@ -360,7 +407,7 @@
           "orientation": "horizontal",
           "layout": {
             "row": "Row_0ngdvnh",
-            "columns": 12,
+            "columns": 13,
             "height": 457.671875
           },
           "id": "Field_0eh0quo"
@@ -370,7 +417,7 @@
       "type": "group",
       "layout": {
         "row": "Row_14xpfcp",
-        "columns": null
+        "columns": 16
       },
       "id": "Field_1ogkllx"
     }

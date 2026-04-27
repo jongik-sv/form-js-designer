@@ -1,0 +1,82 @@
+/**
+ * canvas-spacing.css — form-js 디자이너 캔버스 spacing override
+ *
+ * 단일 source of truth. 다음 3 surface가 모두 import/link로 사용:
+ *   1. designer-editor-host/src/app.css  (standalone preview + tiptap 임베디드 모달)
+ *   2. designer-vscode-extension webview (custom editor)
+ *
+ * form-js base/editor CSS의 기본 spacing(>=2x) 을 약 절반으로 축소.
+ *
+ * NOTE: form-js-editor 루트 element는 `class="fjs-container fjs-editor-container ..."`
+ * 처럼 두 클래스가 같은 노드에 있으므로 `.fjs-editor-container .fjs-container ...`
+ * 같은 descendant 셀렉터는 매칭되지 않는다. 두 클래스를 각각 단독 셀렉터로 사용.
+ */
+
+/* element wrapper padding 2px 0 → 1px 0 (margin은 .fjs-form 안에서 0) */
+.fjs-editor-container .fjs-element,
+.fjs-container .fjs-element {
+  padding: 1px 0;
+}
+
+/* 첫 element 위쪽 8px gap → 4px */
+.fjs-editor-container .fjs-element:first-of-type,
+.fjs-container .fjs-element:first-of-type {
+  margin-top: 4px;
+}
+
+/* 에디터 click-target border 2px → 1px (선택/hover 외곽선이 row 간 visible 갭의 주된 원인) */
+.fjs-editor-container .fjs-children .fjs-element {
+  border-width: 1px;
+}
+
+/* 중첩 children (group/tabs 안 필드 묶음) margin 3px 0 → 2px 0 */
+.fjs-editor-container .fjs-children .fjs-children,
+.fjs-container .fjs-children .fjs-children {
+  margin: 2px 0;
+}
+
+/* group/card/tabPanel 내부 좌우 padding 0 2rem → 0 1rem */
+.fjs-editor-container .fjs-form-field-grouplike .cds--grid,
+.fjs-container .fjs-form-field-grouplike .cds--grid {
+  padding: 0 1rem;
+}
+
+/* ── editor click-target border → outline 전환 ──
+ *
+ * form-js-editor-base.css 는 `.fjs-element` 에 `border: solid 2px transparent`
+ * 를 두고 .fjs-outlined / .fjs-dashed-outlined / .fjs-editor-selected /
+ * :hover.fjs-editor-hovered / :focus 에서 border-color 만 바꿔 selection
+ * 시각화한다. 이 transparent border 가 항상 layout 에 2px 을 차지해
+ * designer ↔ preview 사이 row 간 갭이 어긋난다.
+ *
+ * 해결: border-width 를 0 으로 죽이고 동일 가시 효과를 outline 으로 옮긴다.
+ * outline 은 layout 차지 안 하므로 designer 가 viewer 와 동일한 spacing 을
+ * 갖는다. outline-offset: -1px 로 outline 이 element 안쪽에 그려져 기존
+ * border 와 동일한 위치를 유지한다.
+ *
+ * 같은 specificity 셀렉터가 base 보다 cascade 늦게 로드되어 우선 적용. */
+.fjs-editor-container .fjs-children .fjs-element {
+  border-width: 0;
+  outline: 1px solid transparent;
+  outline-offset: -1px;
+}
+
+.fjs-editor-container .fjs-children .fjs-element.fjs-outlined {
+  outline-color: var(--color-borders-group);
+}
+
+.fjs-editor-container .fjs-children .fjs-element.fjs-dashed-outlined {
+  outline-color: var(--color-borders-group);
+  outline-style: dashed;
+}
+
+.fjs-editor-container .fjs-children .fjs-element.fjs-editor-selected {
+  outline-color: var(--color-children-selected-border) !important;
+  outline-style: solid;
+}
+
+.fjs-editor-container .fjs-children .fjs-element:hover.fjs-editor-hovered,
+.fjs-editor-container .fjs-children .fjs-element:focus {
+  outline-color: var(--color-children-hover-border);
+  outline-style: solid;
+}

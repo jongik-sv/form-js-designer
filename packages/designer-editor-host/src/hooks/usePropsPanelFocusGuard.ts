@@ -21,8 +21,10 @@ export function installPropsPanelFocusGuard(
     const inScope = scope === document || (scope as Element).contains(this);
     if (inScope && this.classList && this.classList.contains('fjs-editor-selected')) {
       const active = document.activeElement;
-      if (active && (active as HTMLElement).closest?.('.props-panel')) {
-        // props-panel input 에서 타이핑 중 — canvas 가 focus 를 훔치려는 시도 차단
+      // .props-panel = 우리 designer PropsPanelContainer
+      // .bio-properties-panel = form-js 내장 propertiesPanel (General/Custom Properties 등)
+      // 두 패널 어느 쪽에서 타이핑 중이든 canvas 의 focus steal 을 차단한다.
+      if (active && (active as HTMLElement).closest?.('.props-panel, .bio-properties-panel')) {
         return;
       }
     }

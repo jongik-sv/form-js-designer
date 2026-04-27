@@ -9,7 +9,7 @@ import {
   deepCloneWithNewIds,
   getDropPosition,
   collectKeys,
-  generateUniqueKey,
+  generateFreshKey,
 } from '../modules/outlineUtils';
 import type { DropPosition } from '../modules/outlineTypes';
 
@@ -135,47 +135,60 @@ describe('deepCloneWithNewIds', () => {
     expect(cloned.id).not.toBe('btn-1');
   });
 
-  // existingKeys 파라미터 — paste 시 key 충돌 회피
-  describe('with existingKeys (paste mode)', () => {
-    it('renames colliding key to baseKey_copy', () => {
+  // existingKeys 파라미터 — paste/duplicate 시 신규 key 발급
+  describe('with existingKeys (paste/duplicate mode)', () => {
+    it('mints fresh key in `${type}_xxxxxx` form on collision', () => {
       const field = { id: 'tf-1', type: 'textfield', key: 'first' };
       const cloned = deepCloneWithNewIds(field, new Set(['first']));
-      expect(cloned.key).toBe('first_copy');
+      expect(cloned.key).toMatch(/^textfield_[0-9a-f]{6}$/);
+      expect(cloned.key).not.toBe('first');
     });
 
-    it('renames to baseKey_copy_2 when baseKey_copy is also taken', () => {
-      const field = { id: 'tf-1', type: 'textfield', key: 'first' };
-      const cloned = deepCloneWithNewIds(field, new Set(['first', 'first_copy']));
-      expect(cloned.key).toBe('first_copy_2');
-    });
-
-    it('keeps original key when no collision', () => {
+    it('mints fresh key even when original key is unique (always regenerate)', () => {
       const field = { id: 'tf-1', type: 'textfield', key: 'unique' };
       const cloned = deepCloneWithNewIds(field, new Set(['other']));
-      expect(cloned.key).toBe('unique');
+      expect(cloned.key).toMatch(/^textfield_[0-9a-f]{6}$/);
+      expect(cloned.key).not.toBe('unique');
     });
 
-    it('does not rename key when existingKeys is omitted (copy mode)', () => {
+    it('never produces chained `_copy` suffixes from prior duplicates', () => {
+      const field = {
+        id: 'tf-1',
+        type: 'textfield',
+        key: 'textfield_7023nj_copy_3_copy_copy_2_copy_2',
+      };
+      const cloned = deepCloneWithNewIds(field, new Set([field.key]));
+      expect(cloned.key).toMatch(/^textfield_[0-9a-f]{6}$/);
+      expect(cloned.key).not.toContain('_copy');
+    });
+
+    it('does not rename key when existingKeys is omitted (clipboard copy)', () => {
       const field = { id: 'tf-1', type: 'textfield', key: 'first' };
       const cloned = deepCloneWithNewIds(field);
       expect(cloned.key).toBe('first');
     });
 
-    it('adds minted keys to set so nested children stay unique', () => {
+    it('adds minted keys to set so siblings stay unique', () => {
       const field = {
         id: 'card-1',
         type: 'card',
         components: [
           { id: 'tf-1', type: 'textfield', key: 'name' },
-          { id: 'tf-2', type: 'textfield', key: 'name' }, // sibling with same key (hypothetical)
+          { id: 'tf-2', type: 'textfield', key: 'name' },
         ],
       };
       const existing = new Set(['name']);
       const cloned = deepCloneWithNewIds(field, existing);
       const keys = cloned.components!.map((c) => c.key);
-      // both renamed, and distinct from each other
       expect(new Set(keys).size).toBe(2);
       expect(keys).not.toContain('name');
+      keys.forEach((k) => expect(k).toMatch(/^textfield_[0-9a-f]{6}$/));
+    });
+
+    it('falls back to `field` prefix when type missing', () => {
+      const field = { id: 'x-1', key: 'orphan' };
+      const cloned = deepCloneWithNewIds(field, new Set(['orphan']));
+      expect(cloned.key).toMatch(/^field_[0-9a-f]{6}$/);
     });
 
     it('leaves fields without key untouched (containers)', () => {
@@ -228,28 +241,34 @@ describe('collectKeys', () => {
   });
 });
 
-describe('generateUniqueKey', () => {
-  it('returns baseKey when no collision', () => {
-    expect(generateUniqueKey('first', new Set(['other']))).toBe('first');
+describe('generateFreshKey', () => {
+  it('mints `${prefix}_xxxxxx` form (6 hex chars)', () => {
+    const key = generateFreshKey('textfield', new Set());
+    expect(key).toMatch(/^textfield_[0-9a-f]{6}$/);
   });
 
-  it('returns baseKey_copy on first collision', () => {
-    expect(generateUniqueKey('first', new Set(['first']))).toBe('first_copy');
+  it('avoids existing keys', () => {
+    // Force a deterministic-ish collision check by seeding many candidates.
+    // Statistical: with 6 hex chars (16M space), 1000 entries → essentially no collision.
+    const taken = new Set<string>();
+    for (let i = 0; i < 1000; i += 1) taken.add(generateFreshKey('tf', taken));
+    expect(taken.size).toBe(1000);
   });
 
-  it('returns baseKey_copy_2 when _copy is also taken', () => {
-    expect(generateUniqueKey('first', new Set(['first', 'first_copy']))).toBe('first_copy_2');
-  });
-
-  it('finds next slot past contiguous holes', () => {
-    const taken = new Set(['first', 'first_copy', 'first_copy_2', 'first_copy_3']);
-    expect(generateUniqueKey('first', taken)).toBe('first_copy_4');
+  it('falls back to `field` prefix when prefix is empty', () => {
+    const key = generateFreshKey('', new Set());
+    expect(key).toMatch(/^field_[0-9a-f]{6}$/);
   });
 
   it('does not mutate the input set', () => {
-    const set = new Set(['first']);
-    generateUniqueKey('first', set);
+    const set = new Set(['anything']);
+    generateFreshKey('tf', set);
     expect(set.size).toBe(1);
+  });
+
+  it('produces no `_copy` suffix regardless of prior keys', () => {
+    const key = generateFreshKey('textfield', new Set(['textfield_7023nj_copy_3']));
+    expect(key).not.toContain('_copy');
   });
 });
 

@@ -99,10 +99,10 @@ describe('MarqueeModule 구조', () => {
   });
 
   it('inject 배열에 eventBus, formFieldRegistry, outlinePanel이 포함된다', () => {
-    const [, Constructor] = MarqueeModule.marquee as [string, { inject?: string[] }];
-    expect(Constructor.inject).toContain('eventBus');
-    expect(Constructor.inject).toContain('formFieldRegistry');
-    expect(Constructor.inject).toContain('outlinePanel');
+    const [, Constructor] = MarqueeModule.marquee as [string, { $inject?: string[] }];
+    expect(Constructor.$inject).toContain('eventBus');
+    expect(Constructor.$inject).toContain('formFieldRegistry');
+    expect(Constructor.$inject).toContain('outlinePanel');
   });
 });
 
