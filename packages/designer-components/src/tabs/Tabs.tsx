@@ -124,6 +124,7 @@ function TabsRender(props: PureRenderProps<TabsSchema>) {
               key={tp.id}
               class="dc-tabs__trigger"
               value={tp.id}
+              data-tab-id={tp.id}
               // form-js draggle calls preventDefault() on pointerdown, which
               // cancels the synthesized mousedown Radix relies on for tab
               // activation. Use click (still fires) + explicit setState so the
