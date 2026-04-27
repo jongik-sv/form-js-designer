@@ -1,7 +1,9 @@
 /**
  * InlineLabelEditModule — 캔버스 form 필드 라벨 더블클릭 인라인 편집.
- * dblclick capture-phase 리스너가 .fjs-editor-container [data-id] .fjs-form-field-label
- * 타깃을 잡아 input 오버레이를 띄우고, Enter/blur 시 modeling.editFormField로 커밋한다.
+ * dblclick capture-phase 리스너가 .fjs-editor-container 내부에서 우선순위 체인으로
+ * 앵커를 해석한다: 탭 트리거(.dc-tabs__trigger[data-tab-id]) → 라벨(.fjs-form-field-label)
+ * → 버튼(.fjs-button) → 필드 행([data-id]) 폴백. field.label이 string인 경우에만 입력
+ * 오버레이를 띄우고 Enter/blur 시 modeling.editFormField로 커밋한다.
  */
 
 export interface EventBusLike {
@@ -26,7 +28,7 @@ export class InlineLabelEditService {
   private readonly _modeling: ModelingLike;
   private _activeFieldId: string | null = null;
   private _inputEl: HTMLInputElement | null = null;
-  private _activeLabelEl: HTMLElement | null = null;
+  private _activeAnchorEl: HTMLElement | null = null;
   private readonly _boundOnDblclick: (e: MouseEvent) => void;
 
   constructor(eventBus: EventBusLike, formFieldRegistry: FormFieldRegistryLike, modeling: ModelingLike) {
@@ -108,7 +110,7 @@ export class InlineLabelEditService {
     return null;
   }
 
-  private _activate(fieldId: string, labelEl: HTMLElement, currentLabel: string): void {
+  private _activate(fieldId: string, anchorEl: HTMLElement, currentLabel: string): void {
     this._teardown();
     const input = document.createElement('input');
     input.type = 'text';
@@ -117,7 +119,7 @@ export class InlineLabelEditService {
     input.setAttribute('data-testid', 'inline-label-edit-input');
     input.setAttribute('data-field-id', fieldId);
 
-    const rect = labelEl.getBoundingClientRect();
+    const rect = anchorEl.getBoundingClientRect();
     input.style.position = 'fixed';
     input.style.left = `${rect.left}px`;
     input.style.top = `${rect.top}px`;
@@ -131,7 +133,7 @@ export class InlineLabelEditService {
 
     this._activeFieldId = fieldId;
     this._inputEl = input;
-    this._activeLabelEl = labelEl;
+    this._activeAnchorEl = anchorEl;
 
     const onKeyDown = (ev: KeyboardEvent) => {
       if (ev.key === 'Enter') {
@@ -170,7 +172,7 @@ export class InlineLabelEditService {
     // (which real browsers do) finds this._inputEl === null and bails in _commit.
     this._inputEl = null;
     this._activeFieldId = null;
-    this._activeLabelEl = null;
+    this._activeAnchorEl = null;
     if (el && el.parentNode) {
       el.parentNode.removeChild(el);
     }

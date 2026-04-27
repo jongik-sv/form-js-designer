@@ -148,8 +148,10 @@ describe('InlineLabelEditModule dblclick filter', () => {
   });
 
   it('mounts overlay on [data-id] dblclick via field-row fallback (Phase 2 broadens Phase 1)', () => {
-    // Phase 2: field-row fallback path mounts when no more-specific anchor (label/button/tab) matches
-    // and field.label is a string. This was a no-op in Phase 1 but is now the empty-label affordance.
+    // Phase 2: when the dblclick target is the [data-id] row itself (not its label/button/tab
+    // descendants), the field-row fallback path activates the overlay as long as field.label
+    // is a string. The empty-label scenario is covered separately in the empty-label fallback
+    // describe block below.
     const fields = { 'f1': { id: 'f1', type: 'textfield', label: 'Old' } };
     const { service } = createService({ formFieldRegistry: createMockFormFieldRegistry(fields) });
     cleanup.push(() => service.destroy());
@@ -409,7 +411,7 @@ describe('InlineLabelEditModule tab trigger anchor', () => {
   });
 
   it('does not mount when trigger has no data-tab-id attribute', () => {
-    const { service } = createService();
+    const { service, formFieldRegistry } = createService();
     cleanup.push(() => service.destroy());
     const canvas = document.createElement('div');
     canvas.className = 'fjs-editor-container';
@@ -420,6 +422,10 @@ describe('InlineLabelEditModule tab trigger anchor', () => {
     document.body.appendChild(canvas);
     dispatchDblclick(trigger);
     expect(document.querySelector('.fjs-inline-label-edit-input')).toBeNull();
+    // Resolver must short-circuit on tab-trigger-without-data-tab-id BEFORE any registry
+    // lookup. If get() were called, that would mean the resolver fell through to the
+    // [data-id] path — exactly the bug this test guards against.
+    expect(formFieldRegistry.get).not.toHaveBeenCalled();
   });
 });
 
