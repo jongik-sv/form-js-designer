@@ -131,12 +131,15 @@ export class InlineLabelEditService {
   }
 
   private _teardown(): void {
-    if (this._inputEl && this._inputEl.parentNode) {
-      this._inputEl.parentNode.removeChild(this._inputEl);
-    }
+    const el = this._inputEl;
+    // Null fields first so that a synchronous blur event fired by removeChild
+    // (which real browsers do) finds this._inputEl === null and bails in _commit.
     this._inputEl = null;
     this._activeFieldId = null;
     this._activeLabelEl = null;
+    if (el && el.parentNode) {
+      el.parentNode.removeChild(el);
+    }
   }
 }
 
