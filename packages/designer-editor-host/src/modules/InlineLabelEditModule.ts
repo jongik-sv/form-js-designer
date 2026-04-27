@@ -54,24 +54,58 @@ export class InlineLabelEditService {
   private _onDblclick(e: MouseEvent): void {
     const target = e.target as HTMLElement | null;
     if (!target || typeof target.closest !== 'function') return;
+    if (!target.closest('.fjs-editor-container')) return;
 
-    const labelEl = target.closest('.fjs-form-field-label') as HTMLElement | null;
-    if (!labelEl) return;
+    const resolved = this._resolveAnchor(target);
+    if (!resolved) return;
 
-    if (!labelEl.closest('.fjs-editor-container')) return;
-
-    const fieldEl = labelEl.closest('[data-id]') as HTMLElement | null;
-    if (!fieldEl) return;
-    const fieldId = fieldEl.getAttribute('data-id');
-    if (!fieldId) return;
-
+    const { fieldId, anchor } = resolved;
     const field = this._formFieldRegistry.get(fieldId);
     if (!field) return;
     if (typeof field.label !== 'string') return;
 
     e.preventDefault();
     e.stopPropagation();
-    this._activate(fieldId, labelEl, field.label);
+    this._activate(fieldId, anchor, field.label);
+  }
+
+  /**
+   * Priority chain for finding the (fieldId, anchor) pair from a dblclick target.
+   * - Tab triggers sit OUTSIDE their tab's [data-id] wrapper, so we read data-tab-id.
+   * - Buttons render their label as their own text node; anchor is the button itself.
+   * - Standard labels follow the original closest-label/closest-data-id pattern.
+   * - Field-row fallback handles empty labels (label DOM may be 0-height).
+   */
+  private _resolveAnchor(target: HTMLElement): { fieldId: string; anchor: HTMLElement } | null {
+    const tabTrigger = target.closest('.dc-tabs__trigger') as HTMLElement | null;
+    if (tabTrigger) {
+      const tabId = tabTrigger.getAttribute('data-tab-id');
+      if (tabId) return { fieldId: tabId, anchor: tabTrigger };
+      return null;
+    }
+
+    const labelEl = target.closest('.fjs-form-field-label') as HTMLElement | null;
+    if (labelEl) {
+      const fieldEl = labelEl.closest('[data-id]') as HTMLElement | null;
+      const fieldId = fieldEl?.getAttribute('data-id');
+      if (fieldId) return { fieldId, anchor: labelEl };
+      return null;
+    }
+
+    const buttonEl = target.closest('.fjs-button') as HTMLElement | null;
+    if (buttonEl) {
+      const fieldEl = buttonEl.closest('[data-id]') as HTMLElement | null;
+      const fieldId = fieldEl?.getAttribute('data-id');
+      if (fieldId) return { fieldId, anchor: buttonEl };
+      return null;
+    }
+
+    const fieldEl = target.closest('[data-id]') as HTMLElement | null;
+    if (fieldEl) {
+      const fieldId = fieldEl.getAttribute('data-id');
+      if (fieldId) return { fieldId, anchor: fieldEl };
+    }
+    return null;
   }
 
   private _activate(fieldId: string, labelEl: HTMLElement, currentLabel: string): void {

@@ -147,13 +147,18 @@ describe('InlineLabelEditModule dblclick filter', () => {
     expect(modeling.editFormField).not.toHaveBeenCalled();
   });
 
-  it('ignores dblclick on [data-id] but not on .fjs-form-field-label', () => {
+  it('mounts overlay on [data-id] dblclick via field-row fallback (Phase 2 broadens Phase 1)', () => {
+    // Phase 2: field-row fallback path mounts when no more-specific anchor (label/button/tab) matches
+    // and field.label is a string. This was a no-op in Phase 1 but is now the empty-label affordance.
     const fields = { 'f1': { id: 'f1', type: 'textfield', label: 'Old' } };
     const { service } = createService({ formFieldRegistry: createMockFormFieldRegistry(fields) });
     cleanup.push(() => service.destroy());
     const { fieldEl } = buildCanvasWithField('f1', 'Old');
     dispatchDblclick(fieldEl);
-    expect(document.querySelector('.fjs-inline-label-edit-input')).toBeNull();
+    const input = document.querySelector('.fjs-inline-label-edit-input') as HTMLInputElement | null;
+    expect(input).not.toBeNull();
+    expect(input!.value).toBe('Old');
+    expect(input!.getAttribute('data-field-id')).toBe('f1');
   });
 
   it('mounts input overlay on label dblclick (prefilled with current label)', () => {
@@ -353,5 +358,154 @@ describe('InlineLabelEditModule cancel + external teardown', () => {
     const inputs = document.querySelectorAll('.fjs-inline-label-edit-input');
     expect(inputs.length).toBe(1);
     expect((inputs[0] as HTMLInputElement).value).toBe('B');
+  });
+});
+
+function buildCanvasWithTabTrigger(tabFieldId: string, tabLabelText: string): {
+  canvas: HTMLElement;
+  triggerEl: HTMLElement;
+} {
+  const canvas = document.createElement('div');
+  canvas.className = 'fjs-editor-container';
+  // Outer tabs container has its own [data-id] (the tabPanel/tabs field)
+  const tabsContainer = document.createElement('div');
+  tabsContainer.setAttribute('data-id', 'tabs-container');
+  const triggerEl = document.createElement('button');
+  triggerEl.className = 'dc-tabs__trigger';
+  triggerEl.setAttribute('data-tab-id', tabFieldId);
+  triggerEl.textContent = tabLabelText;
+  tabsContainer.appendChild(triggerEl);
+  canvas.appendChild(tabsContainer);
+  document.body.appendChild(canvas);
+  return { canvas, triggerEl };
+}
+
+describe('InlineLabelEditModule tab trigger anchor', () => {
+  let cleanup: Array<() => void> = [];
+  beforeEach(() => { cleanup = []; });
+  afterEach(() => {
+    cleanup.forEach((fn) => fn());
+    document.body.innerHTML = '';
+  });
+
+  it('mounts overlay on .dc-tabs__trigger dblclick using data-tab-id (not parent [data-id])', () => {
+    const fields = {
+      'tab-1': { id: 'tab-1', type: 'tabPanel', label: 'My Tab' },
+      'tabs-container': { id: 'tabs-container', type: 'tabs', label: 'Tabs' },
+    };
+    const { service, formFieldRegistry } = createService({
+      formFieldRegistry: createMockFormFieldRegistry(fields),
+    });
+    cleanup.push(() => service.destroy());
+    const { triggerEl } = buildCanvasWithTabTrigger('tab-1', 'My Tab');
+    dispatchDblclick(triggerEl);
+
+    const input = document.querySelector('.fjs-inline-label-edit-input') as HTMLInputElement | null;
+    expect(input).not.toBeNull();
+    expect(input!.value).toBe('My Tab');
+    expect(input!.getAttribute('data-field-id')).toBe('tab-1');
+    // Must lookup the tab id, NOT the parent tabs-container
+    expect(formFieldRegistry.get).toHaveBeenCalledWith('tab-1');
+  });
+
+  it('does not mount when trigger has no data-tab-id attribute', () => {
+    const { service } = createService();
+    cleanup.push(() => service.destroy());
+    const canvas = document.createElement('div');
+    canvas.className = 'fjs-editor-container';
+    const trigger = document.createElement('button');
+    trigger.className = 'dc-tabs__trigger';
+    trigger.textContent = 'Orphan';
+    canvas.appendChild(trigger);
+    document.body.appendChild(canvas);
+    dispatchDblclick(trigger);
+    expect(document.querySelector('.fjs-inline-label-edit-input')).toBeNull();
+  });
+});
+
+describe('InlineLabelEditModule button anchor', () => {
+  let cleanup: Array<() => void> = [];
+  beforeEach(() => { cleanup = []; });
+  afterEach(() => {
+    cleanup.forEach((fn) => fn());
+    document.body.innerHTML = '';
+  });
+
+  it('mounts overlay on .fjs-button dblclick (anchor=button, label=button text)', () => {
+    const fields = { 'btn-1': { id: 'btn-1', type: 'button', label: 'Submit' } };
+    const { service } = createService({
+      formFieldRegistry: createMockFormFieldRegistry(fields),
+    });
+    cleanup.push(() => service.destroy());
+
+    const canvas = document.createElement('div');
+    canvas.className = 'fjs-editor-container';
+    const fieldEl = document.createElement('div');
+    fieldEl.setAttribute('data-id', 'btn-1');
+    const buttonEl = document.createElement('button');
+    buttonEl.className = 'fjs-button';
+    buttonEl.textContent = 'Submit';
+    fieldEl.appendChild(buttonEl);
+    canvas.appendChild(fieldEl);
+    document.body.appendChild(canvas);
+
+    dispatchDblclick(buttonEl);
+    const input = document.querySelector('.fjs-inline-label-edit-input') as HTMLInputElement | null;
+    expect(input).not.toBeNull();
+    expect(input!.value).toBe('Submit');
+    expect(input!.getAttribute('data-field-id')).toBe('btn-1');
+  });
+});
+
+describe('InlineLabelEditModule empty-label fallback', () => {
+  let cleanup: Array<() => void> = [];
+  beforeEach(() => { cleanup = []; });
+  afterEach(() => {
+    cleanup.forEach((fn) => fn());
+    document.body.innerHTML = '';
+  });
+
+  it('mounts overlay on field row dblclick when label is empty string', () => {
+    const fields = { 'f1': { id: 'f1', type: 'textfield', label: '' } };
+    const { service } = createService({
+      formFieldRegistry: createMockFormFieldRegistry(fields),
+    });
+    cleanup.push(() => service.destroy());
+
+    const canvas = document.createElement('div');
+    canvas.className = 'fjs-editor-container';
+    const fieldEl = document.createElement('div');
+    fieldEl.setAttribute('data-id', 'f1');
+    fieldEl.className = 'fjs-form-field';
+    // No label element rendered (or rendered with 0 height); user clicks field body
+    const inner = document.createElement('div');
+    inner.textContent = 'click here';
+    fieldEl.appendChild(inner);
+    canvas.appendChild(fieldEl);
+    document.body.appendChild(canvas);
+
+    dispatchDblclick(inner);
+    const input = document.querySelector('.fjs-inline-label-edit-input') as HTMLInputElement | null;
+    expect(input).not.toBeNull();
+    expect(input!.value).toBe('');
+    expect(input!.getAttribute('data-field-id')).toBe('f1');
+  });
+
+  it('does not mount when field has no label property at all (e.g., spacer)', () => {
+    const fields = { 'sp1': { id: 'sp1', type: 'spacer' } };
+    const { service } = createService({
+      formFieldRegistry: createMockFormFieldRegistry(fields),
+    });
+    cleanup.push(() => service.destroy());
+
+    const canvas = document.createElement('div');
+    canvas.className = 'fjs-editor-container';
+    const fieldEl = document.createElement('div');
+    fieldEl.setAttribute('data-id', 'sp1');
+    canvas.appendChild(fieldEl);
+    document.body.appendChild(canvas);
+
+    dispatchDblclick(fieldEl);
+    expect(document.querySelector('.fjs-inline-label-edit-input')).toBeNull();
   });
 });
