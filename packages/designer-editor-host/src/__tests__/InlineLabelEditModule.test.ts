@@ -243,3 +243,115 @@ describe('InlineLabelEditModule commit', () => {
     expect(document.querySelector('.fjs-inline-label-edit-input')).toBeNull();
   });
 });
+
+describe('InlineLabelEditModule cancel + external teardown', () => {
+  let cleanup: Array<() => void> = [];
+  beforeEach(() => {
+    cleanup = [];
+  });
+  afterEach(() => {
+    cleanup.forEach((fn) => fn());
+    document.body.innerHTML = '';
+  });
+
+  it('Escape cancels without commit and removes overlay', () => {
+    const fields = { 'f1': { id: 'f1', type: 'textfield', label: 'Old' } };
+    const { service, modeling } = createService({ formFieldRegistry: createMockFormFieldRegistry(fields) });
+    cleanup.push(() => service.destroy());
+    const { labelEl } = buildCanvasWithField('f1', 'Old');
+    dispatchDblclick(labelEl);
+
+    const input = document.querySelector('.fjs-inline-label-edit-input') as HTMLInputElement;
+    input.value = 'Discarded';
+    const esc = new KeyboardEvent('keydown', { key: 'Escape', bubbles: true });
+    input.dispatchEvent(esc);
+
+    expect(modeling.editFormField).not.toHaveBeenCalled();
+    expect(document.querySelector('.fjs-inline-label-edit-input')).toBeNull();
+  });
+
+  it('selection.changed tears down overlay (no commit)', () => {
+    const fields = { 'f1': { id: 'f1', type: 'textfield', label: 'Old' } };
+    const eventBus = createMockEventBus();
+    const { service, modeling } = createService({
+      eventBus,
+      formFieldRegistry: createMockFormFieldRegistry(fields),
+    });
+    cleanup.push(() => service.destroy());
+    const { labelEl } = buildCanvasWithField('f1', 'Old');
+    dispatchDblclick(labelEl);
+    expect(document.querySelector('.fjs-inline-label-edit-input')).not.toBeNull();
+
+    eventBus.emit('selection.changed');
+    expect(document.querySelector('.fjs-inline-label-edit-input')).toBeNull();
+    expect(modeling.editFormField).not.toHaveBeenCalled();
+  });
+
+  it('commandStack.changed tears down overlay (no commit)', () => {
+    const fields = { 'f1': { id: 'f1', type: 'textfield', label: 'Old' } };
+    const eventBus = createMockEventBus();
+    const { service, modeling } = createService({
+      eventBus,
+      formFieldRegistry: createMockFormFieldRegistry(fields),
+    });
+    cleanup.push(() => service.destroy());
+    const { labelEl } = buildCanvasWithField('f1', 'Old');
+    dispatchDblclick(labelEl);
+
+    eventBus.emit('commandStack.changed');
+    expect(document.querySelector('.fjs-inline-label-edit-input')).toBeNull();
+    expect(modeling.editFormField).not.toHaveBeenCalled();
+  });
+
+  it('diagram.destroy tears down overlay and removes listener', () => {
+    const fields = { 'f1': { id: 'f1', type: 'textfield', label: 'Old' } };
+    const eventBus = createMockEventBus();
+    const { service } = createService({
+      eventBus,
+      formFieldRegistry: createMockFormFieldRegistry(fields),
+    });
+    cleanup.push(() => service.destroy());
+    const { labelEl } = buildCanvasWithField('f1', 'Old');
+    dispatchDblclick(labelEl);
+
+    eventBus.emit('diagram.destroy');
+    expect(document.querySelector('.fjs-inline-label-edit-input')).toBeNull();
+    // After destroy, further dblclicks must not re-mount overlay
+    dispatchDblclick(labelEl);
+    expect(document.querySelector('.fjs-inline-label-edit-input')).toBeNull();
+  });
+
+  it('second dblclick during edit replaces existing overlay', () => {
+    const fields = {
+      'f1': { id: 'f1', type: 'textfield', label: 'A' },
+      'f2': { id: 'f2', type: 'textfield', label: 'B' },
+    };
+    const { service } = createService({ formFieldRegistry: createMockFormFieldRegistry(fields) });
+    cleanup.push(() => service.destroy());
+
+    const canvas = document.createElement('div');
+    canvas.className = 'fjs-editor-container';
+    const f1 = document.createElement('div');
+    f1.setAttribute('data-id', 'f1');
+    const l1 = document.createElement('label');
+    l1.className = 'fjs-form-field-label';
+    l1.textContent = 'A';
+    f1.appendChild(l1);
+    const f2 = document.createElement('div');
+    f2.setAttribute('data-id', 'f2');
+    const l2 = document.createElement('label');
+    l2.className = 'fjs-form-field-label';
+    l2.textContent = 'B';
+    f2.appendChild(l2);
+    canvas.appendChild(f1);
+    canvas.appendChild(f2);
+    document.body.appendChild(canvas);
+
+    dispatchDblclick(l1);
+    dispatchDblclick(l2);
+
+    const inputs = document.querySelectorAll('.fjs-inline-label-edit-input');
+    expect(inputs.length).toBe(1);
+    expect((inputs[0] as HTMLInputElement).value).toBe('B');
+  });
+});
