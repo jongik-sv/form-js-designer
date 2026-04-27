@@ -3,15 +3,22 @@
  * form-js Block Editor 패널에서만 로드된다.
  *
  * 레이아웃 정책:
- * - 가운데 **캔버스(.fjs-form-editor)** 의 최소 너비를 1024px로 보장.
+ * - 가운데 **캔버스(.fjs-form-editor)** 의 최소 너비를 1280px로 보장.
  *   좌측 팔레트(.fjs-palette-container)·우측 프로퍼티(.fjs-properties-container)는 제외.
- * - webview pane이 (palette + 1024 + properties) 합계보다 좁으면 body가 horizontal
+ * - webview pane이 (palette + 1280 + properties) 합계보다 좁으면 body가 horizontal
  *   scroll로 가려진 영역을 노출.
  * - 세로 스크롤은 form-js editor 내부 canvas/properties panel이 자체 처리하므로
  *   body 레벨에서는 차단(overflow-y: hidden)하여 이중 스크롤을 방지.
  */
 
 /* ── 루트 레이아웃 ─────────────────────────────────── */
+
+:root {
+  /* 좌측 rail / 우측 properties 폭. PanelResizeModule이 drag로 갱신한다.
+     form-js editor base CSS의 --properties-panel-width를 호스트 webview에서 덮어쓸 수 있도록 동일 변수명을 사용. */
+  --left-rail-width: 260px;
+  --properties-panel-width: 300px;
+}
 
 html,
 body {
@@ -39,12 +46,11 @@ body {
 /* ── #app 컨테이너 ─────────────────────────────────── */
 
 #app {
-  /* New flex-row layout: left-rail (260) + editor-host (1024+) + reserved properties (300).
-     Total min-width: 260 + 1024 + 300 = 1584px to ensure horizontal scrolling when pane
-     is narrower. Left-rail tabs and outline/components panels sit at fixed width; editor-host
-     expands to fill available space (flex: 1 1 auto). */
+  /* flex-row layout: left-rail + editor-host + reserved properties.
+     min-width = left-rail + 1280(canvas) + properties + 8(handles)로, JS가 panel 폭 변경 시 동적으로 다시 계산해 inline style로 덮어쓴다.
+     초기값은 변수 기본값 기준 (260+1280+300+8=1848). */
   height: 100%;
-  min-width: 1584px;
+  min-width: calc(var(--left-rail-width) + 1280px + var(--properties-panel-width) + 8px);
   display: flex;
   flex-direction: row;
 }
@@ -55,23 +61,23 @@ body {
 }
 
 #editor-host {
-  /* canvas (1024) + form-js properties panel sibling (300) = 1324 inside .fjs-editor-container.
+  /* canvas (1280) + form-js properties panel sibling (300) = 1580 inside .fjs-editor-container.
      Palette는 relocatePalette로 left-rail로 빠져나가 budget에서 제외. */
   flex: 1 1 auto;
-  min-width: 1324px;
+  min-width: 1580px;
   height: 100%;
 }
 
 /* ── 캔버스 최소 너비 ───────────────────────────────── */
 
 /**
- * 가운데 form-editor 영역만 최소 1024px.
+ * 가운데 form-editor 영역만 최소 1280px.
  * - .fjs-editor-container 는 horizontal flex (palette + form-editor + properties).
  * - .fjs-form-editor 는 가운데 영역(canvas + render injector). flex:1이지만 min-width로 하한을 둔다.
  * - palette/properties 너비는 form-js 기본값(270/300px)을 그대로 사용.
  */
 .fjs-editor-container .fjs-form-editor {
-  min-width: 1024px;
+  min-width: 1280px;
 }
 
 /* ── 컴포넌트 height resize 핸들 ─────────────────────── */
@@ -109,58 +115,73 @@ body {
 /* ── 좌측 rail ─────────────────────────────────── */
 
 .left-rail {
-  width: 260px;
+  width: var(--left-rail-width);
   flex-shrink: 0;
-  border-right: 1px solid var(--vscode-panel-border, #2d2d2d);
   background: var(--vscode-sideBar-background, #252526);
   display: flex;
   flex-direction: column;
   height: 100%;
   min-height: 0;
+  position: relative;
 }
 
+/* VS Code 사이드바 섹션 헤더 스타일에 맞춘 탭 row.
+   기본은 무배경, 활성 탭만 하단에 2px accent 라인을 표시해
+   라이트/다크 테마 모두에서 명확히 구분되게 한다. */
 .left-rail__tabs {
   display: flex;
   flex-direction: row;
   flex-shrink: 0;
-  border-bottom: 1px solid var(--vscode-panel-border, #2d2d2d);
-  background: var(--vscode-tab-inactiveBackground, #2d2d2d);
-  padding: 0 8px;
-  gap: 2px;
+  border-bottom: 1px solid var(--vscode-sideBarSectionHeader-border, var(--vscode-panel-border, #2d2d2d));
+  background: var(--vscode-sideBarSectionHeader-background, var(--vscode-sideBar-background, #252526));
+  padding: 0;
 }
 
 .left-rail__tab {
-  flex: 0 0 auto;
+  flex: 1 1 0;
+  position: relative;
   background: transparent;
-  border: 1px solid transparent;
-  border-bottom: none;
-  border-top-left-radius: 4px;
-  border-top-right-radius: 4px;
-  padding: 8px 14px;
-  margin-bottom: -1px;
-  color: var(--vscode-tab-inactiveForeground, #969696);
-  font-size: 13px;
-  font-weight: 500;
+  border: none;
+  padding: 10px 12px;
+  color: var(--vscode-sideBarSectionHeader-foreground, var(--vscode-sideBar-foreground, #cccccc));
+  opacity: 0.75;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   line-height: 1;
   cursor: pointer;
   font-family: inherit;
 }
 
 .left-rail__tab:hover {
-  background: var(--vscode-tab-hoverBackground, #2a2d2e);
-  color: var(--vscode-tab-hoverForeground, #ffffff);
+  opacity: 1;
 }
 
+/* 활성 탭에서는 focus outline을 숨겨 시각 노이즈 제거.
+   비활성 탭의 키보드 포커스만 1px outline으로 표시한다. */
 .left-rail__tab:focus-visible {
-  outline: 2px solid var(--vscode-focusBorder, #007fd4);
+  outline: none;
+}
+
+.left-rail__tab:not(.left-rail__tab--active):focus-visible {
+  outline: 1px solid var(--vscode-focusBorder, #007fd4);
   outline-offset: -2px;
 }
 
 .left-rail__tab--active {
-  background: var(--vscode-tab-activeBackground, #1e1e1e);
-  color: var(--vscode-tab-activeForeground, #ffffff);
-  border-color: var(--vscode-panel-border, #2d2d2d);
-  border-bottom-color: var(--vscode-tab-activeBackground, #1e1e1e);
+  opacity: 1;
+}
+
+/* 활성 탭 하단 2px accent 라인 — 활성 표시는 색상 토큰이 아닌 강조선으로 한다. */
+.left-rail__tab--active::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 2px;
+  background: var(--vscode-focusBorder, #007fd4);
 }
 
 .left-rail__panels {
@@ -185,4 +206,201 @@ body {
   width: 100%;
   max-width: 100%;
   border-right: none;
+}
+
+/* ── 패널 리사이즈 핸들 ──────────────────────────────
+ * #left-rail 우측·.fjs-properties-container 좌측 가장자리에
+ * PanelResizeModule이 4px wide handle을 절대 배치한다. visual은
+ * 1px 구분선만 보이고, 호버/드래그 시 focusBorder 색으로 강조된다.
+ */
+.panel-resize-handle {
+  flex: 0 0 auto;
+  width: 4px;
+  cursor: col-resize;
+  background: var(--vscode-panel-border, #2d2d2d);
+  align-self: stretch;
+  position: relative;
+  z-index: 2;
+  transition: background 0.12s;
+}
+
+.panel-resize-handle:hover,
+.panel-resize-handle[data-resizing='true'] {
+  background: var(--vscode-focusBorder, #007fd4);
+}
+
+/* drag 중에 iframe/canvas selection 등 방해요소 차단 */
+body[data-panel-resizing='true'] {
+  cursor: col-resize !important;
+  user-select: none !important;
+}
+
+body[data-panel-resizing='true'] * {
+  pointer-events: none !important;
+}
+
+body[data-panel-resizing='true'] .panel-resize-handle {
+  pointer-events: auto !important;
+}
+
+/* ── Outline 트리 ──────────────────────────────────
+ * VS Code 사이드바 톤에 맞춘 트리 스타일.
+ * 들여쓰기는 row의 inline --depth 변수(0,1,2,…) 기반으로 padding-left만 부여한다.
+ * <ul>/<li>는 list-style/padding/margin 모두 reset해서 브라우저 기본 들여쓰기·bullet을 제거한다.
+ */
+.outline-panel {
+  font-size: 13px;
+  color: var(--vscode-sideBar-foreground, var(--vscode-foreground, #cccccc));
+  outline: none;
+}
+
+.outline-panel ul,
+.outline-panel li {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* 트리 indent 단위 — 시안에서 한 단계 8px가 적당 */
+.outline-panel {
+  --outline-indent: 8px;
+  --outline-row-pad-x: 6px;
+}
+
+.outline-node-row {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  min-height: 22px;
+  padding-left: calc(var(--outline-row-pad-x) + var(--depth, 0) * var(--outline-indent));
+  padding-right: var(--outline-row-pad-x);
+}
+
+.outline-node-row:hover {
+  background: var(--vscode-list-hoverBackground, rgba(255, 255, 255, 0.04));
+}
+
+.outline-toggle,
+.outline-toggle-spacer {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  margin: 0;
+  color: var(--vscode-icon-foreground, var(--vscode-foreground, #cccccc));
+  font-size: 9px;
+  line-height: 1;
+}
+
+.outline-toggle:hover {
+  color: var(--vscode-foreground, #ffffff);
+}
+
+.outline-toggle:focus-visible {
+  outline: 1px solid var(--vscode-focusBorder, #007fd4);
+  outline-offset: -1px;
+  border-radius: 2px;
+}
+
+.outline-node {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  flex: 1 1 auto;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  padding: 2px 4px;
+  margin: 0;
+  cursor: pointer;
+  text-align: left;
+  color: inherit;
+  font: inherit;
+  border-radius: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.outline-node:focus-visible {
+  outline: 1px solid var(--vscode-focusBorder, #007fd4);
+  outline-offset: -1px;
+}
+
+.outline-node--selected,
+.outline-node--selected:hover {
+  background: var(--vscode-list-activeSelectionBackground, #094771);
+  color: var(--vscode-list-activeSelectionForeground, #ffffff);
+}
+
+.outline-node--virtual-root {
+  cursor: default;
+  font-weight: 600;
+  opacity: 0.85;
+}
+
+.outline-node__type {
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.outline-node__label {
+  color: var(--vscode-descriptionForeground, #888);
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.outline-node--selected .outline-node__label {
+  color: inherit;
+  opacity: 0.85;
+}
+
+/* DnD drop indicator */
+.outline-drop-indicator--before {
+  box-shadow: inset 0 2px 0 0 var(--vscode-focusBorder, #007fd4);
+}
+
+.outline-drop-indicator--after {
+  box-shadow: inset 0 -2px 0 0 var(--vscode-focusBorder, #007fd4);
+}
+
+.outline-drop-indicator--inside {
+  background: var(--vscode-list-dropBackground, rgba(0, 127, 212, 0.18));
+}
+
+.outline-node--dragging {
+  opacity: 0.5;
+}
+
+/* ── 컴포넌트 사이 여백 축소 ──────────────────────────── */
+
+/**
+ * form-js-base.css / form-js-editor.css / form-js-editor-base.css의
+ * 폼 항목 spacing을 약 절반으로 줄여 캔버스가 더 빽빽하게 보이도록 한다.
+ * 베이스 CSS는 copy-media.mjs로 vendoring되므로 직접 수정하지 않고 여기서 override.
+ * .fjs-editor-container 스코프로 한정 — 마크다운 미리보기(.fjs-container)는 영향 없음.
+ */
+
+.fjs-editor-container .fjs-container .fjs-element {
+  margin: 0 2px 2px 2px;
+  padding: 1px 0;
+}
+
+.fjs-editor-container .fjs-container .fjs-element:first-of-type {
+  margin-top: 4px;
+}
+
+.fjs-editor-container .fjs-children .fjs-children {
+  margin: 2px 0;
+}
+
+.fjs-editor-container .fjs-form-field-grouplike .cds--grid {
+  padding: 0 1rem;
 }
