@@ -158,7 +158,13 @@ export class InlineLabelEditService {
     input.style.height = `${rect.height}px`;
     input.style.zIndex = '9999';
 
-    document.body.appendChild(input);
+    // Append into the nearest portal/stacking context so we don't get hidden
+    // beneath modal hosts (e.g. tiptap embedded designer uses z-index 2.1B on
+    // its root). Falls back to body for plain hosts (vscode custom editor).
+    const portalRoot =
+      (anchorEl.closest('.fjd-embedded-designer-root') as HTMLElement | null) ??
+      document.body;
+    portalRoot.appendChild(input);
     input.focus();
     input.select();
 

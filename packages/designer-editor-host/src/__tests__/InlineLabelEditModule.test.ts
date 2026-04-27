@@ -193,6 +193,35 @@ describe('InlineLabelEditModule dblclick filter', () => {
     dispatchDblclick(labelEl);
     expect(document.querySelector('.fjs-inline-label-edit-input')).toBeNull();
   });
+
+  it('appends overlay into closest .fjd-embedded-designer-root for portal stacking', () => {
+    // Hosts that render the canvas inside their own portal/modal (e.g. tiptap
+    // embedded designer with z-index 2.1B) must receive the input inside that
+    // portal so it isn't stacked behind the modal. Plain hosts with no portal
+    // ancestor still fall back to document.body — covered by the other tests.
+    const fields = { 'f1': { id: 'f1', type: 'textfield', label: 'Old' } };
+    const { service } = createService({ formFieldRegistry: createMockFormFieldRegistry(fields) });
+    cleanup.push(() => service.destroy());
+
+    const portalRoot = document.createElement('div');
+    portalRoot.className = 'fjd-embedded-designer-root';
+    const canvas = document.createElement('div');
+    canvas.className = 'fjs-editor-container';
+    const fieldEl = document.createElement('div');
+    fieldEl.setAttribute('data-id', 'f1');
+    const labelEl = document.createElement('label');
+    labelEl.className = 'fjs-form-field-label';
+    labelEl.textContent = 'Old';
+    fieldEl.appendChild(labelEl);
+    canvas.appendChild(fieldEl);
+    portalRoot.appendChild(canvas);
+    document.body.appendChild(portalRoot);
+
+    dispatchDblclick(labelEl);
+    const input = document.querySelector('.fjs-inline-label-edit-input') as HTMLInputElement | null;
+    expect(input).not.toBeNull();
+    expect(input!.parentElement).toBe(portalRoot);
+  });
 });
 
 describe('InlineLabelEditModule commit', () => {
