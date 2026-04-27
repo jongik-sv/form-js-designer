@@ -2,8 +2,10 @@
  * InlineLabelEditModule — 캔버스 form 필드 라벨 더블클릭 인라인 편집.
  * dblclick capture-phase 리스너가 .fjs-editor-container 내부에서 우선순위 체인으로
  * 앵커를 해석한다: 탭 트리거(.dc-tabs__trigger[data-tab-id]) → 라벨(.fjs-form-field-label)
- * → 버튼(.fjs-button) → 필드 행([data-id]) 폴백. field.label이 string인 경우에만 입력
- * 오버레이를 띄우고 Enter/blur 시 modeling.editFormField로 커밋한다.
+ * → 버튼(.fjs-button) → 필드 행([data-id]) 폴백. 편집 대상 라벨 속성은 필드 타입별로
+ * 결정한다: 일반 필드는 'label', datetime 필드는 클릭한 sub-label의 for 속성에 따라
+ * 'dateLabel' 또는 'timeLabel'. 해당 속성이 string인 경우에만 입력 오버레이를 띄우고
+ * Enter/blur 시 modeling.editFormField로 커밋한다.
  */
 
 export interface EventBusLike {
@@ -11,8 +13,16 @@ export interface EventBusLike {
   off(event: string, callback: (event?: unknown) => void): void;
 }
 
+export interface FormFieldLike {
+  id: string;
+  type: string;
+  label?: string;
+  dateLabel?: string;
+  timeLabel?: string;
+}
+
 export interface FormFieldRegistryLike {
-  get(id: string): { id: string; type: string; label?: string } | undefined;
+  get(id: string): FormFieldLike | undefined;
 }
 
 export interface ModelingLike {
@@ -27,6 +37,7 @@ export class InlineLabelEditService {
   private readonly _formFieldRegistry: FormFieldRegistryLike;
   private readonly _modeling: ModelingLike;
   private _activeFieldId: string | null = null;
+  private _activeLabelKey: string | null = null;
   private _inputEl: HTMLInputElement | null = null;
   private _activeAnchorEl: HTMLElement | null = null;
   private readonly _boundOnDblclick: (e: MouseEvent) => void;
@@ -64,11 +75,31 @@ export class InlineLabelEditService {
     const { fieldId, anchor } = resolved;
     const field = this._formFieldRegistry.get(fieldId);
     if (!field) return;
-    if (typeof field.label !== 'string') return;
+
+    const labelKey = this._resolveLabelKey(field, anchor);
+    const currentLabel = (field as Record<string, unknown>)[labelKey];
+    if (typeof currentLabel !== 'string') return;
 
     e.preventDefault();
     e.stopPropagation();
-    this._activate(fieldId, anchor, field.label);
+    this._activate(fieldId, anchor, currentLabel, labelKey);
+  }
+
+  /**
+   * Determines which property on the field model holds the user-visible label
+   * for the clicked anchor. Most fields use 'label'. The datetime field is
+   * special: it has no 'label' property; instead it stores 'dateLabel' and
+   * 'timeLabel' for its two sub-pickers, each rendered with its own
+   * .fjs-form-field-label element. We read the anchor's `for` attribute (set
+   * by form-js as `<formId>-<fieldId>-date` / `-time`) to pick the right one.
+   */
+  private _resolveLabelKey(field: FormFieldLike, anchor: HTMLElement): string {
+    if (field.type === 'datetime') {
+      const forAttr = anchor.getAttribute('for') ?? '';
+      if (forAttr.endsWith('-time')) return 'timeLabel';
+      return 'dateLabel';
+    }
+    return 'label';
   }
 
   /**
@@ -110,7 +141,7 @@ export class InlineLabelEditService {
     return null;
   }
 
-  private _activate(fieldId: string, anchorEl: HTMLElement, currentLabel: string): void {
+  private _activate(fieldId: string, anchorEl: HTMLElement, currentLabel: string, labelKey: string): void {
     this._teardown();
     const input = document.createElement('input');
     input.type = 'text';
@@ -132,6 +163,7 @@ export class InlineLabelEditService {
     input.select();
 
     this._activeFieldId = fieldId;
+    this._activeLabelKey = labelKey;
     this._inputEl = input;
     this._activeAnchorEl = anchorEl;
 
@@ -157,10 +189,11 @@ export class InlineLabelEditService {
     }
     const newLabel = this._inputEl.value;
     const fieldId = this._activeFieldId;
+    const labelKey = this._activeLabelKey ?? 'label';
     if (newLabel !== originalLabel) {
       const field = this._formFieldRegistry.get(fieldId);
       if (field) {
-        this._modeling.editFormField(field, { label: newLabel });
+        this._modeling.editFormField(field, { [labelKey]: newLabel });
       }
     }
     this._teardown();
@@ -172,6 +205,7 @@ export class InlineLabelEditService {
     // (which real browsers do) finds this._inputEl === null and bails in _commit.
     this._inputEl = null;
     this._activeFieldId = null;
+    this._activeLabelKey = null;
     this._activeAnchorEl = null;
     if (el && el.parentNode) {
       el.parentNode.removeChild(el);

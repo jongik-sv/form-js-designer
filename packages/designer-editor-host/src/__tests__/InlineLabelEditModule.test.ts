@@ -35,7 +35,9 @@ function createMockEventBus(): MockEventBus {
   };
 }
 
-function createMockFormFieldRegistry(fields: Record<string, { id: string; type: string; label?: string }> = {}) {
+function createMockFormFieldRegistry(
+  fields: Record<string, { id: string; type: string; label?: string; dateLabel?: string; timeLabel?: string }> = {},
+) {
   return {
     get: vi.fn((id: string) => fields[id]),
   };
@@ -512,6 +514,140 @@ describe('InlineLabelEditModule empty-label fallback', () => {
     document.body.appendChild(canvas);
 
     dispatchDblclick(fieldEl);
+    expect(document.querySelector('.fjs-inline-label-edit-input')).toBeNull();
+  });
+});
+
+function buildCanvasWithDatetime(fieldId: string, opts: { dateLabel?: string; timeLabel?: string; whichLabel: 'date' | 'time' }): {
+  canvas: HTMLElement;
+  labelEl: HTMLElement;
+} {
+  const canvas = document.createElement('div');
+  canvas.className = 'fjs-editor-container';
+  const fieldEl = document.createElement('div');
+  fieldEl.setAttribute('data-id', fieldId);
+  fieldEl.setAttribute('data-field-type', 'datetime');
+  fieldEl.className = 'fjs-element';
+
+  // form-js renders sub-pickers each with their own label and a `for` attribute
+  // pointing at `${formDomId}-${fieldId}-(date|time)`.
+  if (opts.dateLabel !== undefined) {
+    const dateLabel = document.createElement('label');
+    dateLabel.className = 'fjs-form-field-label';
+    dateLabel.setAttribute('for', `fjs-form-test-${fieldId}-date`);
+    dateLabel.textContent = opts.dateLabel;
+    fieldEl.appendChild(dateLabel);
+  }
+  if (opts.timeLabel !== undefined) {
+    const timeLabel = document.createElement('label');
+    timeLabel.className = 'fjs-form-field-label';
+    timeLabel.setAttribute('for', `fjs-form-test-${fieldId}-time`);
+    timeLabel.textContent = opts.timeLabel;
+    fieldEl.appendChild(timeLabel);
+  }
+  canvas.appendChild(fieldEl);
+  document.body.appendChild(canvas);
+
+  const labelEl = fieldEl.querySelector(
+    `label[for$="-${opts.whichLabel}"]`,
+  ) as HTMLElement;
+  return { canvas, labelEl };
+}
+
+describe('InlineLabelEditModule datetime field (dateLabel/timeLabel)', () => {
+  let cleanup: Array<() => void> = [];
+  beforeEach(() => { cleanup = []; });
+  afterEach(() => {
+    cleanup.forEach((fn) => fn());
+    document.body.innerHTML = '';
+  });
+
+  it('mounts overlay on date sub-label dblclick (subtype=date) reading dateLabel', () => {
+    const fields = {
+      'dt1': { id: 'dt1', type: 'datetime', dateLabel: 'My Date' },
+    };
+    const { service, formFieldRegistry } = createService({
+      formFieldRegistry: createMockFormFieldRegistry(fields),
+    });
+    cleanup.push(() => service.destroy());
+    const { labelEl } = buildCanvasWithDatetime('dt1', { dateLabel: 'My Date', whichLabel: 'date' });
+    dispatchDblclick(labelEl);
+
+    const input = document.querySelector('.fjs-inline-label-edit-input') as HTMLInputElement | null;
+    expect(input).not.toBeNull();
+    expect(input!.value).toBe('My Date');
+    expect(input!.getAttribute('data-field-id')).toBe('dt1');
+    expect(formFieldRegistry.get).toHaveBeenCalledWith('dt1');
+  });
+
+  it('mounts overlay on time sub-label dblclick (subtype=time) reading timeLabel', () => {
+    const fields = {
+      'dt2': { id: 'dt2', type: 'datetime', timeLabel: 'My Time' },
+    };
+    const { service } = createService({
+      formFieldRegistry: createMockFormFieldRegistry(fields),
+    });
+    cleanup.push(() => service.destroy());
+    const { labelEl } = buildCanvasWithDatetime('dt2', { timeLabel: 'My Time', whichLabel: 'time' });
+    dispatchDblclick(labelEl);
+
+    const input = document.querySelector('.fjs-inline-label-edit-input') as HTMLInputElement | null;
+    expect(input).not.toBeNull();
+    expect(input!.value).toBe('My Time');
+  });
+
+  it('Enter on dateLabel input commits to dateLabel (not label)', () => {
+    const fields = {
+      'dt3': { id: 'dt3', type: 'datetime', dateLabel: 'Old' },
+    };
+    const { service, modeling } = createService({
+      formFieldRegistry: createMockFormFieldRegistry(fields),
+    });
+    cleanup.push(() => service.destroy());
+    const { labelEl } = buildCanvasWithDatetime('dt3', { dateLabel: 'Old', whichLabel: 'date' });
+    dispatchDblclick(labelEl);
+
+    const input = document.querySelector('.fjs-inline-label-edit-input') as HTMLInputElement;
+    input.value = 'New Date';
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+
+    expect(modeling.editFormField).toHaveBeenCalledTimes(1);
+    expect(modeling.editFormField).toHaveBeenCalledWith(fields.dt3, { dateLabel: 'New Date' });
+    expect(document.querySelector('.fjs-inline-label-edit-input')).toBeNull();
+  });
+
+  it('Enter on timeLabel input commits to timeLabel (not label)', () => {
+    const fields = {
+      'dt4': { id: 'dt4', type: 'datetime', timeLabel: 'Old Time' },
+    };
+    const { service, modeling } = createService({
+      formFieldRegistry: createMockFormFieldRegistry(fields),
+    });
+    cleanup.push(() => service.destroy());
+    const { labelEl } = buildCanvasWithDatetime('dt4', { timeLabel: 'Old Time', whichLabel: 'time' });
+    dispatchDblclick(labelEl);
+
+    const input = document.querySelector('.fjs-inline-label-edit-input') as HTMLInputElement;
+    input.value = 'New Time';
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+
+    expect(modeling.editFormField).toHaveBeenCalledWith(fields.dt4, { timeLabel: 'New Time' });
+  });
+
+  it('does not mount when datetime field has neither dateLabel nor timeLabel as string', () => {
+    const fields = {
+      'dt5': { id: 'dt5', type: 'datetime' },  // no labels
+    };
+    const { service } = createService({
+      formFieldRegistry: createMockFormFieldRegistry(fields),
+    });
+    cleanup.push(() => service.destroy());
+    // Render a date sub-label DOM but with no corresponding string in the model
+    const { labelEl } = buildCanvasWithDatetime('dt5', { dateLabel: '', whichLabel: 'date' });
+    // override DOM textContent to simulate a partially-rendered state — model still
+    // missing the dateLabel property entirely
+    labelEl.textContent = '';
+    dispatchDblclick(labelEl);
     expect(document.querySelector('.fjs-inline-label-edit-input')).toBeNull();
   });
 });
