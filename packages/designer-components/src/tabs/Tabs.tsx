@@ -17,6 +17,22 @@ void h;
 const VALID_ORIENTATIONS = new Set(['horizontal', 'vertical']);
 
 /**
+ * Survive remount-on-schema-change.
+ *
+ * form-js editor reconciles by replacing the entire field subtree when the
+ * schema changes (e.g. modeling.editFormField on a child field). That nukes
+ * the Tabs preact tree, so `useState(effectiveDefaultValue)` re-runs and the
+ * UI snaps back to the first tab — even though the user is mid-edit on a
+ * different tab. The selection.changed handler below cannot recover state
+ * because it only registers AFTER mount, by which point the post-edit
+ * selection event has already fired.
+ *
+ * Keying by field.id (Tabs id, stable across remounts) restores the active
+ * tab without polluting the schema with transient UI state.
+ */
+const activeTabCache = new Map<string, string>();
+
+/**
  * Validate and sanitize tabs field values for render.
  * Now uses field.components (tabPanel[]) instead of field.tabs[].
  */
@@ -75,7 +91,15 @@ function TabsRender(props: PureRenderProps<TabsSchema>) {
   // `.dc-tabs-container { min-height: inherit }` 가 받아 쓴다 — 여기서는 어떤 높이도 인라인으로
   // 지정하지 않는다. (tabHeight 는 legacy 필드로 migrateLegacyTabsSchema 가 layout.height 로 흡수한다.)
 
-  const [activeId, setActiveId] = useState<string>(effectiveDefaultValue);
+  const cachedActiveId = activeTabCache.get(field.id);
+  const initialActiveId =
+    cachedActiveId && panelIds.includes(cachedActiveId) ? cachedActiveId : effectiveDefaultValue;
+  const [activeId, setActiveId] = useState<string>(initialActiveId);
+
+  // Mirror activeId into the cache so a subsequent remount restores it.
+  useEffect(() => {
+    activeTabCache.set(field.id, activeId);
+  }, [field.id, activeId]);
 
   // Keep activeId valid if panels change (e.g. panel deleted, schema re-imported).
   useEffect(() => {
