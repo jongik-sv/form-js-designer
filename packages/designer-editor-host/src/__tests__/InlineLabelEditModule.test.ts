@@ -185,3 +185,61 @@ describe('InlineLabelEditModule dblclick filter', () => {
     expect(document.querySelector('.fjs-inline-label-edit-input')).toBeNull();
   });
 });
+
+describe('InlineLabelEditModule commit', () => {
+  let cleanup: Array<() => void> = [];
+  beforeEach(() => {
+    cleanup = [];
+  });
+  afterEach(() => {
+    cleanup.forEach((fn) => fn());
+    document.body.innerHTML = '';
+  });
+
+  it('commits new label via modeling.editFormField on Enter and removes overlay', () => {
+    const fields = { 'f1': { id: 'f1', type: 'textfield', label: 'Old' } };
+    const registry = createMockFormFieldRegistry(fields);
+    const { service, modeling } = createService({ formFieldRegistry: registry });
+    cleanup.push(() => service.destroy());
+    const { labelEl } = buildCanvasWithField('f1', 'Old');
+    dispatchDblclick(labelEl);
+
+    const input = document.querySelector('.fjs-inline-label-edit-input') as HTMLInputElement;
+    input.value = 'New Label';
+    const enter = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true });
+    input.dispatchEvent(enter);
+
+    expect(modeling.editFormField).toHaveBeenCalledTimes(1);
+    expect(modeling.editFormField).toHaveBeenCalledWith(fields.f1, { label: 'New Label' });
+    expect(document.querySelector('.fjs-inline-label-edit-input')).toBeNull();
+  });
+
+  it('commits on blur', () => {
+    const fields = { 'f1': { id: 'f1', type: 'textfield', label: 'Old' } };
+    const { service, modeling } = createService({ formFieldRegistry: createMockFormFieldRegistry(fields) });
+    cleanup.push(() => service.destroy());
+    const { labelEl } = buildCanvasWithField('f1', 'Old');
+    dispatchDblclick(labelEl);
+
+    const input = document.querySelector('.fjs-inline-label-edit-input') as HTMLInputElement;
+    input.value = 'Blurred';
+    input.dispatchEvent(new FocusEvent('blur'));
+
+    expect(modeling.editFormField).toHaveBeenCalledWith(fields.f1, { label: 'Blurred' });
+    expect(document.querySelector('.fjs-inline-label-edit-input')).toBeNull();
+  });
+
+  it('does not commit when value is unchanged', () => {
+    const fields = { 'f1': { id: 'f1', type: 'textfield', label: 'Old' } };
+    const { service, modeling } = createService({ formFieldRegistry: createMockFormFieldRegistry(fields) });
+    cleanup.push(() => service.destroy());
+    const { labelEl } = buildCanvasWithField('f1', 'Old');
+    dispatchDblclick(labelEl);
+
+    const input = document.querySelector('.fjs-inline-label-edit-input') as HTMLInputElement;
+    input.dispatchEvent(new FocusEvent('blur'));
+
+    expect(modeling.editFormField).not.toHaveBeenCalled();
+    expect(document.querySelector('.fjs-inline-label-edit-input')).toBeNull();
+  });
+});

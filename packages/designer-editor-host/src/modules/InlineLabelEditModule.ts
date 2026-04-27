@@ -98,6 +98,36 @@ export class InlineLabelEditService {
     this._activeFieldId = fieldId;
     this._inputEl = input;
     this._activeLabelEl = labelEl;
+
+    const onKeyDown = (ev: KeyboardEvent) => {
+      if (ev.key === 'Enter') {
+        ev.preventDefault();
+        this._commit(currentLabel);
+      } else if (ev.key === 'Escape') {
+        ev.preventDefault();
+        this._teardown();
+      }
+    };
+    const onBlur = () => this._commit(currentLabel);
+
+    input.addEventListener('keydown', onKeyDown);
+    input.addEventListener('blur', onBlur);
+  }
+
+  private _commit(originalLabel: string): void {
+    if (!this._inputEl || !this._activeFieldId) {
+      this._teardown();
+      return;
+    }
+    const newLabel = this._inputEl.value;
+    const fieldId = this._activeFieldId;
+    if (newLabel !== originalLabel) {
+      const field = this._formFieldRegistry.get(fieldId);
+      if (field) {
+        this._modeling.editFormField(field, { label: newLabel });
+      }
+    }
+    this._teardown();
   }
 
   private _teardown(): void {
