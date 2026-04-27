@@ -96,3 +96,92 @@ describe('InlineLabelEditModule shape', () => {
     removeSpy.mockRestore();
   });
 });
+
+function buildCanvasWithField(fieldId: string, labelText: string): {
+  canvas: HTMLElement;
+  fieldEl: HTMLElement;
+  labelEl: HTMLElement;
+  outsideEl: HTMLElement;
+} {
+  const canvas = document.createElement('div');
+  canvas.className = 'fjs-editor-container';
+  const fieldEl = document.createElement('div');
+  fieldEl.setAttribute('data-id', fieldId);
+  fieldEl.className = 'fjs-form-field';
+  const labelEl = document.createElement('label');
+  labelEl.className = 'fjs-form-field-label';
+  labelEl.textContent = labelText;
+  fieldEl.appendChild(labelEl);
+  canvas.appendChild(fieldEl);
+  document.body.appendChild(canvas);
+
+  const outsideEl = document.createElement('div');
+  outsideEl.textContent = 'outside';
+  document.body.appendChild(outsideEl);
+
+  return { canvas, fieldEl, labelEl, outsideEl };
+}
+
+function dispatchDblclick(target: Element): void {
+  const ev = new MouseEvent('dblclick', { bubbles: true, cancelable: true });
+  target.dispatchEvent(ev);
+}
+
+describe('InlineLabelEditModule dblclick filter', () => {
+  let cleanup: Array<() => void> = [];
+  beforeEach(() => {
+    cleanup = [];
+  });
+  afterEach(() => {
+    cleanup.forEach((fn) => fn());
+    document.body.innerHTML = '';
+  });
+
+  it('ignores dblclick outside .fjs-editor-container', () => {
+    const fields = { 'f1': { id: 'f1', type: 'textfield', label: 'Old' } };
+    const { service, modeling } = createService({ formFieldRegistry: createMockFormFieldRegistry(fields) });
+    cleanup.push(() => service.destroy());
+    const { outsideEl } = buildCanvasWithField('f1', 'Old');
+    dispatchDblclick(outsideEl);
+    expect(document.querySelector('.fjs-inline-label-edit-input')).toBeNull();
+    expect(modeling.editFormField).not.toHaveBeenCalled();
+  });
+
+  it('ignores dblclick on [data-id] but not on .fjs-form-field-label', () => {
+    const fields = { 'f1': { id: 'f1', type: 'textfield', label: 'Old' } };
+    const { service } = createService({ formFieldRegistry: createMockFormFieldRegistry(fields) });
+    cleanup.push(() => service.destroy());
+    const { fieldEl } = buildCanvasWithField('f1', 'Old');
+    dispatchDblclick(fieldEl);
+    expect(document.querySelector('.fjs-inline-label-edit-input')).toBeNull();
+  });
+
+  it('mounts input overlay on label dblclick (prefilled with current label)', () => {
+    const fields = { 'f1': { id: 'f1', type: 'textfield', label: 'Old' } };
+    const { service, formFieldRegistry } = createService({ formFieldRegistry: createMockFormFieldRegistry(fields) });
+    cleanup.push(() => service.destroy());
+    const { labelEl } = buildCanvasWithField('f1', 'Old');
+    dispatchDblclick(labelEl);
+    const input = document.querySelector('.fjs-inline-label-edit-input') as HTMLInputElement | null;
+    expect(input).not.toBeNull();
+    expect(input!.value).toBe('Old');
+    expect(formFieldRegistry.get).toHaveBeenCalledWith('f1');
+  });
+
+  it('does not mount overlay when registry returns undefined', () => {
+    const { service } = createService({ formFieldRegistry: createMockFormFieldRegistry({}) });
+    cleanup.push(() => service.destroy());
+    const { labelEl } = buildCanvasWithField('missing', 'Old');
+    dispatchDblclick(labelEl);
+    expect(document.querySelector('.fjs-inline-label-edit-input')).toBeNull();
+  });
+
+  it('does not mount overlay when field has no label property', () => {
+    const fields = { 'f1': { id: 'f1', type: 'spacer' } };
+    const { service } = createService({ formFieldRegistry: createMockFormFieldRegistry(fields) });
+    cleanup.push(() => service.destroy());
+    const { labelEl } = buildCanvasWithField('f1', '');
+    dispatchDblclick(labelEl);
+    expect(document.querySelector('.fjs-inline-label-edit-input')).toBeNull();
+  });
+});

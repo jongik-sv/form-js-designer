@@ -24,6 +24,9 @@ export class InlineLabelEditService {
   private readonly _eventBus: EventBusLike;
   private readonly _formFieldRegistry: FormFieldRegistryLike;
   private readonly _modeling: ModelingLike;
+  private _activeFieldId: string | null = null;
+  private _inputEl: HTMLInputElement | null = null;
+  private _activeLabelEl: HTMLElement | null = null;
   private readonly _boundOnDblclick: (e: MouseEvent) => void;
 
   constructor(eventBus: EventBusLike, formFieldRegistry: FormFieldRegistryLike, modeling: ModelingLike) {
@@ -48,12 +51,62 @@ export class InlineLabelEditService {
     this._teardown();
   }
 
-  private _onDblclick(_e: MouseEvent): void {
-    // Implemented in later tasks
+  private _onDblclick(e: MouseEvent): void {
+    const target = e.target as HTMLElement | null;
+    if (!target || typeof target.closest !== 'function') return;
+
+    const labelEl = target.closest('.fjs-form-field-label') as HTMLElement | null;
+    if (!labelEl) return;
+
+    if (!labelEl.closest('.fjs-editor-container')) return;
+
+    const fieldEl = labelEl.closest('[data-id]') as HTMLElement | null;
+    if (!fieldEl) return;
+    const fieldId = fieldEl.getAttribute('data-id');
+    if (!fieldId) return;
+
+    const field = this._formFieldRegistry.get(fieldId);
+    if (!field) return;
+    if (typeof field.label !== 'string') return;
+
+    e.preventDefault();
+    e.stopPropagation();
+    this._activate(fieldId, labelEl, field.label);
+  }
+
+  private _activate(fieldId: string, labelEl: HTMLElement, currentLabel: string): void {
+    this._teardown();
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'fjs-inline-label-edit-input';
+    input.value = currentLabel;
+    input.setAttribute('data-testid', 'inline-label-edit-input');
+    input.setAttribute('data-field-id', fieldId);
+
+    const rect = labelEl.getBoundingClientRect();
+    input.style.position = 'fixed';
+    input.style.left = `${rect.left}px`;
+    input.style.top = `${rect.top}px`;
+    input.style.width = `${Math.max(rect.width, 80)}px`;
+    input.style.height = `${rect.height}px`;
+    input.style.zIndex = '9999';
+
+    document.body.appendChild(input);
+    input.focus();
+    input.select();
+
+    this._activeFieldId = fieldId;
+    this._inputEl = input;
+    this._activeLabelEl = labelEl;
   }
 
   private _teardown(): void {
-    // Implemented in later tasks
+    if (this._inputEl && this._inputEl.parentNode) {
+      this._inputEl.parentNode.removeChild(this._inputEl);
+    }
+    this._inputEl = null;
+    this._activeFieldId = null;
+    this._activeLabelEl = null;
   }
 }
 
