@@ -722,8 +722,5 @@ describe('InlineLabelEditModule text type → feelers popup', () => {
 
     // 인라인 input 미생성 확인
     expect(document.querySelector('.fjs-inline-label-edit-input')).toBeNull();
-
-    document.body.removeChild(container);
-    service.destroy();
   });
 });

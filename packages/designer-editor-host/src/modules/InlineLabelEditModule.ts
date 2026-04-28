@@ -55,8 +55,8 @@ export class InlineLabelEditService {
     }
 
     eventBus.on('diagram.destroy', () => this.destroy());
-    eventBus.on('commandStack.changed', () => this._teardown());
-    eventBus.on('selection.changed', () => this._teardown());
+    eventBus.on('commandStack.changed', () => { if (this._inputEl) this._teardown(); });
+    eventBus.on('selection.changed', () => { if (this._inputEl) this._teardown(); });
   }
 
   destroy(): void {
@@ -126,6 +126,7 @@ export class InlineLabelEditService {
       tooltipContainer: document.body,
       type: 'feelers',
       value: currentValue,
+      // TODO: wire real variables from variable resolver service for FEEL auto-complete
       variables: [],
       feelLanguageContext: null,
     });
