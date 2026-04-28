@@ -194,8 +194,12 @@ function TabsRender(props: PureRenderProps<TabsSchema>) {
                * so dragula resolves drop target to the tabPanel, not its parent tabs.
                * Without this, `tabs-tabpanel-refactor` fix: dropped fields land as
                * siblings of tabPanels in tabs.components[] and never render.
+               *
+               * Spread parent props (onChange/onBlur/onFocus/disabled/readonly) so the
+               * tabPanel's children receive a working onChange chain — without this,
+               * input fields inside tabs throw `_onChange is not a function`.
                */}
-              <FormField field={tp as never} />
+              <FormField {...(props as Record<string, unknown>)} field={tp as never} />
             </TabsPrimitive.Content>
           ))}
         </div>

@@ -128,7 +128,8 @@ function ModalRender(props: PureRenderProps<ModalSchema>) {
             )}
 
             <div class="dc-modal__body dc-container-body">
-              <ChildrenSlot field={field as unknown as ContainerField} />
+              {/* Forward parent FormField props so children receive onChange. */}
+              <ChildrenSlot {...props} field={field as unknown as ContainerField} />
             </div>
           </DialogPrimitive.Content>
         </DialogPrimitive.Portal>

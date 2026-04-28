@@ -50,7 +50,11 @@ function CardRender(props: PureRenderProps<CardSchema>) {
         <HeaderTag class="dc-card__header">{header}</HeaderTag>
       ) : null}
       <div class="dc-card__body dc-container-body">
-        <ChildrenSlot field={field as unknown as ContainerField} />
+        {/* Forward parent FormField props (onChange/onBlur/onFocus/disabled/readonly)
+            so child fields inside the card receive a working onChange handler.
+            Without this, dropdown/datetime/textfield interactions throw
+            `_onChange is not a function`. */}
+        <ChildrenSlot {...props} field={field as unknown as ContainerField} />
       </div>
       {errors.length > 0 ? (
         <ul class="dc-card__errors" aria-label="errors">
