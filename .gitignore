@@ -35,3 +35,6 @@ packages/*/spike/*/tests/artifacts/
 .claude/scheduled_tasks.lock
 .claude/worktrees/
 **/.vscode-test/
+
+# superpowers plugin local state
+.superpowers/

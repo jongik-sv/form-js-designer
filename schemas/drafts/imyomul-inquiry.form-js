@@ -1,0 +1,248 @@
+{
+  "components": [
+    {
+      "type": "card",
+      "padding": "md",
+      "elevation": 1,
+      "components": [
+        {
+          "subtype": "date",
+          "type": "datetime",
+          "id": "datetime-1",
+          "key": "filter.dateFrom",
+          "label": "대상기간",
+          "layout": {
+            "row": "row-1",
+            "columns": 2
+          },
+          "dateLabel": "시작일자"
+        },
+        {
+          "subtype": "date",
+          "type": "datetime",
+          "id": "datetime-2",
+          "key": "filter.dateTo",
+          "label": "",
+          "layout": {
+            "row": "row-1",
+            "columns": 2
+          },
+          "dateLabel": "종료일자"
+        },
+        {
+          "label": "공정",
+          "values": [
+            {
+              "label": "전체",
+              "value": "all"
+            },
+            {
+              "label": "1P",
+              "value": "1P"
+            },
+            {
+              "label": "33",
+              "value": "33"
+            },
+            {
+              "label": "51",
+              "value": "51"
+            },
+            {
+              "label": "69",
+              "value": "69"
+            },
+            {
+              "label": "72",
+              "value": "72"
+            },
+            {
+              "label": "77",
+              "value": "77"
+            },
+            {
+              "label": "82",
+              "value": "82"
+            },
+            {
+              "label": "83",
+              "value": "83"
+            },
+            {
+              "label": "84",
+              "value": "84"
+            }
+          ],
+          "type": "select",
+          "id": "select-1",
+          "key": "filter.gongjeong",
+          "layout": {
+            "row": "row-1",
+            "columns": 2
+          }
+        },
+        {
+          "label": "구분",
+          "values": [
+            {
+              "label": "전체",
+              "value": "all"
+            },
+            {
+              "label": "1. 생산",
+              "value": "production"
+            },
+            {
+              "label": "4. 스크랩판정",
+              "value": "scrap"
+            }
+          ],
+          "type": "select",
+          "id": "select-2",
+          "key": "filter.gubun",
+          "layout": {
+            "row": "row-1",
+            "columns": 2
+          }
+        },
+        {
+          "label": "원재료품명",
+          "type": "textfield",
+          "id": "textfield-1",
+          "key": "filter.wonjaeryoPumName",
+          "layout": {
+            "row": "row-1",
+            "columns": 2
+          }
+        },
+        {
+          "label": "제품품명",
+          "type": "textfield",
+          "id": "textfield-2",
+          "key": "filter.jepumPumName",
+          "layout": {
+            "row": "row-1",
+            "columns": 2
+          }
+        },
+        {
+          "label": "조회",
+          "action": "submit",
+          "type": "button",
+          "id": "button-1",
+          "layout": {
+            "row": "row-1",
+            "columns": 2
+          }
+        },
+        {
+          "label": "닫기",
+          "action": "reset",
+          "type": "button",
+          "id": "button-2",
+          "layout": {
+            "row": "row-1",
+            "columns": 1
+          }
+        }
+      ],
+      "id": "card-1",
+      "header": "임여물 조회",
+      "headerTag": "h3",
+      "layout": {
+        "row": "Row_0czfv7w"
+      }
+    },
+    {
+      "type": "card",
+      "padding": "md",
+      "elevation": 1,
+      "components": [
+        {
+          "type": "table",
+          "label": "잉여물 목록",
+          "dataSource": "= [{jeongiil:\"20260427\",saengsanGubun:\"1. 생산\",gongjeong:\"1P\",wonjaeryo:\"H\",jepum:\"3\",gungnaeTuip:\"168,400\",gungnaeSeangsan:\"163,740\",gungnaeIossCoil:\"0\",gungnaeIossOther:\"4,660\",suipTuip:\"\",suipSaengsan:\"\",suipLossCoil:\"\",suipLoss:\"\"}, {jeongiil:\"20260427\",saengsanGubun:\"1. 생산\",gongjeong:\"1P\",wonjaeryo:\"H\",jepum:\"6\",gungnaeTuip:\"21,030\",gungnaeSeangsan:\"20,420\",gungnaeIossCoil:\"0\",gungnaeIossOther:\"610\",suipTuip:\"\",suipSaengsan:\"\",suipLossCoil:\"\",suipLoss:\"\"}, {jeongiil:\"20260427\",saengsanGubun:\"1. 생산\",gongjeong:\"1P\",wonjaeryo:\"H\",jepum:\"G\",gungnaeTuip:\"2,391,830\",gungnaeSeangsan:\"2,337,800\",gungnaeIossCoil:\"0\",gungnaeIossOther:\"54,030\",suipTuip:\"\",suipSaengsan:\"\",suipLossCoil:\"\",suipLoss:\"\"}, {jeongiil:\"20260427\",saengsanGubun:\"1. 생산\",gongjeong:\"1P\",wonjaeryo:\"H\",jepum:\"L\",gungnaeTuip:\"90,370\",gungnaeSeangsan:\"87,730\",gungnaeIossCoil:\"0\",gungnaeIossOther:\"2,640\",suipTuip:\"\",suipSaengsan:\"\",suipLossCoil:\"\",suipLoss:\"\"}, {jeongiil:\"20260427\",saengsanGubun:\"1. 생산\",gongjeong:\"33\",wonjaeryo:\"H\",jepum:\"2\",gungnaeTuip:\"169,710\",gungnaeSeangsan:\"168,940\",gungnaeIossCoil:\"770\",gungnaeIossOther:\"0\",suipTuip:\"\",suipSaengsan:\"\",suipLossCoil:\"\",suipLoss:\"\"}, {jeongiil:\"20260427\",saengsanGubun:\"1. 생산\",gongjeong:\"33\",wonjaeryo:\"H\",jepum:\"E\",gungnaeTuip:\"\",gungnaeSeangsan:\"\",gungnaeIossCoil:\"\",gungnaeIossOther:\"\",suipTuip:\"\",suipSaengsan:\"\",suipLossCoil:\"\",suipLoss:\"\"}, {jeongiil:\"20260427\",saengsanGubun:\"1. 생산\",gongjeong:\"51\",wonjaeryo:\"H\",jepum:\"2\",gungnaeTuip:\"165,465\",gungnaeSeangsan:\"165,460\",gungnaeIossCoil:\"0\",gungnaeIossOther:\"5\",suipTuip:\"\",suipSaengsan:\"\",suipLossCoil:\"\",suipLoss:\"\"}, {jeongiil:\"20260427\",saengsanGubun:\"1. 생산\",gongjeong:\"69\",wonjaeryo:\"H\",jepum:\"2\",gungnaeTuip:\"6,501\",gungnaeSeangsan:\"5,993\",gungnaeIossCoil:\"0\",gungnaeIossOther:\"508\",suipTuip:\"\",suipSaengsan:\"\",suipLossCoil:\"\",suipLoss:\"\"}, {jeongiil:\"20260427\",saengsanGubun:\"1. 생산\",gongjeong:\"72\",wonjaeryo:\"H\",jepum:\"3\",gungnaeTuip:\"3,522\",gungnaeSeangsan:\"2,811\",gungnaeIossCoil:\"734\",gungnaeIossOther:\"0\",suipTuip:\"\",suipSaengsan:\"\",suipLossCoil:\"\",suipLoss:\"\"}, {jeongiil:\"20260427\",saengsanGubun:\"1. 생산\",gongjeong:\"A3\",wonjaeryo:\"H\",jepum:\"6\",gungnaeTuip:\"\",gungnaeSeangsan:\"\",gungnaeIossCoil:\"\",gungnaeIossOther:\"\",suipTuip:\"11,493\",suipSaengsan:\"11,054\",suipLossCoil:\"94\",suipLoss:\"\"}, {jeongiil:\"20260427\",saengsanGubun:\"1. 생산\",gongjeong:\"A4\",wonjaeryo:\"H\",jepum:\"3\",gungnaeTuip:\"47,933\",gungnaeSeangsan:\"27,096\",gungnaeIossCoil:\"1,106\",gungnaeIossOther:\"19,731\",suipTuip:\"\",suipSaengsan:\"\",suipLossCoil:\"\",suipLoss:\"\"}, {jeongiil:\"20260427\",saengsanGubun:\"1. 생산\",gongjeong:\"A6\",wonjaeryo:\"H\",jepum:\"3\",gungnaeTuip:\"14,323\",gungnaeSeangsan:\"14,274\",gungnaeIossCoil:\"0\",gungnaeIossOther:\"49\",suipTuip:\"16,402\",suipSaengsan:\"16,382\",suipLossCoil:\"0\",suipLoss:\"\"}, {jeongiil:\"20260427\",saengsanGubun:\"1. 생산\",gongjeong:\"A7\",wonjaeryo:\"C\",jepum:\"2\",gungnaeTuip:\"232,905\",gungnaeSeangsan:\"226,573\",gungnaeIossCoil:\"1,849\",gungnaeIossOther:\"4,483\",suipTuip:\"\",suipSaengsan:\"\",suipLossCoil:\"\",suipLoss:\"\"}, {jeongiil:\"20260427\",saengsanGubun:\"1. 생산\",gongjeong:\"소계\",wonjaeryo:\"\",jepum:\"\",gungnaeTuip:\"5,865,114\",gungnaeSeangsan:\"5,748,221\",gungnaeIossCoil:\"8,340\",gungnaeIossOther:\"47,311\",suipTuip:\"27,895\",suipSaengsan:\"27,436\",suipLossCoil:\"94\",suipLoss:\"\"}, {jeongiil:\"20260427\",saengsanGubun:\"4. 스크랩판정\",gongjeong:\"51\",wonjaeryo:\"H\",jepum:\"2\",gungnaeTuip:\"1,584\",gungnaeSeangsan:\"0\",gungnaeIossCoil:\"1,584\",gungnaeIossOther:\"0\",suipTuip:\"\",suipSaengsan:\"\",suipLossCoil:\"\",suipLoss:\"\"}]",
+          "layout": {
+            "row": "row-2",
+            "columns": 16,
+            "height": 648.09765625
+          },
+          "rowCount": 15,
+          "id": "table-1",
+          "columns": [
+            {
+              "label": "잉여물 전기일",
+              "key": "jeongiil"
+            },
+            {
+              "label": "잉여물 생산구분",
+              "key": "saengsanGubun"
+            },
+            {
+              "label": "공정",
+              "key": "gongjeong"
+            },
+            {
+              "label": "원재료",
+              "key": "wonjaeryo"
+            },
+            {
+              "label": "제품",
+              "key": "jepum"
+            },
+            {
+              "label": "국내투입",
+              "key": "gungnaeTuip"
+            },
+            {
+              "label": "국내생산",
+              "key": "gungnaeSeangsan"
+            },
+            {
+              "label": "국내LOSS (코일형)",
+              "key": "gungnaeIossCoil"
+            },
+            {
+              "label": "국내LOSS (기타)",
+              "key": "gungnaeIossOther"
+            },
+            {
+              "label": "수입통관투입",
+              "key": "suipTuip"
+            },
+            {
+              "label": "수입통관생산",
+              "key": "suipSaengsan"
+            },
+            {
+              "label": "수입통관LOSS (코일형)",
+              "key": "suipLossCoil"
+            },
+            {
+              "label": "수입통관LOSS",
+              "key": "suipLoss"
+            }
+          ]
+        },
+        {
+          "text": "## 64건의 Data가 조회되었습니다.",
+          "type": "text",
+          "id": "text-2",
+          "layout": {
+            "row": "row-3",
+            "columns": 16
+          }
+        }
+      ],
+      "id": "card-2",
+      "header": "",
+      "headerTag": "h3",
+      "layout": {
+        "row": "Row_1wz56lk"
+      }
+    }
+  ],
+  "schemaVersion": 19,
+  "type": "default",
+  "id": "Form_imyomul_inquiry"
+}

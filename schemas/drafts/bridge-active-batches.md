@@ -431,8 +431,24 @@
 
 ## 검증 결과
 
-```
-Validation passed: schemas/drafts/bridge-active-batches.form-js
+```form-js
+{
+  "components": [
+    {
+      "label": "Text field",
+      "type": "textfield",
+      "layout": {
+        "row": "Row_165pry6",
+        "columns": null
+      },
+      "id": "Field_0w2qune",
+      "key": "textfield_v22b7r"
+    }
+  ],
+  "type": "default",
+  "id": "Form_01re16m",
+  "schemaVersion": 19
+}
 ```
 
 자기검증(§5) 모두 통과:
