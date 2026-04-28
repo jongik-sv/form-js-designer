@@ -11,6 +11,7 @@
 export interface EventBusLike {
   on(event: string, callback: (event?: unknown) => void): void;
   off(event: string, callback: (event?: unknown) => void): void;
+  fire(event: string, context?: unknown): unknown;
 }
 
 export interface FormFieldLike {
@@ -19,6 +20,7 @@ export interface FormFieldLike {
   label?: string;
   dateLabel?: string;
   timeLabel?: string;
+  text?: string;
 }
 
 export interface FormFieldRegistryLike {
@@ -76,6 +78,13 @@ export class InlineLabelEditService {
     const field = this._formFieldRegistry.get(fieldId);
     if (!field) return;
 
+    if (field.type === 'text') {
+      e.preventDefault();
+      e.stopPropagation();
+      this._openTextPopup(field, anchor);
+      return;
+    }
+
     const labelKey = this._resolveLabelKey(field, anchor);
     const currentLabel = (field as Record<string, unknown>)[labelKey];
     if (typeof currentLabel !== 'string') return;
@@ -100,6 +109,26 @@ export class InlineLabelEditService {
       return 'dateLabel';
     }
     return 'label';
+  }
+
+  private _openTextPopup(field: FormFieldLike, sourceEl: HTMLElement): void {
+    const currentValue = field.text ?? '';
+    this._eventBus.fire('propertiesPanel.openPopup', {
+      element: field,
+      entryId: `${field.id}-text`,
+      hostLanguage: 'markdown',
+      label: 'Text',
+      onInput: (value: string) => {
+        this._modeling.editFormField(field, { text: value });
+      },
+      singleLine: false,
+      sourceElement: sourceEl,
+      tooltipContainer: document.body,
+      type: 'feelers',
+      value: currentValue,
+      variables: [],
+      feelLanguageContext: null,
+    });
   }
 
   /**

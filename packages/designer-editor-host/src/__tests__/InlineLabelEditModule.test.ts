@@ -17,6 +17,7 @@ import { InlineLabelEditModule } from '../modules/InlineLabelEditModule';
 interface MockEventBus {
   on: ReturnType<typeof vi.fn>;
   off: ReturnType<typeof vi.fn>;
+  fire: ReturnType<typeof vi.fn>;
   emit: (event: string, payload?: unknown) => void;
 }
 
@@ -28,6 +29,7 @@ function createMockEventBus(): MockEventBus {
       listeners[event]!.push(cb);
     }),
     off: vi.fn(),
+    fire: vi.fn(),
     emit: (event: string, payload?: unknown) => {
       const cbs = listeners[event] ?? [];
       for (const cb of cbs) cb(payload);
@@ -36,7 +38,7 @@ function createMockEventBus(): MockEventBus {
 }
 
 function createMockFormFieldRegistry(
-  fields: Record<string, { id: string; type: string; label?: string; dateLabel?: string; timeLabel?: string }> = {},
+  fields: Record<string, { id: string; type: string; label?: string; dateLabel?: string; timeLabel?: string; text?: string }> = {},
 ) {
   return {
     get: vi.fn((id: string) => fields[id]),
@@ -678,5 +680,50 @@ describe('InlineLabelEditModule datetime field (dateLabel/timeLabel)', () => {
     labelEl.textContent = '';
     dispatchDblclick(labelEl);
     expect(document.querySelector('.fjs-inline-label-edit-input')).toBeNull();
+  });
+});
+
+describe('InlineLabelEditModule text type → feelers popup', () => {
+  let cleanup: Array<() => void> = [];
+  beforeEach(() => { cleanup = []; });
+  afterEach(() => {
+    cleanup.forEach((fn) => fn());
+    document.body.innerHTML = '';
+  });
+
+  it('text 타입 더블클릭 → propertiesPanel.openPopup 발화, 인라인 input 미생성', () => {
+    const fields = { 'f1': { id: 'f1', type: 'text', text: '## Hello World' } };
+    const { service, eventBus } = createService({ formFieldRegistry: createMockFormFieldRegistry(fields) });
+    cleanup.push(() => service.destroy());
+
+    // DOM 셋업: .fjs-editor-container > [data-id="f1"] > div
+    const container = document.createElement('div');
+    container.className = 'fjs-editor-container';
+    const fieldEl = document.createElement('div');
+    fieldEl.setAttribute('data-id', 'f1');
+    const inner = document.createElement('div');
+    fieldEl.appendChild(inner);
+    container.appendChild(fieldEl);
+    document.body.appendChild(container);
+
+    // 더블클릭
+    const dblclickEvt = new MouseEvent('dblclick', { bubbles: true, cancelable: true });
+    inner.dispatchEvent(dblclickEvt);
+
+    // fire 호출 확인
+    expect((eventBus as any).fire).toHaveBeenCalledWith(
+      'propertiesPanel.openPopup',
+      expect.objectContaining({
+        type: 'feelers',
+        hostLanguage: 'markdown',
+        value: '## Hello World',
+      }),
+    );
+
+    // 인라인 input 미생성 확인
+    expect(document.querySelector('.fjs-inline-label-edit-input')).toBeNull();
+
+    document.body.removeChild(container);
+    service.destroy();
   });
 });
