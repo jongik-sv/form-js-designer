@@ -130,6 +130,18 @@ export class InlineLabelEditService {
       variables: [],
       feelLanguageContext: null,
     });
+
+    // FeelPopup renders synchronously into document.body. In the embedded
+    // designer (tiptap modal at z-index 2.1B), that container sits as a sibling
+    // of the modal and gets covered. Reparent the popup container into the
+    // portal root so it inherits the modal's stacking context.
+    const portalRoot = sourceEl.closest('.fjd-embedded-designer-root') as HTMLElement | null;
+    if (portalRoot) {
+      const popupContainer = document.body.querySelector(':scope > .bio-properties-panel-popup-container') as HTMLElement | null;
+      if (popupContainer && popupContainer.parentElement !== portalRoot) {
+        portalRoot.appendChild(popupContainer);
+      }
+    }
   }
 
   /**
