@@ -29,6 +29,7 @@ import { PropsPanelModule } from './propsPanel/PropsPanelService';
 import { ComponentResizeOverlay } from './resize/ComponentResizeOverlay';
 import { OutlineModule } from '@form-js-designer/designer-editor-host/modules/outline';
 import { InlineLabelEditModule } from '@form-js-designer/designer-editor-host/modules/inline-label-edit';
+import { ShortcutModule } from '@form-js-designer/designer-editor-host/modules/shortcut';
 import { LeftRailTabs, type LeftRailTab } from './leftRail/LeftRailTabs';
 import { relocatePalette } from './leftRail/relocatePalette';
 import { mountPanelResize, reattachRightHandle } from './leftRail/PanelResizeModule';
@@ -66,6 +67,7 @@ const EDITOR_MODULES = [
   LayoutHeightModule,
   OutlineModule,
   InlineLabelEditModule,
+  ShortcutModule,
 ];
 
 const RESIZE_OVERLAY_ROOT_ID = 'component-resize-overlay-root';

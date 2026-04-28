@@ -7,7 +7,8 @@
   "exports": {
     "./embedded": "./src/embeddedDesigner.tsx",
     "./modules/outline": "./src/modules/OutlineModule.ts",
-    "./modules/inline-label-edit": "./src/modules/InlineLabelEditModule.ts"
+    "./modules/inline-label-edit": "./src/modules/InlineLabelEditModule.ts",
+    "./modules/shortcut": "./src/modules/ShortcutModule.ts"
   },
   "scripts": {
     "dev": "vite",
