@@ -24,7 +24,7 @@ export const treePropsSchema: PropsSchema = {
     nodes: {
       type: 'tree',
       label: 'designer.components.tree.nodes',
-      default: [],
+      default: Object.freeze([] as unknown[]) as unknown[],
     },
   },
 };

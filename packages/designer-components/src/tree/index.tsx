@@ -25,6 +25,7 @@ function TreeRender(props: PureRenderProps<TreeSchema>) {
   );
 }
 
+// TODO Phase 1A: revisit escapeGridRender + group when recursive editor lands
 export const TreeComponent = defineComponent<TreeSchema>({
   type: 'tree',
   name: '트리',
