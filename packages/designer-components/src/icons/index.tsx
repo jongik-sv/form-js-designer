@@ -165,3 +165,50 @@ export const ModalIcon: ComponentType<IconProps> = (props) => (
   </svg>
 );
 
+export const ChartIcon: ComponentType<IconProps> = (props) => (
+  <svg {...SVG_BASE} {...props}>
+    {/* 축 */}
+    <line
+      x1={10}
+      y1={44}
+      x2={46}
+      y2={44}
+      stroke="currentColor"
+      strokeWidth={2}
+    />
+    <line
+      x1={10}
+      y1={10}
+      x2={10}
+      y2={44}
+      stroke="currentColor"
+      strokeWidth={2}
+    />
+    {/* 막대 3개 */}
+    <rect
+      x={16}
+      y={28}
+      width={6}
+      height={14}
+      fill="currentColor"
+      fillOpacity={0.6}
+    />
+    <rect
+      x={26}
+      y={20}
+      width={6}
+      height={22}
+      fill="currentColor"
+      fillOpacity={0.4}
+    />
+    <rect
+      x={36}
+      y={32}
+      width={6}
+      height={10}
+      fill="currentColor"
+      fillOpacity={0.8}
+    />
+  </svg>
+);
+

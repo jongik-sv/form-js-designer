@@ -1,0 +1,30 @@
+@layer components {
+  .dc-chart-placeholder {
+    display: block;
+    width: 100%;
+  }
+
+  .dc-chart-placeholder__title {
+    font-weight: 600;
+    margin-bottom: 0.5em;
+  }
+
+  .dc-chart-placeholder__canvas {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .dc-chart-placeholder__canvas > svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  .dc-chart-placeholder__description {
+    font-size: 0.875em;
+    opacity: 0.75;
+    margin-top: 0.5em;
+  }
+}
