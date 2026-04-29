@@ -11,6 +11,8 @@ export interface TreeSchema {
   type: 'tree';
   label?: string;
   nodes?: TreeNode[];
+  expandedByDefault?: boolean;
+  showGuides?: boolean;
   [key: string]: unknown;
 }
 

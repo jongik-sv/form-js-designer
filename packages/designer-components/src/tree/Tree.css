@@ -1,7 +1,7 @@
 @layer components {
   .dc-tree {
-    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-    font-size: 12px;
+    font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 13px;
     color: #1e293b;
     width: 100%;
     box-sizing: border-box;
@@ -11,9 +11,68 @@
     border-radius: 4px;
   }
 
-  .dc-tree pre {
+  .dc-tree__list {
+    list-style: none;
+    padding: 0;
     margin: 0;
-    white-space: pre-wrap;
+  }
+
+  .dc-tree__item {
+    list-style: none;
+  }
+
+  .dc-tree__row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 0;
+  }
+
+  .dc-tree__toggle {
+    width: 16px;
+    height: 16px;
+    flex: 0 0 auto;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    padding: 0;
+    font-size: 12px;
+    line-height: 1;
+    color: #475569;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .dc-tree__toggle--leaf {
+    cursor: default;
+  }
+
+  .dc-tree__label {
+    flex: 1 1 auto;
+    min-width: 0;
     word-break: break-word;
+  }
+
+  .dc-tree__children {
+    list-style: none;
+    padding: 0 0 0 20px;
+    margin: 0;
+  }
+
+  .dc-tree__children[aria-hidden='true'] {
+    display: none;
+  }
+
+  .dc-tree--guides .dc-tree__children {
+    border-left: 1px dashed #cbd5e1;
+    margin-left: 6px;
+    padding-left: 10px;
+  }
+
+  .dc-tree__empty {
+    font-size: 12px;
+    color: #64748b;
+    font-style: italic;
   }
 }
