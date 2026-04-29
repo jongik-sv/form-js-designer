@@ -145,7 +145,7 @@ export const TreeComponent = defineComponent<TreeSchema>({
   icon: TreeIcon,
   keyed: false,
   pathed: false,
-  escapeGridRender: true,
+  escapeGridRender: false,
   propsSchema: treePropsSchema,
   create: (options = {}) => ({
     type: 'tree',

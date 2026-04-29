@@ -73,14 +73,14 @@ describe('PanelWidgetRegistry', () => {
 });
 
 describe('createDefaultRegistry', () => {
-  it('(정상) 기본 8종 위젯이 모두 등록됨', () => {
+  it('(정상) 기본 9종 위젯이 모두 등록됨', () => {
     const registry = createDefaultRegistry();
     const list = registry.list();
-    const expected = ['string', 'number', 'boolean', 'enum', 'color', 'spacing', 'expression', 'i18n'];
+    const expected = ['string', 'number', 'boolean', 'enum', 'color', 'spacing', 'expression', 'i18n', 'tree'];
     for (const type of expected) {
       expect(list).toContain(type);
     }
-    expect(list.length).toBe(8);
+    expect(list.length).toBe(9);
   });
 
   it('(정상) 각 기본 위젯이 {render, edit, validate} 3 계약 모두 구현', () => {

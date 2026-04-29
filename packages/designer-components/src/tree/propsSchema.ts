@@ -28,5 +28,15 @@ export const treePropsSchema: PropsSchema = {
       label: 'designer.components.tree.nodes',
       default: Object.freeze([] as unknown[]) as unknown[],
     },
+    expandedByDefault: {
+      type: 'boolean',
+      label: 'designer.components.tree.expandedByDefault',
+      default: true,
+    },
+    showGuides: {
+      type: 'boolean',
+      label: 'designer.components.tree.showGuides',
+      default: false,
+    },
   },
 };
