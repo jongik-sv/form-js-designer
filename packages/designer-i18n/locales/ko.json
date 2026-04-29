@@ -37,5 +37,20 @@
   "components.card.name":                 "카드",
   "components.stack.name":                "스택",
   "components.tabs.name":                 "탭",
-  "components.modal.name":                "모달"
+  "components.modal.name":                "모달",
+  "designer.components.chartPlaceholder.name":                "차트",
+  "designer.components.chartPlaceholder.chartType":           "차트 종류",
+  "designer.components.chartPlaceholder.title":               "제목",
+  "designer.components.chartPlaceholder.description":         "설명",
+  "designer.components.chartPlaceholder.types.bar":           "막대",
+  "designer.components.chartPlaceholder.types.line":          "선",
+  "designer.components.chartPlaceholder.types.pie":           "파이",
+  "designer.components.chartPlaceholder.types.donut":         "도넛",
+  "designer.components.chartPlaceholder.types.area":          "영역",
+  "designer.components.chartPlaceholder.types.scatter":       "분산",
+  "designer.components.chartPlaceholder.types.stackedBar":    "누적막대",
+  "designer.components.chartPlaceholder.types.horizontalBar": "가로막대",
+  "designer.components.chartPlaceholder.types.gauge":         "게이지",
+  "designer.components.chartPlaceholder.types.heatmap":       "히트맵",
+  "designer.components.chartPlaceholder.types.treemap":       "트리맵"
 }
