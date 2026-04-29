@@ -71,6 +71,7 @@ description: "form-js 호환 JSON 스키마를 생성·수정·검증하는 AI S
 | `modal` | container | `packages/designer-components/src/modal/spec.json` | `components: []` | trigger 버튼 + 본문 |
 | `tabs` | container | `packages/designer-components/src/tabs/spec.json` | `tabs[]` 메타 + `components: []`(tabPanel 자식) | 자식은 tabPanel로 분리 |
 | `tabPanel` | container | (없음 — `propsSchema.ts`만) | `components: []` | tabs 내부 자식. `label`만 props |
+| `chartPlaceholder` | presentation | `packages/designer-components/src/chartPlaceholder/spec.json` | (자식 없음) | 데이터 바인딩 없는 시각 stub. `chartType`(11종 카탈로그) + `title` + `description`. 카탈로그 SoT: `packages/designer-components/src/chartPlaceholder/chartCatalog.ts` |
 
 **propsSchema 직접 참조 (spec.json 없음):**
 - `packages/designer-components/src/tabPanel/propsSchema.ts`
@@ -111,6 +112,7 @@ description: "form-js 호환 JSON 스키마를 생성·수정·검증하는 AI S
 | 가로 구분선 / 섹션 시각 분리 | `separator` | |
 | 단순 빈 간격 | `spacer` (`height: <px>`) | |
 | 외부 컨텐츠 임베드 | `iframe` | |
+| 차트 / 그래프 / 시각화 자리 / 막대 차트 / 파이 차트 / "여기에 차트" 등 | `chartPlaceholder` | `chartType` 11종(`bar`/`line`/`pie`/`donut`/`area`/`scatter`/`stackedBar`/`horizontalBar`/`gauge`/`heatmap`/`treemap`) 중 시안에 가까운 것 선택. 데이터 바인딩 없는 시각 stub. 실데이터 차트 필요 시 별도 컴포넌트 검토 |
 
 **체크리스트:**
 1. 시안의 모든 클릭 가능한 요소 → `button` 우선 검토
