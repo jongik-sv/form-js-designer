@@ -2,7 +2,7 @@
  * TSK-04-01: DesignerComponentsModule 단위 테스트
  *
  * QA 체크리스트 항목:
- * - DesignerComponentsModule 등록: mock FormFieldRegistry에 register 호출 시 card/tabs/modal/tabPanel 4종 등록
+ * - DesignerComponentsModule 등록: mock FormFieldRegistry에 register 호출 시 card/tabs/modal/tabPanel/tree 5종 등록
  * - i18n 키 규칙: designer.components.{name}.* 키 형식
  * - spec.json 존재: 유효한 JSON + type/propsSchema 필드
  * - defineComponent 순수 렌더 계약: assertPureRender 경고 없이 렌더

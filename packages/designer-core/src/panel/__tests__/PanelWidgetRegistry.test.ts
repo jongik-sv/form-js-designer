@@ -1,6 +1,6 @@
 /**
  * PanelWidgetRegistry 단위 테스트
- * - register/get/list/중복 에러/기본 8종 선등록 검증
+ * - register/get/list/중복 에러/기본 9종 선등록 검증
  */
 import { describe, it, expect } from 'vitest';
 import { PanelWidgetRegistry, createDefaultRegistry } from '../PanelWidgetRegistry';
