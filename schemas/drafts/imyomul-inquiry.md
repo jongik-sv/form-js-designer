@@ -3,7 +3,7 @@
 원본 디자인 시안: 사용자 첨부 이미지 (DONGKUK CM / 임여물 조회 화면)
 산출물: [`schemas/drafts/imyomul-inquiry.form-js`](./imyomul-inquiry.form-js)
 스킬: [`form-designer`](../../.claude/skills/form-designer/SKILL.md) (§4 — literal 라벨 + table dataSource 인라인)
-
+![alt text](image.png)
 ## 컴포넌트 매핑
 
 시안에 보이는 텍스트는 그대로 literal로, 테이블 행은 시안에 보이는 15건을 `dataSource`에 인라인했다.

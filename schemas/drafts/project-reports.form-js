@@ -1,0 +1,222 @@
+{
+  "schemaVersion": 19,
+  "type": "default",
+  "components": [
+    {
+      "type": "text",
+      "id": "text-1",
+      "text": "# 프로젝트 리포트",
+      "layout": { "row": "row-1", "columns": 10 }
+    },
+    {
+      "type": "button",
+      "id": "button-1",
+      "label": "엑셀 내보내기",
+      "action": "submit",
+      "layout": { "row": "row-1", "columns": 3 }
+    },
+    {
+      "type": "button",
+      "id": "button-2",
+      "label": "PDF 출력",
+      "action": "submit",
+      "layout": { "row": "row-1", "columns": 3 }
+    },
+    {
+      "type": "datetime",
+      "id": "datetime-1",
+      "key": "filters.startDate",
+      "label": "시작일",
+      "subtype": "date",
+      "layout": { "row": "row-2", "columns": 4 }
+    },
+    {
+      "type": "datetime",
+      "id": "datetime-2",
+      "key": "filters.endDate",
+      "label": "종료일",
+      "subtype": "date",
+      "layout": { "row": "row-2", "columns": 4 }
+    },
+    {
+      "type": "select",
+      "id": "select-1",
+      "key": "filters.department",
+      "label": "부서",
+      "values": [
+        { "label": "전체 부서", "value": "all" },
+        { "label": "개발팀", "value": "dev" },
+        { "label": "디자인팀", "value": "design" },
+        { "label": "마케팅팀", "value": "marketing" },
+        { "label": "영업팀", "value": "sales" },
+        { "label": "운영팀", "value": "ops" },
+        { "label": "인사팀", "value": "hr" },
+        { "label": "재무팀", "value": "finance" }
+      ],
+      "layout": { "row": "row-2", "columns": 4 }
+    },
+    {
+      "type": "select",
+      "id": "select-2",
+      "key": "filters.category",
+      "label": "프로젝트 카테고리",
+      "values": [
+        { "label": "전체 카테고리", "value": "all" },
+        { "label": "신규 개발", "value": "new" },
+        { "label": "유지보수", "value": "maintenance" },
+        { "label": "인프라", "value": "infra" },
+        { "label": "마케팅", "value": "marketing" },
+        { "label": "연구개발", "value": "rnd" }
+      ],
+      "layout": { "row": "row-2", "columns": 4 }
+    },
+    {
+      "type": "card",
+      "id": "card-1",
+      "padding": "md",
+      "elevation": 1,
+      "header": "완료율",
+      "headerTag": "h3",
+      "layout": { "row": "row-3", "columns": 4, "height": 130 },
+      "components": [
+        {
+          "type": "text",
+          "id": "text-2",
+          "text": "## 78.4%\n완료된 프로젝트 비율"
+        }
+      ]
+    },
+    {
+      "type": "card",
+      "id": "card-2",
+      "padding": "md",
+      "elevation": 1,
+      "header": "평균 진행률",
+      "headerTag": "h3",
+      "layout": { "row": "row-3", "columns": 4, "height": 130 },
+      "components": [
+        {
+          "type": "text",
+          "id": "text-3",
+          "text": "## 62.1%\n전체 프로젝트 평균"
+        }
+      ]
+    },
+    {
+      "type": "card",
+      "id": "card-3",
+      "padding": "md",
+      "elevation": 1,
+      "header": "지연 비율",
+      "headerTag": "h3",
+      "layout": { "row": "row-3", "columns": 4, "height": 130 },
+      "components": [
+        {
+          "type": "text",
+          "id": "text-4",
+          "text": "## 14.7%\n일정 지연 프로젝트"
+        }
+      ]
+    },
+    {
+      "type": "card",
+      "id": "card-4",
+      "padding": "md",
+      "elevation": 1,
+      "header": "총 예산 집행",
+      "headerTag": "h3",
+      "layout": { "row": "row-3", "columns": 4, "height": 130 },
+      "components": [
+        {
+          "type": "text",
+          "id": "text-5",
+          "text": "## 84억 3,200만원\n연간 예산 대비 집행"
+        }
+      ]
+    },
+    {
+      "type": "card",
+      "id": "card-5",
+      "padding": "md",
+      "elevation": 1,
+      "header": "부서별 현황",
+      "headerTag": "h3",
+      "layout": { "row": "row-4", "columns": 8, "height": 360 },
+      "components": [
+        {
+          "type": "table",
+          "id": "table-1",
+          "label": "부서별 진행률",
+          "rowCount": 7,
+          "columns": [
+            { "label": "부서", "key": "dept" },
+            { "label": "진행 프로젝트 수", "key": "activeCount" },
+            { "label": "평균 진행률", "key": "avgProgress" },
+            { "label": "지연 건수", "key": "delayCount" },
+            { "label": "분기 완료율", "key": "quarterlyCompletion" }
+          ],
+          "dataSource": "= [{dept:\"개발팀\",activeCount:12,avgProgress:\"68.3%\",delayCount:2,quarterlyCompletion:\"83.3%\"},{dept:\"디자인팀\",activeCount:7,avgProgress:\"74.1%\",delayCount:1,quarterlyCompletion:\"85.7%\"},{dept:\"마케팅팀\",activeCount:9,avgProgress:\"55.8%\",delayCount:3,quarterlyCompletion:\"66.7%\"},{dept:\"영업팀\",activeCount:11,avgProgress:\"61.4%\",delayCount:2,quarterlyCompletion:\"72.7%\"},{dept:\"운영팀\",activeCount:6,avgProgress:\"79.2%\",delayCount:0,quarterlyCompletion:\"100.0%\"},{dept:\"인사팀\",activeCount:4,avgProgress:\"88.5%\",delayCount:0,quarterlyCompletion:\"100.0%\"},{dept:\"재무팀\",activeCount:5,avgProgress:\"52.3%\",delayCount:1,quarterlyCompletion:\"80.0%\"}]"
+        }
+      ]
+    },
+    {
+      "type": "card",
+      "id": "card-6",
+      "padding": "md",
+      "elevation": 1,
+      "header": "월별 완료 추이",
+      "headerTag": "h3",
+      "layout": { "row": "row-4", "columns": 8, "height": 360 },
+      "components": [
+        {
+          "type": "text",
+          "id": "text-6",
+          "text": "```\n1월  ████░░░░  5\n2월  ██████░░  8\n3월  ████████  11\n4월  ██████░░  9\n5월  ██████░░  9\n6월  ████████  12\n7월  ██████░░  8\n8월  █████░░░  7\n9월  ████████  13\n10월 ██████░░  10\n11월 █████░░░  7\n12월 ████░░░░  6\n```"
+        },
+        {
+          "type": "table",
+          "id": "table-2",
+          "label": "월별 현황",
+          "rowCount": 6,
+          "columns": [
+            { "label": "월", "key": "month" },
+            { "label": "신규", "key": "newCount" },
+            { "label": "완료", "key": "doneCount" },
+            { "label": "지연", "key": "delayCount" }
+          ],
+          "dataSource": "= [{month:\"1월\",newCount:7,doneCount:5,delayCount:1},{month:\"2월\",newCount:10,doneCount:8,delayCount:2},{month:\"3월\",newCount:13,doneCount:11,delayCount:1},{month:\"4월\",newCount:11,doneCount:9,delayCount:2},{month:\"5월\",newCount:12,doneCount:9,delayCount:3},{month:\"6월\",newCount:14,doneCount:12,delayCount:1}]"
+        }
+      ]
+    },
+    {
+      "type": "table",
+      "id": "table-3",
+      "label": "프로젝트별 비용 분석",
+      "rowCount": 8,
+      "columns": [
+        { "label": "프로젝트명", "key": "projectName" },
+        { "label": "책정 예산", "key": "budget" },
+        { "label": "집행", "key": "spent" },
+        { "label": "잔여", "key": "remaining" },
+        { "label": "집행률", "key": "spentRate" },
+        { "label": "상태", "key": "status" }
+      ],
+      "dataSource": "= [{projectName:\"차세대 ERP 구축\",budget:\"12억 5,000만원\",spent:\"9억 8,400만원\",remaining:\"2억 6,600만원\",spentRate:\"78.7%\",status:\"진행중\"},{projectName:\"모바일 앱 리뉴얼\",budget:\"3억 2,000만원\",spent:\"3억 1,500만원\",remaining:\"500만원\",spentRate:\"98.4%\",status:\"완료\"},{projectName:\"클라우드 인프라 전환\",budget:\"8억 7,000만원\",spent:\"5억 2,000만원\",remaining:\"3억 5,000만원\",spentRate:\"59.8%\",status:\"진행중\"},{projectName:\"디지털 마케팅 플랫폼\",budget:\"2억 1,000만원\",spent:\"2억 3,400만원\",remaining:\"-2,400만원\",spentRate:\"111.4%\",status:\"초과\"},{projectName:\"CRM 고도화\",budget:\"4억 5,000만원\",spent:\"4억 500만원\",remaining:\"4,500만원\",spentRate:\"90.0%\",status:\"완료\"},{projectName:\"데이터 분석 플랫폼\",budget:\"6억 8,000만원\",spent:\"2억 1,000만원\",remaining:\"4억 7,000만원\",spentRate:\"30.9%\",status:\"초기\"},{projectName:\"HR 시스템 개편\",budget:\"1억 9,000만원\",spent:\"1억 7,600만원\",remaining:\"1,400만원\",spentRate:\"92.6%\",status:\"진행중\"},{projectName:\"보안 인프라 강화\",budget:\"3억 4,000만원\",spent:\"3억 4,000만원\",remaining:\"0원\",spentRate:\"100.0%\",status:\"완료\"}]",
+      "layout": { "row": "row-5", "columns": 16, "height": 420 }
+    },
+    {
+      "type": "textarea",
+      "id": "textarea-1",
+      "key": "reports.notes",
+      "label": "분석 메모",
+      "layout": { "row": "row-6", "columns": 12 }
+    },
+    {
+      "type": "button",
+      "id": "button-3",
+      "label": "저장",
+      "action": "submit",
+      "layout": { "row": "row-6", "columns": 4 }
+    }
+  ]
+}

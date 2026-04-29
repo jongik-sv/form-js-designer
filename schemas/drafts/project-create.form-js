@@ -1,0 +1,197 @@
+{
+  "schemaVersion": 19,
+  "type": "default",
+  "components": [
+    {
+      "type": "text",
+      "id": "text-1",
+      "text": "# 신규 프로젝트 등록",
+      "layout": { "row": "row-1", "columns": 16 }
+    },
+    {
+      "type": "card",
+      "id": "card-1",
+      "header": "기본 정보",
+      "headerTag": "h3",
+      "padding": "md",
+      "elevation": 1,
+      "layout": { "row": "row-2", "columns": 16 },
+      "components": [
+        {
+          "type": "textfield",
+          "id": "textfield-1",
+          "key": "project.name",
+          "label": "프로젝트명",
+          "validate": { "required": true },
+          "layout": { "row": "row-1", "columns": 10 }
+        },
+        {
+          "type": "textfield",
+          "id": "textfield-2",
+          "key": "project.code",
+          "label": "프로젝트 코드",
+          "description": "예: PRJ-2026-010",
+          "layout": { "row": "row-1", "columns": 6 }
+        },
+        {
+          "type": "select",
+          "id": "select-1",
+          "key": "project.category",
+          "label": "카테고리",
+          "values": [
+            { "label": "개발", "value": "dev" },
+            { "label": "디자인", "value": "design" },
+            { "label": "마케팅", "value": "marketing" },
+            { "label": "운영", "value": "ops" },
+            { "label": "연구", "value": "research" }
+          ],
+          "layout": { "row": "row-2", "columns": 6 }
+        },
+        {
+          "type": "radio",
+          "id": "radio-1",
+          "key": "project.priority",
+          "label": "우선순위",
+          "values": [
+            { "label": "높음", "value": "high" },
+            { "label": "보통", "value": "medium" },
+            { "label": "낮음", "value": "low" }
+          ],
+          "layout": { "row": "row-2", "columns": 10 }
+        },
+        {
+          "type": "textarea",
+          "id": "textarea-1",
+          "key": "project.description",
+          "label": "설명",
+          "layout": { "row": "row-3", "columns": 16, "height": 140 }
+        }
+      ]
+    },
+    {
+      "type": "card",
+      "id": "card-2",
+      "header": "일정",
+      "headerTag": "h3",
+      "padding": "md",
+      "elevation": 1,
+      "layout": { "row": "row-3", "columns": 8 },
+      "components": [
+        {
+          "type": "datetime",
+          "id": "datetime-1",
+          "key": "project.startDate",
+          "label": "시작일",
+          "subtype": "date"
+        },
+        {
+          "type": "datetime",
+          "id": "datetime-2",
+          "key": "project.dueDate",
+          "label": "마감일",
+          "subtype": "date"
+        },
+        {
+          "type": "number",
+          "id": "number-1",
+          "key": "project.estimateDays",
+          "label": "예상 공수(일)"
+        }
+      ]
+    },
+    {
+      "type": "card",
+      "id": "card-3",
+      "header": "팀 · 예산",
+      "headerTag": "h3",
+      "padding": "md",
+      "elevation": 1,
+      "layout": { "row": "row-3", "columns": 8 },
+      "components": [
+        {
+          "type": "select",
+          "id": "select-2",
+          "key": "project.manager",
+          "label": "프로젝트 매니저",
+          "searchable": true,
+          "values": [
+            { "label": "김민수", "value": "kim-minsu" },
+            { "label": "이지은", "value": "lee-jieun" },
+            { "label": "박상우", "value": "park-sangwoo" },
+            { "label": "최유진", "value": "choi-yujin" },
+            { "label": "정현우", "value": "jung-hyunwoo" },
+            { "label": "한가람", "value": "han-garam" }
+          ]
+        },
+        {
+          "type": "select",
+          "id": "select-3",
+          "key": "project.department",
+          "label": "부서",
+          "values": [
+            { "label": "개발팀", "value": "dev" },
+            { "label": "디자인팀", "value": "design" },
+            { "label": "마케팅팀", "value": "marketing" },
+            { "label": "영업팀", "value": "sales" },
+            { "label": "운영팀", "value": "ops" }
+          ]
+        },
+        {
+          "type": "number",
+          "id": "number-2",
+          "key": "project.budget",
+          "label": "예산(원)"
+        }
+      ]
+    },
+    {
+      "type": "card",
+      "id": "card-4",
+      "header": "알림",
+      "headerTag": "h3",
+      "padding": "md",
+      "elevation": 1,
+      "layout": { "row": "row-4", "columns": 16 },
+      "components": [
+        {
+          "type": "checkbox",
+          "id": "checkbox-1",
+          "key": "project.notify.deadline",
+          "label": "마감 임박 알림"
+        },
+        {
+          "type": "checkbox",
+          "id": "checkbox-2",
+          "key": "project.notify.stalled",
+          "label": "진행률 정체 알림"
+        },
+        {
+          "type": "checkbox",
+          "id": "checkbox-3",
+          "key": "project.notify.member",
+          "label": "멤버 변경 알림"
+        }
+      ]
+    },
+    {
+      "type": "button",
+      "id": "button-1",
+      "label": "취소",
+      "action": "reset",
+      "layout": { "row": "row-5", "columns": 4 }
+    },
+    {
+      "type": "button",
+      "id": "button-2",
+      "label": "임시 저장",
+      "layout": { "row": "row-5", "columns": 4 }
+    },
+    {
+      "type": "button",
+      "id": "button-3",
+      "label": "등록",
+      "action": "submit",
+      "layout": { "row": "row-5", "columns": 4 }
+    }
+  ]
+}

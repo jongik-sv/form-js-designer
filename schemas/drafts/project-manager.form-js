@@ -1,0 +1,323 @@
+{
+  "schemaVersion": 19,
+  "type": "default",
+  "components": [
+    {
+      "type": "text",
+      "id": "text-1",
+      "text": "# 프로젝트 매니저",
+      "layout": { "row": "row-1", "columns": 12 }
+    },
+    {
+      "type": "button",
+      "id": "button-1",
+      "label": "+ 새 프로젝트",
+      "action": "submit",
+      "layout": { "row": "row-1", "columns": 4 }
+    },
+    {
+      "type": "card",
+      "id": "card-1",
+      "padding": "md",
+      "elevation": 1,
+      "header": "전체 프로젝트",
+      "headerTag": "h4",
+      "layout": { "row": "row-2", "columns": 4, "height": 140 },
+      "components": [
+        {
+          "type": "text",
+          "id": "text-2",
+          "text": "# 24\n\n전월 대비 +3"
+        }
+      ]
+    },
+    {
+      "type": "card",
+      "id": "card-2",
+      "padding": "md",
+      "elevation": 1,
+      "header": "진행중",
+      "headerTag": "h4",
+      "layout": { "row": "row-2", "columns": 4, "height": 140 },
+      "components": [
+        {
+          "type": "text",
+          "id": "text-3",
+          "text": "# 13\n\n이번 주 마일스톤 5건"
+        }
+      ]
+    },
+    {
+      "type": "card",
+      "id": "card-3",
+      "padding": "md",
+      "elevation": 1,
+      "header": "완료",
+      "headerTag": "h4",
+      "layout": { "row": "row-2", "columns": 4, "height": 140 },
+      "components": [
+        {
+          "type": "text",
+          "id": "text-4",
+          "text": "# 8\n\n분기 완료율 67%"
+        }
+      ]
+    },
+    {
+      "type": "card",
+      "id": "card-4",
+      "padding": "md",
+      "elevation": 1,
+      "header": "지연",
+      "headerTag": "h4",
+      "layout": { "row": "row-2", "columns": 4, "height": 140 },
+      "components": [
+        {
+          "type": "text",
+          "id": "text-5",
+          "text": "# 3\n\n즉시 검토 필요"
+        }
+      ]
+    },
+    {
+      "type": "textfield",
+      "id": "textfield-1",
+      "key": "filters.search",
+      "label": "검색",
+      "description": "프로젝트명, ID, 담당자로 검색",
+      "layout": { "row": "row-3", "columns": 6 }
+    },
+    {
+      "type": "select",
+      "id": "select-1",
+      "key": "filters.status",
+      "label": "상태",
+      "values": [
+        { "label": "전체 상태", "value": "all" },
+        { "label": "진행중", "value": "active" },
+        { "label": "대기", "value": "pending" },
+        { "label": "완료", "value": "completed" },
+        { "label": "지연", "value": "overdue" }
+      ],
+      "layout": { "row": "row-3", "columns": 3 }
+    },
+    {
+      "type": "select",
+      "id": "select-2",
+      "key": "filters.priority",
+      "label": "우선순위",
+      "values": [
+        { "label": "전체 우선순위", "value": "all" },
+        { "label": "높음", "value": "high" },
+        { "label": "보통", "value": "medium" },
+        { "label": "낮음", "value": "low" }
+      ],
+      "layout": { "row": "row-3", "columns": 3 }
+    },
+    {
+      "type": "select",
+      "id": "select-3",
+      "key": "filters.owner",
+      "label": "담당자",
+      "searchable": true,
+      "values": [
+        { "label": "전체 담당자", "value": "all" },
+        { "label": "김민수", "value": "u-001" },
+        { "label": "이지은", "value": "u-002" },
+        { "label": "박상우", "value": "u-003" },
+        { "label": "최유진", "value": "u-004" },
+        { "label": "정현우", "value": "u-005" },
+        { "label": "한가람", "value": "u-006" }
+      ],
+      "layout": { "row": "row-3", "columns": 4 }
+    },
+    {
+      "type": "table",
+      "id": "table-1",
+      "label": "프로젝트 목록",
+      "rowCount": 10,
+      "pagination": true,
+      "columns": [
+        { "label": "프로젝트명", "key": "name" },
+        { "label": "ID", "key": "projectId" },
+        { "label": "담당자", "key": "owner" },
+        { "label": "상태", "key": "status" },
+        { "label": "진행률", "key": "progress" },
+        { "label": "마감일", "key": "dueDate" },
+        { "label": "우선순위", "key": "priority" }
+      ],
+      "dataSource": "= [{name:\"신규 결제 시스템 도입\",projectId:\"PRJ-2026-001\",owner:\"김민수\",status:\"진행중\",progress:\"68%\",dueDate:\"2026-06-30\",priority:\"높음\"}, {name:\"모바일 앱 리뉴얼\",projectId:\"PRJ-2026-002\",owner:\"이지은\",status:\"진행중\",progress:\"45%\",dueDate:\"2026-07-15\",priority:\"높음\"}, {name:\"고객 지원 챗봇\",projectId:\"PRJ-2026-003\",owner:\"박상우\",status:\"대기\",progress:\"0%\",dueDate:\"2026-08-01\",priority:\"보통\"}, {name:\"데이터 웨어하우스 마이그레이션\",projectId:\"PRJ-2026-004\",owner:\"최유진\",status:\"진행중\",progress:\"82%\",dueDate:\"2026-05-20\",priority:\"높음\"}, {name:\"사내 위키 개편\",projectId:\"PRJ-2025-098\",owner:\"정현우\",status:\"완료\",progress:\"100%\",dueDate:\"2026-04-15\",priority:\"낮음\"}, {name:\"보안 감사 대응\",projectId:\"PRJ-2026-005\",owner:\"한가람\",status:\"지연\",progress:\"55%\",dueDate:\"2026-04-10\",priority:\"높음\"}, {name:\"브랜드 리프레시\",projectId:\"PRJ-2026-006\",owner:\"송지원\",status:\"진행중\",progress:\"30%\",dueDate:\"2026-09-30\",priority:\"보통\"}, {name:\"신입사원 온보딩 자동화\",projectId:\"PRJ-2026-007\",owner:\"윤재호\",status:\"대기\",progress:\"0%\",dueDate:\"2026-10-15\",priority:\"낮음\"}, {name:\"ERP 모듈 업그레이드\",projectId:\"PRJ-2026-008\",owner:\"김민수\",status:\"진행중\",progress:\"22%\",dueDate:\"2026-11-30\",priority:\"보통\"}, {name:\"고객 만족도 대시보드\",projectId:\"PRJ-2026-009\",owner:\"이지은\",status:\"진행중\",progress:\"74%\",dueDate:\"2026-05-31\",priority:\"보통\"}]",
+      "layout": { "row": "row-4", "columns": 16, "height": 520 }
+    },
+    {
+      "type": "card",
+      "id": "card-5",
+      "padding": "md",
+      "elevation": 1,
+      "header": "다가오는 마감",
+      "headerTag": "h3",
+      "layout": { "row": "row-5", "columns": 8, "height": 320 },
+      "components": [
+        {
+          "type": "table",
+          "id": "table-2",
+          "label": "마감 임박",
+          "rowCount": 5,
+          "columns": [
+            { "label": "프로젝트", "key": "name" },
+            { "label": "남은 일수", "key": "daysLeft" },
+            { "label": "담당자", "key": "owner" }
+          ],
+          "dataSource": "= [{name:\"보안 감사 대응\",daysLeft:\"D-2 (지연)\",owner:\"한가람\"}, {name:\"사내 위키 개편\",daysLeft:\"D+0 (완료)\",owner:\"정현우\"}, {name:\"데이터 웨어하우스 마이그레이션\",daysLeft:\"D-21\",owner:\"최유진\"}, {name:\"고객 만족도 대시보드\",daysLeft:\"D-32\",owner:\"이지은\"}, {name:\"신규 결제 시스템 도입\",daysLeft:\"D-62\",owner:\"김민수\"}]"
+        }
+      ]
+    },
+    {
+      "type": "card",
+      "id": "card-6",
+      "padding": "md",
+      "elevation": 1,
+      "header": "최근 활동",
+      "headerTag": "h3",
+      "layout": { "row": "row-5", "columns": 8, "height": 320 },
+      "components": [
+        {
+          "type": "text",
+          "id": "text-6",
+          "text": "- **김민수** — PRJ-2026-001 마일스톤 \"PG 연동 1차 완료\" 처리 · 10분 전\n- **이지은** — PRJ-2026-002에 디자인 리뷰 코멘트 3건 추가 · 32분 전\n- **최유진** — PRJ-2026-004 진행률 78% → 82% · 1시간 전\n- **한가람** — PRJ-2026-005 상태를 \"지연\"으로 변경 · 2시간 전\n- **정현우** — PRJ-2025-098을 \"완료\"로 종료 · 어제"
+        }
+      ]
+    },
+    {
+      "type": "card",
+      "id": "card-7",
+      "padding": "md",
+      "elevation": 1,
+      "header": "프로젝트 상세 / 신규 등록",
+      "headerTag": "h3",
+      "layout": { "row": "row-6", "columns": 16 },
+      "components": [
+        {
+          "type": "textfield",
+          "id": "textfield-2",
+          "key": "project.name",
+          "label": "프로젝트명",
+          "defaultValue": "신규 결제 시스템 도입",
+          "validate": { "required": true },
+          "layout": { "row": "row-1", "columns": 8 }
+        },
+        {
+          "type": "textfield",
+          "id": "textfield-3",
+          "key": "project.code",
+          "label": "프로젝트 코드",
+          "description": "예: PRJ-2026-010",
+          "defaultValue": "PRJ-2026-001",
+          "layout": { "row": "row-1", "columns": 4 }
+        },
+        {
+          "type": "select",
+          "id": "select-4",
+          "key": "project.priority",
+          "label": "우선순위",
+          "defaultValue": "high",
+          "values": [
+            { "label": "높음", "value": "high" },
+            { "label": "보통", "value": "medium" },
+            { "label": "낮음", "value": "low" }
+          ],
+          "layout": { "row": "row-1", "columns": 4 }
+        },
+        {
+          "type": "select",
+          "id": "select-5",
+          "key": "project.owner",
+          "label": "담당자",
+          "defaultValue": "u-001",
+          "searchable": true,
+          "values": [
+            { "label": "김민수", "value": "u-001" },
+            { "label": "이지은", "value": "u-002" },
+            { "label": "박상우", "value": "u-003" },
+            { "label": "최유진", "value": "u-004" },
+            { "label": "정현우", "value": "u-005" },
+            { "label": "한가람", "value": "u-006" }
+          ],
+          "layout": { "row": "row-2", "columns": 6 }
+        },
+        {
+          "type": "datetime",
+          "id": "datetime-1",
+          "key": "project.startDate",
+          "label": "시작일",
+          "subtype": "date",
+          "defaultValue": "2026-04-01",
+          "layout": { "row": "row-2", "columns": 5 }
+        },
+        {
+          "type": "datetime",
+          "id": "datetime-2",
+          "key": "project.dueDate",
+          "label": "마감일",
+          "subtype": "date",
+          "defaultValue": "2026-06-30",
+          "layout": { "row": "row-2", "columns": 5 }
+        },
+        {
+          "type": "textarea",
+          "id": "textarea-1",
+          "key": "project.description",
+          "label": "프로젝트 설명",
+          "description": "범위, 목표, 핵심 산출물을 한두 문단으로 기재",
+          "defaultValue": "사내 결제 시스템을 PG사와 연동하여 신규 결제 플랫폼을 구축한다. 온라인 결제, 정기 결제, 환불 프로세스 자동화를 포함하며 핵심 산출물은 결제 API, UI 모듈, 운영 매뉴얼이다.",
+          "layout": { "row": "row-3", "columns": 16, "height": 140 }
+        },
+        {
+          "type": "number",
+          "id": "number-1",
+          "key": "project.progress",
+          "label": "진행률 (%)",
+          "defaultValue": 68,
+          "decimalDigits": 0,
+          "layout": { "row": "row-4", "columns": 4 }
+        },
+        {
+          "type": "select",
+          "id": "select-6",
+          "key": "project.status",
+          "label": "상태",
+          "defaultValue": "active",
+          "values": [
+            { "label": "대기", "value": "pending" },
+            { "label": "진행중", "value": "active" },
+            { "label": "완료", "value": "completed" },
+            { "label": "지연", "value": "overdue" }
+          ],
+          "layout": { "row": "row-4", "columns": 4 }
+        },
+        {
+          "type": "checkbox",
+          "id": "checkbox-1",
+          "key": "project.notify",
+          "label": "마감 임박 시 알림 받기",
+          "defaultValue": true,
+          "layout": { "row": "row-4", "columns": 8 }
+        },
+        {
+          "type": "button",
+          "id": "button-2",
+          "label": "취소",
+          "action": "reset",
+          "layout": { "row": "row-5", "columns": 4 }
+        },
+        {
+          "type": "button",
+          "id": "button-3",
+          "label": "저장",
+          "action": "submit",
+          "layout": { "row": "row-5", "columns": 4 }
+        }
+      ]
+    }
+  ]
+}
