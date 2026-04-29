@@ -1,0 +1,15 @@
+{
+  "type": "tree",
+  "name": "designer.components.tree.name",
+  "group": "presentation",
+  "propsSchema": {
+    "properties": {
+      "label": { "type": "i18n", "label": "designer.components.tree.label", "default": "트리" },
+      "dataSource": { "type": "expression", "label": "designer.components.tree.dataSource", "default": "" },
+      "labelKey": { "type": "string", "label": "designer.components.tree.labelKey", "default": "label" },
+      "childrenKey": { "type": "string", "label": "designer.components.tree.childrenKey", "default": "children" },
+      "expandedByDefault": { "type": "boolean", "label": "designer.components.tree.expandedByDefault", "default": true },
+      "showGuides": { "type": "boolean", "label": "designer.components.tree.showGuides", "default": false }
+    }
+  }
+}

@@ -40,6 +40,7 @@ const DESIGNER_COMPONENTS_TYPES = new Set([
   'card',
   'tabs',
   'modal',
+  'tree',
 ]);
 
 const ALL_TYPES = new Set([

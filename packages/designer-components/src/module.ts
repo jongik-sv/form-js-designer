@@ -7,7 +7,7 @@
  *
  * form-js는 DI 컨테이너에 `formFields` 서비스로 `FormFields` 레지스트리를
  * 제공한다(`formFields.register(type, componentDef)`). 본 모듈은 이를
- * 주입받아 Card/Tabs/Modal/TabPanel 을 등록한다. Button 은 form-js native
+ * 주입받아 Card/Tabs/Modal/TabPanel/Tree 을 등록한다. Button 은 form-js native
  * 컴포넌트를 그대로 사용하며, 스타일만 container-base.css 에서 .fjs-button 에 오버라이드한다.
  *
  * TabPanel은 팔레트 숨김 대상:
@@ -20,6 +20,7 @@ import { CardComponent } from './card/index';
 import { TabsComponent } from './tabs/Tabs';
 import { ModalComponent } from './modal/Modal';
 import { TabPanelComponent } from './tabPanel/index';
+import { TreeComponent } from './tree/index';
 
 /** form-js didi 컨테이너가 주입하는 FormFields 최소 인터페이스 */
 interface FormFields {
@@ -27,7 +28,7 @@ interface FormFields {
   _formFields?: Record<string, unknown>;
 }
 
-const COMPONENTS = [CardComponent, TabsComponent, ModalComponent, TabPanelComponent] as const;
+const COMPONENTS = [CardComponent, TabsComponent, ModalComponent, TabPanelComponent, TreeComponent] as const;
 
 /**
  * 팔레트에서 숨길 타입 목록.
