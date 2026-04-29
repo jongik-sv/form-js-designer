@@ -1,0 +1,307 @@
+{
+  "schemaVersion": 19,
+  "type": "default",
+  "components": [
+    {
+      "type": "text",
+      "id": "text-1",
+      "text": "# 팀원 관리",
+      "layout": { "row": "row-1", "columns": 12 }
+    },
+    {
+      "type": "button",
+      "id": "button-1",
+      "label": "+ 팀원 추가",
+      "layout": { "row": "row-1", "columns": 4 }
+    },
+    {
+      "type": "card",
+      "id": "card-1",
+      "header": "전체 인원",
+      "headerTag": "h3",
+      "padding": "md",
+      "elevation": 1,
+      "layout": { "row": "row-2", "columns": 4, "height": 120 },
+      "components": []
+    },
+    {
+      "type": "card",
+      "id": "card-2",
+      "header": "가용 인원",
+      "headerTag": "h3",
+      "padding": "md",
+      "elevation": 1,
+      "layout": { "row": "row-2", "columns": 4, "height": 120 },
+      "components": []
+    },
+    {
+      "type": "card",
+      "id": "card-3",
+      "header": "평균 가동률",
+      "headerTag": "h3",
+      "padding": "md",
+      "elevation": 1,
+      "layout": { "row": "row-2", "columns": 4, "height": 120 },
+      "components": []
+    },
+    {
+      "type": "card",
+      "id": "card-4",
+      "header": "신규 입사",
+      "headerTag": "h3",
+      "padding": "md",
+      "elevation": 1,
+      "layout": { "row": "row-2", "columns": 4, "height": 120 },
+      "components": []
+    },
+    {
+      "type": "textfield",
+      "id": "textfield-1",
+      "key": "filters.search",
+      "label": "이름·이메일 검색",
+      "layout": { "row": "row-3", "columns": 6 }
+    },
+    {
+      "type": "select",
+      "id": "select-1",
+      "key": "filters.department",
+      "label": "부서",
+      "values": [
+        { "label": "개발팀", "value": "dev" },
+        { "label": "디자인팀", "value": "design" },
+        { "label": "마케팅팀", "value": "marketing" },
+        { "label": "영업팀", "value": "sales" },
+        { "label": "운영팀", "value": "operations" },
+        { "label": "인사팀", "value": "hr" }
+      ],
+      "layout": { "row": "row-3", "columns": 4 }
+    },
+    {
+      "type": "select",
+      "id": "select-2",
+      "key": "filters.role",
+      "label": "역할",
+      "values": [
+        { "label": "PM", "value": "pm" },
+        { "label": "개발자", "value": "developer" },
+        { "label": "디자이너", "value": "designer" },
+        { "label": "QA", "value": "qa" },
+        { "label": "마케터", "value": "marketer" },
+        { "label": "영업", "value": "sales" }
+      ],
+      "layout": { "row": "row-3", "columns": 3 }
+    },
+    {
+      "type": "select",
+      "id": "select-3",
+      "key": "filters.status",
+      "label": "상태",
+      "values": [
+        { "label": "가용", "value": "available" },
+        { "label": "바쁨", "value": "busy" },
+        { "label": "휴가", "value": "vacation" },
+        { "label": "외근", "value": "offsite" }
+      ],
+      "layout": { "row": "row-3", "columns": 3 }
+    },
+    {
+      "type": "table",
+      "id": "table-1",
+      "label": "팀원 목록",
+      "rowCount": 10,
+      "columns": [
+        { "label": "이름", "key": "name" },
+        { "label": "역할", "key": "role" },
+        { "label": "부서", "key": "department" },
+        { "label": "담당 프로젝트 수", "key": "projectCount" },
+        { "label": "가동률", "key": "utilization" },
+        { "label": "이메일", "key": "email" },
+        { "label": "연락처", "key": "phone" },
+        { "label": "상태", "key": "status" }
+      ],
+      "dataSource": "= [{name:\"김민수\",role:\"PM\",department:\"개발팀\",projectCount:4,utilization:\"85%\",email:\"minsu.kim@acme.co.kr\",phone:\"010-1234-5678\",status:\"가용\"}, {name:\"이지은\",role:\"개발자\",department:\"개발팀\",projectCount:3,utilization:\"92%\",email:\"jieun.lee@acme.co.kr\",phone:\"010-2345-6789\",status:\"바쁨\"}, {name:\"박준호\",role:\"디자이너\",department:\"디자인팀\",projectCount:2,utilization:\"78%\",email:\"junho.park@acme.co.kr\",phone:\"010-3456-7890\",status:\"가용\"}, {name:\"최수진\",role:\"QA\",department:\"개발팀\",projectCount:5,utilization:\"88%\",email:\"sujin.choi@acme.co.kr\",phone:\"010-4567-8901\",status:\"가용\"}, {name:\"정준영\",role:\"마케터\",department:\"마케팅팀\",projectCount:3,utilization:\"80%\",email:\"junyoung.jung@acme.co.kr\",phone:\"010-5678-9012\",status:\"휴가\"}, {name:\"허지훈\",role:\"개발자\",department:\"개발팀\",projectCount:4,utilization:\"90%\",email:\"jihun.heo@acme.co.kr\",phone:\"010-6789-0123\",status:\"가용\"}, {name:\"나유경\",role:\"PM\",department:\"마케팅팀\",projectCount:2,utilization:\"75%\",email:\"yukyung.na@acme.co.kr\",phone:\"010-7890-1234\",status:\"가용\"}, {name:\"손영준\",role:\"영업\",department:\"영업팀\",projectCount:6,utilization:\"95%\",email:\"youngjun.son@acme.co.kr\",phone:\"010-8901-2345\",status:\"외근\"}, {name:\"오은별\",role:\"디자이너\",department:\"디자인팀\",projectCount:2,utilization:\"82%\",email:\"eunbyeol.oh@acme.co.kr\",phone:\"010-9012-3456\",status:\"가용\"}, {name:\"강민철\",role:\"개발자\",department:\"개발팀\",projectCount:3,utilization:\"87%\",email:\"minchul.kang@acme.co.kr\",phone:\"010-1111-2222\",status:\"바쁨\"}]",
+      "layout": { "row": "row-4", "columns": 16, "height": 520 }
+    },
+    {
+      "type": "card",
+      "id": "card-5",
+      "header": "부서별 인원",
+      "headerTag": "h3",
+      "padding": "md",
+      "elevation": 1,
+      "layout": { "row": "row-5", "columns": 8, "height": 320 },
+      "components": [
+        {
+          "type": "table",
+          "id": "table-2",
+          "rowCount": 6,
+          "columns": [
+            { "label": "부서", "key": "dept" },
+            { "label": "인원", "key": "count" },
+            { "label": "평균 가동률", "key": "avgUtil" },
+            { "label": "매니저", "key": "manager" }
+          ],
+          "dataSource": "= [{dept:\"개발팀\",count:4,avgUtil:\"88%\",manager:\"김민수\"}, {dept:\"디자인팀\",count:2,avgUtil:\"80%\",manager:\"박준호\"}, {dept:\"마케팅팀\",count:2,avgUtil:\"78%\",manager:\"나유경\"}, {dept:\"영업팀\",count:1,avgUtil:\"95%\",manager:\"손영준\"}, {dept:\"운영팀\",count:0,avgUtil:\"-\",manager:\"-\"}, {dept:\"인사팀\",count:0,avgUtil:\"-\",manager:\"-\"}]"
+        }
+      ]
+    },
+    {
+      "type": "card",
+      "id": "card-6",
+      "header": "역할별 분포",
+      "headerTag": "h3",
+      "padding": "md",
+      "elevation": 1,
+      "layout": { "row": "row-5", "columns": 8, "height": 320 },
+      "components": [
+        {
+          "type": "table",
+          "id": "table-3",
+          "rowCount": 6,
+          "columns": [
+            { "label": "역할", "key": "role" },
+            { "label": "인원", "key": "count" },
+            { "label": "평균 경력", "key": "avgCareer" },
+            { "label": "평균 가동률", "key": "avgUtil" }
+          ],
+          "dataSource": "= [{role:\"PM\",count:2,avgCareer:\"6.5년\",avgUtil:\"80%\"}, {role:\"개발자\",count:4,avgCareer:\"4.2년\",avgUtil:\"88%\"}, {role:\"디자이너\",count:2,avgCareer:\"3.5년\",avgUtil:\"80%\"}, {role:\"QA\",count:1,avgCareer:\"5.0년\",avgUtil:\"88%\"}, {role:\"마케터\",count:1,avgCareer:\"4.0년\",avgUtil:\"80%\"}, {role:\"영업\",count:1,avgCareer:\"7.0년\",avgUtil:\"95%\"}]"
+        }
+      ]
+    },
+    {
+      "type": "card",
+      "id": "card-7",
+      "header": "팀원 정보",
+      "headerTag": "h2",
+      "padding": "md",
+      "elevation": 1,
+      "layout": { "row": "row-6", "columns": 16 },
+      "components": [
+        {
+          "type": "textfield",
+          "id": "textfield-2",
+          "key": "member.name",
+          "label": "이름",
+          "defaultValue": "김민수",
+          "validate": { "required": true },
+          "layout": { "row": "row-1", "columns": 6 }
+        },
+        {
+          "type": "textfield",
+          "id": "textfield-3",
+          "key": "member.empId",
+          "label": "사번",
+          "defaultValue": "E-2018-042",
+          "layout": { "row": "row-1", "columns": 4 }
+        },
+        {
+          "type": "select",
+          "id": "select-4",
+          "key": "member.department",
+          "label": "부서",
+          "defaultValue": "dev",
+          "values": [
+            { "label": "개발팀", "value": "dev" },
+            { "label": "디자인팀", "value": "design" },
+            { "label": "마케팅팀", "value": "marketing" },
+            { "label": "영업팀", "value": "sales" },
+            { "label": "운영팀", "value": "operations" },
+            { "label": "인사팀", "value": "hr" }
+          ],
+          "layout": { "row": "row-1", "columns": 6 }
+        },
+        {
+          "type": "select",
+          "id": "select-5",
+          "key": "member.role",
+          "label": "역할",
+          "defaultValue": "pm",
+          "values": [
+            { "label": "PM", "value": "pm" },
+            { "label": "개발자", "value": "developer" },
+            { "label": "디자이너", "value": "designer" },
+            { "label": "QA", "value": "qa" },
+            { "label": "마케터", "value": "marketer" },
+            { "label": "영업", "value": "sales" }
+          ],
+          "layout": { "row": "row-2", "columns": 4 }
+        },
+        {
+          "type": "select",
+          "id": "select-6",
+          "key": "member.position",
+          "label": "직급",
+          "defaultValue": "manager",
+          "values": [
+            { "label": "사원", "value": "staff" },
+            { "label": "대리", "value": "assistant" },
+            { "label": "과장", "value": "manager" },
+            { "label": "차장", "value": "senior" },
+            { "label": "부장", "value": "director" }
+          ],
+          "layout": { "row": "row-2", "columns": 4 }
+        },
+        {
+          "type": "datetime",
+          "id": "datetime-1",
+          "key": "member.joinDate",
+          "label": "입사일",
+          "subtype": "date",
+          "defaultValue": "2018-03-02",
+          "layout": { "row": "row-2", "columns": 4 }
+        },
+        {
+          "type": "number",
+          "id": "number-1",
+          "key": "member.utilization",
+          "label": "가동률(%)",
+          "defaultValue": 85,
+          "layout": { "row": "row-2", "columns": 4 }
+        },
+        {
+          "type": "textfield",
+          "id": "textfield-4",
+          "key": "member.email",
+          "label": "이메일",
+          "defaultValue": "minsu.kim@acme.co.kr",
+          "layout": { "row": "row-3", "columns": 8 }
+        },
+        {
+          "type": "textfield",
+          "id": "textfield-5",
+          "key": "member.phone",
+          "label": "연락처",
+          "defaultValue": "010-1234-5678",
+          "layout": { "row": "row-3", "columns": 8 }
+        },
+        {
+          "type": "textarea",
+          "id": "textarea-1",
+          "key": "member.note",
+          "label": "메모",
+          "layout": { "row": "row-4", "columns": 16, "height": 120 }
+        },
+        {
+          "type": "button",
+          "id": "button-2",
+          "label": "삭제",
+          "layout": { "row": "row-5", "columns": 4 }
+        },
+        {
+          "type": "button",
+          "id": "button-3",
+          "label": "취소",
+          "action": "reset",
+          "layout": { "row": "row-5", "columns": 4 }
+        },
+        {
+          "type": "button",
+          "id": "button-4",
+          "label": "저장",
+          "action": "submit",
+          "layout": { "row": "row-5", "columns": 4 }
+        }
+      ]
+    }
+  ]
+}

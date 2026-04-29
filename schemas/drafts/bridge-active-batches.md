@@ -115,13 +115,14 @@
               "type": "text",
               "id": "text-3",
               "layout": {
-                "row": "Row_1a7t8zo"
+                "row": "Row_1a7t8zo",
+                "columns": 16
               }
             },
             {
               "text": "Sold",
               "type": "text",
-              "id": "text-4",
+              "id": "text-1f1f9c97",
               "layout": {
                 "row": "Row_1qchpus"
               }
@@ -171,7 +172,7 @@
           "headerTag": "h2",
           "layout": {
             "row": "Row_0ngdvnh",
-            "columns": 3,
+            "columns": 2,
             "height": 800
           }
         },
@@ -205,7 +206,7 @@
                       }
                     },
                     {
-                      "label": "Search",
+                      "label": "검색",
                       "type": "textfield",
                       "id": "textfield-1",
                       "key": "filters.search",
@@ -216,7 +217,7 @@
                       }
                     },
                     {
-                      "label": "Status",
+                      "label": "상태",
                       "values": [
                         {
                           "label": "All statuses",
@@ -245,7 +246,7 @@
                     },
                     {
                       "type": "table",
-                      "label": "Batches",
+                      "label": "배치들",
                       "dataSource": "= [{name:\"Emerald Green Tea Leaves\",productId:\"#134239GGUW\",price:\"$44.10\",status:\"Produced\"}, {name:\"Dragon Fruit Powder\",productId:\"#4467KCCHY8Z\",price:\"$112.30\",status:\"Produced\"}, {name:\"Cold-Pressed Virgin Maruia Oil\",productId:\"#7813HGBWMM\",price:\"$124.00\",status:\"Ready for pickup\"}, {name:\"Organic Madagascar Vanilla Beans\",productId:\"#647K1ZWCCQ\",price:\"$165.00\",status:\"Produced\"}, {name:\"Artisanal Smoked Paprika\",productId:\"#91987YEDB\",price:\"$38.50\",status:\"Ready for pickup\"}, {name:\"Toasted Sesame Oil\",productId:\"#1398BFGROUT\",price:\"$89.95\",status:\"Ready for pickup\"}, {name:\"Biodegradable Bamboo Fiber\",productId:\"#284K1KH7CEE\",price:\"$62.40\",status:\"Produced\"}, {name:\"Cold-Pressed Chia Seed Oil\",productId:\"#5372D1LYKLH\",price:\"$198.00\",status:\"Picked up\"}, {name:\"Himalayan Pink Salt\",productId:\"#10804FT9MJJ\",price:\"$88.40\",status:\"Produced\"}, {name:\"Fermented Pea Protein\",productId:\"#37950CCCSF28\",price:\"$74.20\",status:\"Produced\"}]",
                       "layout": {
                         "row": "row-3",
@@ -315,7 +316,7 @@
               ],
               "id": "tabPanel_c12dff60-3db2-4e57-9284-b18d61d87998",
               "type": "tabPanel",
-              "label": "Tab",
+              "label": "활성",
               "layout": {
                 "row": "Row_1lglxjn"
               }
@@ -396,7 +397,7 @@
               ],
               "id": "tabPanel_c28e6617-b9ca-4dcd-ab61-ef197afc0565",
               "type": "tabPanel",
-              "label": "Tab 2",
+              "label": "아무거나",
               "layout": {
                 "row": "Row_1waxp8x",
                 "height": 528.07421875
@@ -430,8 +431,24 @@
 
 ## 검증 결과
 
-```
-Validation passed: schemas/drafts/bridge-active-batches.form-js
+```form-js
+{
+  "components": [
+    {
+      "label": "Text field",
+      "type": "textfield",
+      "layout": {
+        "row": "Row_165pry6",
+        "columns": null
+      },
+      "id": "Field_0w2qune",
+      "key": "textfield_v22b7r"
+    }
+  ],
+  "type": "default",
+  "id": "Form_01re16m",
+  "schemaVersion": 19
+}
 ```
 
 자기검증(§5) 모두 통과:

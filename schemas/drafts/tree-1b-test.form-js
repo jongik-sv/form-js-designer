@@ -1,0 +1,17 @@
+{
+  "components": [
+    {
+      "type": "tree",
+      "label": "조직도",
+      "id": "tree1",
+      "dataSource": "=[{\"name\":\"대표이사\",\"kids\":[{\"name\":\"기획팀\"},{\"name\":\"기술팀\",\"kids\":[{\"name\":\"백엔드\"},{\"name\":\"프론트엔드\"}]}]},{\"name\":\"감사위\"}]",
+      "labelKey": "name",
+      "childrenKey": "kids",
+      "expandedByDefault": true,
+      "showGuides": true
+    }
+  ],
+  "type": "default",
+  "id": "Tree_test_form_js",
+  "schemaVersion": 19
+}

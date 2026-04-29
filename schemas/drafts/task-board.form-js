@@ -1,0 +1,309 @@
+{
+  "schemaVersion": 19,
+  "type": "default",
+  "components": [
+    {
+      "type": "text",
+      "id": "text-1",
+      "text": "# 태스크 보드",
+      "layout": { "row": "row-1", "columns": 10 }
+    },
+    {
+      "type": "button",
+      "id": "button-1",
+      "label": "+ 새 태스크",
+      "action": "submit",
+      "layout": { "row": "row-1", "columns": 3 }
+    },
+    {
+      "type": "button",
+      "id": "button-2",
+      "label": "보드 설정",
+      "action": "reset",
+      "layout": { "row": "row-1", "columns": 3 }
+    },
+    {
+      "type": "textfield",
+      "id": "textfield-1",
+      "key": "filter.search",
+      "label": "검색",
+      "description": "태스크 제목, 담당자 등으로 검색",
+      "layout": { "row": "row-2", "columns": 6 }
+    },
+    {
+      "type": "select",
+      "id": "select-1",
+      "key": "filter.project",
+      "label": "프로젝트",
+      "values": [
+        { "label": "전체 프로젝트", "value": "all" },
+        { "label": "플랫폼 개발", "value": "platform" },
+        { "label": "디자인 시스템", "value": "design" },
+        { "label": "API 고도화", "value": "api" }
+      ],
+      "layout": { "row": "row-2", "columns": 4 }
+    },
+    {
+      "type": "select",
+      "id": "select-2",
+      "key": "filter.assignee",
+      "label": "담당자",
+      "searchable": true,
+      "values": [
+        { "label": "전체 담당자", "value": "all" },
+        { "label": "김민수", "value": "minsu" },
+        { "label": "이지은", "value": "jieun" },
+        { "label": "박철수", "value": "cheolsu" },
+        { "label": "정유진", "value": "yujin" }
+      ],
+      "layout": { "row": "row-2", "columns": 3 }
+    },
+    {
+      "type": "select",
+      "id": "select-3",
+      "key": "filter.label",
+      "label": "라벨",
+      "values": [
+        { "label": "전체 라벨", "value": "all" },
+        { "label": "버그", "value": "bug" },
+        { "label": "기능", "value": "feature" },
+        { "label": "개선", "value": "improvement" },
+        { "label": "문서", "value": "docs" }
+      ],
+      "layout": { "row": "row-2", "columns": 3 }
+    },
+    {
+      "type": "card",
+      "id": "card-1",
+      "padding": "md",
+      "elevation": 1,
+      "header": "이번 주 신규",
+      "headerTag": "h4",
+      "layout": { "row": "row-3", "columns": 4, "height": 120 },
+      "components": [
+        { "type": "text", "id": "text-2", "text": "# 4건\n\n전주 대비 +1", "layout": { "row": "card-1-r1", "columns": 16 } }
+      ]
+    },
+    {
+      "type": "card",
+      "id": "card-2",
+      "padding": "md",
+      "elevation": 1,
+      "header": "이번 주 완료",
+      "headerTag": "h4",
+      "layout": { "row": "row-3", "columns": 4, "height": 120 },
+      "components": [
+        { "type": "text", "id": "text-3", "text": "# 7건\n\n목표 대비 117%", "layout": { "row": "card-2-r1", "columns": 16 } }
+      ]
+    },
+    {
+      "type": "card",
+      "id": "card-3",
+      "padding": "md",
+      "elevation": 1,
+      "header": "지연",
+      "headerTag": "h4",
+      "layout": { "row": "row-3", "columns": 4, "height": 120 },
+      "components": [
+        { "type": "text", "id": "text-4", "text": "# 2건\n\n즉시 검토 필요", "layout": { "row": "card-3-r1", "columns": 16 } }
+      ]
+    },
+    {
+      "type": "card",
+      "id": "card-4",
+      "padding": "md",
+      "elevation": 1,
+      "header": "내 담당",
+      "headerTag": "h4",
+      "layout": { "row": "row-3", "columns": 4, "height": 120 },
+      "components": [
+        { "type": "text", "id": "text-5", "text": "# 6건\n\n진행중 3 · 검토 2", "layout": { "row": "card-4-r1", "columns": 16 } }
+      ]
+    },
+    {
+      "type": "card",
+      "id": "card-5",
+      "padding": "md",
+      "elevation": 1,
+      "header": "📋 할 일 (12)",
+      "headerTag": "h4",
+      "layout": { "row": "row-4", "columns": 4, "height": 560 },
+      "components": [
+        { "type": "text", "id": "text-6", "text": "**PG 연동 API 명세서 작성**\n\n김민수 · D-3 · 높음", "layout": { "row": "card-5-r1", "columns": 16 } },
+        { "type": "text", "id": "text-7", "text": "**로그인 페이지 반응형 처리**\n\n이지은 · D-7 · 중간", "layout": { "row": "card-5-r2", "columns": 16 } },
+        { "type": "text", "id": "text-8", "text": "**알림 배치 스케줄러 구현**\n\n박철수 · D-10 · 낮음", "layout": { "row": "card-5-r3", "columns": 16 } },
+        { "type": "text", "id": "text-9", "text": "**검색 필터 UX 개선**\n\n정유진 · D-14 · 중간", "layout": { "row": "card-5-r4", "columns": 16 } },
+        { "type": "button", "id": "button-3", "label": "+ 태스크 추가", "action": "submit", "layout": { "row": "card-5-r5", "columns": 16 } }
+      ]
+    },
+    {
+      "type": "card",
+      "id": "card-6",
+      "padding": "md",
+      "elevation": 1,
+      "header": "⚙️ 진행중 (5)",
+      "headerTag": "h4",
+      "layout": { "row": "row-4", "columns": 4, "height": 560 },
+      "components": [
+        { "type": "text", "id": "text-10", "text": "**사용자 권한 모듈 리팩터링**\n\n김민수 · D-1 · 높음", "layout": { "row": "card-6-r1", "columns": 16 } },
+        { "type": "text", "id": "text-11", "text": "**대시보드 차트 컴포넌트 개발**\n\n이지은 · D-2 · 중간", "layout": { "row": "card-6-r2", "columns": 16 } },
+        { "type": "text", "id": "text-12", "text": "**DB 인덱스 최적화**\n\n박철수 · D-3 · 높음", "layout": { "row": "card-6-r3", "columns": 16 } },
+        { "type": "text", "id": "text-13", "text": "**웹소켓 실시간 알림 구현**\n\n정유진 · D-5 · 중간", "layout": { "row": "card-6-r4", "columns": 16 } },
+        { "type": "text", "id": "text-14", "text": "**파일 업로드 S3 연동**\n\n김민수 · D-6 · 낮음", "layout": { "row": "card-6-r5", "columns": 16 } },
+        { "type": "button", "id": "button-4", "label": "+ 태스크 추가", "action": "submit", "layout": { "row": "card-6-r6", "columns": 16 } }
+      ]
+    },
+    {
+      "type": "card",
+      "id": "card-7",
+      "padding": "md",
+      "elevation": 1,
+      "header": "👁 검토 (3)",
+      "headerTag": "h4",
+      "layout": { "row": "row-4", "columns": 4, "height": 560 },
+      "components": [
+        { "type": "text", "id": "text-15", "text": "**OAuth2 소셜 로그인 통합**\n\n이지은 · D-0 · 높음", "layout": { "row": "card-7-r1", "columns": 16 } },
+        { "type": "text", "id": "text-16", "text": "**정산 보고서 PDF 출력**\n\n박철수 · D-1 · 중간", "layout": { "row": "card-7-r2", "columns": 16 } },
+        { "type": "text", "id": "text-17", "text": "**API 응답 캐싱 전략 적용**\n\n정유진 · D-2 · 높음", "layout": { "row": "card-7-r3", "columns": 16 } },
+        { "type": "text", "id": "text-18", "text": "**접근성 개선 (ARIA 레이블)**\n\n이지은 · D-3 · 낮음", "layout": { "row": "card-7-r4", "columns": 16 } },
+        { "type": "button", "id": "button-5", "label": "+ 태스크 추가", "action": "submit", "layout": { "row": "card-7-r5", "columns": 16 } }
+      ]
+    },
+    {
+      "type": "card",
+      "id": "card-8",
+      "padding": "md",
+      "elevation": 1,
+      "header": "✅ 완료 (28)",
+      "headerTag": "h4",
+      "layout": { "row": "row-4", "columns": 4, "height": 560 },
+      "components": [
+        { "type": "text", "id": "text-19", "text": "**회원가입 이메일 인증 구현**\n\n김민수 · 완료 · 높음", "layout": { "row": "card-8-r1", "columns": 16 } },
+        { "type": "text", "id": "text-20", "text": "**공통 에러 핸들러 구성**\n\n박철수 · 완료 · 중간", "layout": { "row": "card-8-r2", "columns": 16 } },
+        { "type": "text", "id": "text-21", "text": "**Swagger 문서 자동화 설정**\n\n정유진 · 완료 · 낮음", "layout": { "row": "card-8-r3", "columns": 16 } },
+        { "type": "text", "id": "text-22", "text": "**CI/CD 파이프라인 구성**\n\n이지은 · 완료 · 높음", "layout": { "row": "card-8-r4", "columns": 16 } },
+        { "type": "button", "id": "button-6", "label": "+ 태스크 추가", "action": "submit", "layout": { "row": "card-8-r5", "columns": 16 } }
+      ]
+    },
+    {
+      "type": "card",
+      "id": "card-9",
+      "padding": "md",
+      "elevation": 2,
+      "header": "태스크 상세",
+      "headerTag": "h3",
+      "layout": { "row": "row-5", "columns": 16, "height": 540 },
+      "components": [
+        {
+          "type": "textfield",
+          "id": "textfield-2",
+          "key": "task.title",
+          "label": "제목",
+          "defaultValue": "PG 연동 API 명세서 작성",
+          "layout": { "row": "card-9-r1", "columns": 16 }
+        },
+        {
+          "type": "textarea",
+          "id": "textarea-1",
+          "key": "task.description",
+          "label": "설명",
+          "defaultValue": "결제 게이트웨이 연동을 위한 REST API 명세서를 작성한다. 요청/응답 스키마, 에러 코드, 인증 방식을 포함한다.",
+          "layout": { "row": "card-9-r2", "columns": 16 }
+        },
+        {
+          "type": "select",
+          "id": "select-4",
+          "key": "task.assignee",
+          "label": "담당자",
+          "defaultValue": "minsu",
+          "values": [
+            { "label": "김민수", "value": "minsu" },
+            { "label": "이지은", "value": "jieun" },
+            { "label": "박철수", "value": "cheolsu" },
+            { "label": "정유진", "value": "yujin" }
+          ],
+          "layout": { "row": "card-9-r3", "columns": 8 }
+        },
+        {
+          "type": "select",
+          "id": "select-5",
+          "key": "task.priority",
+          "label": "우선순위",
+          "defaultValue": "high",
+          "values": [
+            { "label": "높음", "value": "high" },
+            { "label": "중간", "value": "medium" },
+            { "label": "낮음", "value": "low" }
+          ],
+          "layout": { "row": "card-9-r3", "columns": 8 }
+        },
+        {
+          "type": "select",
+          "id": "select-6",
+          "key": "task.status",
+          "label": "상태",
+          "defaultValue": "in_progress",
+          "values": [
+            { "label": "할 일", "value": "todo" },
+            { "label": "진행중", "value": "in_progress" },
+            { "label": "검토", "value": "review" },
+            { "label": "완료", "value": "done" }
+          ],
+          "layout": { "row": "card-9-r4", "columns": 8 }
+        },
+        {
+          "type": "datetime",
+          "id": "datetime-1",
+          "key": "task.dueDate",
+          "label": "마감일",
+          "subtype": "date",
+          "defaultValue": "2026-05-02",
+          "layout": { "row": "card-9-r4", "columns": 8 }
+        },
+        {
+          "type": "select",
+          "id": "select-7",
+          "key": "task.label",
+          "label": "라벨",
+          "defaultValue": "docs",
+          "values": [
+            { "label": "버그", "value": "bug" },
+            { "label": "기능", "value": "feature" },
+            { "label": "개선", "value": "improvement" },
+            { "label": "문서", "value": "docs" }
+          ],
+          "layout": { "row": "card-9-r5", "columns": 8 }
+        },
+        {
+          "type": "number",
+          "id": "number-1",
+          "key": "task.progress",
+          "label": "진행률 (%)",
+          "defaultValue": 35,
+          "layout": { "row": "card-9-r5", "columns": 8 }
+        },
+        {
+          "type": "textarea",
+          "id": "textarea-2",
+          "key": "task.comment",
+          "label": "댓글",
+          "layout": { "row": "card-9-r6", "columns": 16 }
+        },
+        {
+          "type": "button",
+          "id": "button-7",
+          "label": "취소",
+          "action": "reset",
+          "layout": { "row": "card-9-r7", "columns": 4 }
+        },
+        {
+          "type": "button",
+          "id": "button-8",
+          "label": "저장",
+          "action": "submit",
+          "layout": { "row": "card-9-r7", "columns": 4 }
+        }
+      ]
+    }
+  ]
+}

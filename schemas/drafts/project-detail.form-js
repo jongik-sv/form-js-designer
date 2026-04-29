@@ -1,0 +1,219 @@
+{
+  "schemaVersion": 19,
+  "type": "default",
+  "components": [
+    {
+      "type": "text",
+      "id": "text-1",
+      "text": "## 신규 결제 시스템 도입 (PRJ-2026-001)",
+      "layout": { "row": "row-1", "columns": 10 }
+    },
+    {
+      "type": "button",
+      "id": "button-1",
+      "label": "편집",
+      "layout": { "row": "row-1", "columns": 3 }
+    },
+    {
+      "type": "button",
+      "id": "button-2",
+      "label": "완료 처리",
+      "action": "submit",
+      "layout": { "row": "row-1", "columns": 3 }
+    },
+    {
+      "type": "card",
+      "id": "card-1",
+      "padding": "md",
+      "elevation": 1,
+      "header": "프로젝트 정보",
+      "headerTag": "h3",
+      "layout": { "row": "row-2", "columns": 6, "height": 480 },
+      "components": [
+        {
+          "type": "select",
+          "id": "select-1",
+          "key": "project.manager",
+          "label": "담당자",
+          "defaultValue": "u-001",
+          "searchable": true,
+          "values": [
+            { "label": "김민수", "value": "u-001" },
+            { "label": "이지은", "value": "u-002" },
+            { "label": "박상우", "value": "u-003" },
+            { "label": "최유진", "value": "u-004" },
+            { "label": "정현우", "value": "u-005" },
+            { "label": "한가람", "value": "u-006" }
+          ]
+        },
+        {
+          "type": "select",
+          "id": "select-dept",
+          "key": "project.department",
+          "label": "부서",
+          "defaultValue": "dev",
+          "values": [
+            { "label": "개발팀", "value": "dev" },
+            { "label": "디자인팀", "value": "design" },
+            { "label": "마케팅팀", "value": "marketing" },
+            { "label": "영업팀", "value": "sales" },
+            { "label": "운영팀", "value": "ops" }
+          ]
+        },
+        {
+          "type": "datetime",
+          "id": "datetime-1",
+          "key": "project.startDate",
+          "label": "시작일",
+          "subtype": "date",
+          "defaultValue": "2026-04-01"
+        },
+        {
+          "type": "datetime",
+          "id": "datetime-2",
+          "key": "project.dueDate",
+          "label": "마감일",
+          "subtype": "date",
+          "defaultValue": "2026-06-30"
+        },
+        {
+          "type": "select",
+          "id": "select-priority",
+          "key": "project.priority",
+          "label": "우선순위",
+          "defaultValue": "high",
+          "values": [
+            { "label": "긴급", "value": "critical" },
+            { "label": "높음", "value": "high" },
+            { "label": "보통", "value": "medium" },
+            { "label": "낮음", "value": "low" }
+          ]
+        },
+        {
+          "type": "number",
+          "id": "number-1",
+          "key": "project.budget",
+          "label": "예산 (원)",
+          "defaultValue": 350000000
+        }
+      ]
+    },
+    {
+      "type": "card",
+      "id": "card-2",
+      "padding": "md",
+      "elevation": 1,
+      "header": "진행 현황",
+      "headerTag": "h3",
+      "layout": { "row": "row-2", "columns": 10, "height": 480 },
+      "components": [
+        {
+          "type": "text",
+          "id": "text-2",
+          "text": "### 현재 진행률: **68%** — 목표 마일스톤까지 D-18"
+        },
+        {
+          "type": "number",
+          "id": "number-2",
+          "key": "project.progressRate",
+          "label": "진행률 (%)",
+          "defaultValue": 68
+        },
+        {
+          "type": "select",
+          "id": "select-2",
+          "key": "project.status",
+          "label": "상태",
+          "defaultValue": "active",
+          "values": [
+            { "label": "진행중", "value": "active" },
+            { "label": "지연", "value": "delayed" },
+            { "label": "완료", "value": "completed" },
+            { "label": "보류", "value": "on_hold" },
+            { "label": "취소", "value": "cancelled" }
+          ]
+        },
+        {
+          "type": "textfield",
+          "id": "textfield-3",
+          "key": "project.nextMilestone",
+          "label": "다음 마일스톤",
+          "defaultValue": "결제 모듈 1차 개발 완료"
+        }
+      ]
+    },
+    {
+      "type": "table",
+      "id": "table-1",
+      "label": "태스크 목록",
+      "rowCount": 8,
+      "columns": [
+        { "label": "태스크명", "key": "taskName" },
+        { "label": "담당자", "key": "assignee" },
+        { "label": "상태", "key": "status" },
+        { "label": "우선순위", "key": "priority" },
+        { "label": "마감일", "key": "dueDate" },
+        { "label": "진행률", "key": "progress" }
+      ],
+      "dataSource": "= [{taskName:\"결제 API 설계\",assignee:\"박민준\",status:\"완료\",priority:\"긴급\",dueDate:\"2026-02-10\",progress:\"100%\"},{taskName:\"PG사 연동 개발\",assignee:\"이서연\",status:\"진행 중\",priority:\"높음\",dueDate:\"2026-03-15\",progress:\"75%\"},{taskName:\"결제 UI 구현\",assignee:\"최지훈\",status:\"진행 중\",priority:\"높음\",dueDate:\"2026-03-20\",progress:\"60%\"},{taskName:\"보안 취약점 점검\",assignee:\"김태양\",status:\"대기\",priority:\"긴급\",dueDate:\"2026-04-01\",progress:\"0%\"},{taskName:\"테스트 시나리오 작성\",assignee:\"정유나\",status:\"진행 중\",priority:\"보통\",dueDate:\"2026-03-25\",progress:\"40%\"},{taskName:\"DB 스키마 설계\",assignee:\"박민준\",status:\"완료\",priority:\"높음\",dueDate:\"2026-02-05\",progress:\"100%\"},{taskName:\"운영 배포 계획 수립\",assignee:\"이서연\",status:\"대기\",priority:\"보통\",dueDate:\"2026-04-10\",progress:\"0%\"},{taskName:\"사용자 교육 자료 준비\",assignee:\"최지훈\",status:\"대기\",priority:\"낮음\",dueDate:\"2026-04-15\",progress:\"0%\"}]",
+      "layout": { "row": "row-3", "columns": 16, "height": 360 }
+    },
+    {
+      "type": "table",
+      "id": "table-2",
+      "label": "마일스톤",
+      "rowCount": 5,
+      "columns": [
+        { "label": "마일스톤", "key": "milestone" },
+        { "label": "마감일", "key": "dueDate" },
+        { "label": "상태", "key": "status" },
+        { "label": "산출물", "key": "deliverable" }
+      ],
+      "dataSource": "= [{milestone:\"요구사항 분석 완료\",dueDate:\"2026-01-31\",status:\"완료\",deliverable:\"요구사항 정의서\"},{milestone:\"시스템 설계 완료\",dueDate:\"2026-02-15\",status:\"완료\",deliverable:\"설계 명세서\"},{milestone:\"1차 개발 완료\",dueDate:\"2026-03-31\",status:\"진행 중\",deliverable:\"개발 소스 및 단위테스트 결과\"},{milestone:\"통합 테스트 완료\",dueDate:\"2026-04-15\",status:\"대기\",deliverable:\"테스트 결과 보고서\"},{milestone:\"운영 배포\",dueDate:\"2026-05-01\",status:\"대기\",deliverable:\"배포 완료 확인서\"}]",
+      "layout": { "row": "row-4", "columns": 8, "height": 280 }
+    },
+    {
+      "type": "card",
+      "id": "card-3",
+      "padding": "md",
+      "elevation": 1,
+      "header": "첨부 파일",
+      "headerTag": "h3",
+      "layout": { "row": "row-4", "columns": 8, "height": 280 },
+      "components": [
+        {
+          "type": "table",
+          "id": "table-3",
+          "label": "파일 목록",
+          "rowCount": 5,
+          "columns": [
+            { "label": "파일명", "key": "fileName" },
+            { "label": "업로드자", "key": "uploader" },
+            { "label": "크기", "key": "fileSize" },
+            { "label": "업로드 일자", "key": "uploadDate" }
+          ],
+          "dataSource": "= [{fileName:\"PRJ-2026-001_요구사항정의서.docx\",uploader:\"김지수\",fileSize:\"1.2 MB\",uploadDate:\"2026-01-20\"},{fileName:\"시스템_설계명세서_v2.pdf\",uploader:\"박민준\",fileSize:\"3.8 MB\",uploadDate:\"2026-02-14\"},{fileName:\"결제API_연동가이드.pdf\",uploader:\"이서연\",fileSize:\"2.1 MB\",uploadDate:\"2026-02-28\"},{fileName:\"DB_스키마_ERD.png\",uploader:\"박민준\",fileSize:\"540 KB\",uploadDate:\"2026-02-05\"},{fileName:\"보안검토_체크리스트.xlsx\",uploader:\"김태양\",fileSize:\"88 KB\",uploadDate:\"2026-03-10\"}]"
+        }
+      ]
+    },
+    {
+      "type": "button",
+      "id": "button-3",
+      "label": "히스토리 보기",
+      "layout": { "row": "row-5", "columns": 4 }
+    },
+    {
+      "type": "button",
+      "id": "button-4",
+      "label": "삭제",
+      "layout": { "row": "row-5", "columns": 4 }
+    },
+    {
+      "type": "button",
+      "id": "button-5",
+      "label": "저장",
+      "action": "submit",
+      "layout": { "row": "row-5", "columns": 4 }
+    }
+  ]
+}
