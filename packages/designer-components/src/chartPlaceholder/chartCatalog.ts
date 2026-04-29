@@ -15,6 +15,11 @@
 // 않으므로(기존 designer-i18n / designer-runtime도 각자 inline) 여기서도 동일 패턴
 // 으로 인라인 헬퍼를 둔다. dev 환경에서만 console.warn 1회 출력하기 위함.
 // -----------------------------------------------------------------------------
+// TODO(designer-core export): designer-core가 isProductionEnv를 export하면
+// 아래 인라인 헬퍼를 `import { isProductionEnv } from '@form-js-designer/designer-core'`로 교체한다.
+// 동일 패턴이 다음 파일에도 있어 일괄 마이그레이션 대상:
+//   - packages/designer-i18n/src/envUtils.ts
+//   - packages/designer-runtime/src/watermark/WatermarkMonitor.ts
 function isProductionEnv(): boolean {
   const meta = (import.meta as { env?: { PROD?: boolean } }).env;
   if (meta !== undefined) {
@@ -310,6 +315,16 @@ const CATALOG_INDEX: ReadonlyMap<ChartType, ChartCatalogEntry> = new Map(
   CHART_CATALOG.map((e) => [e.type, e]),
 );
 
+// FALLBACK_ENTRY: 첫 번째 entry는 spec.md §3.4에 따라 'bar'여야 함.
+// 카탈로그 무결성 sanity check(모듈 로드 시 1회). invariant 위반은 개발자 실수.
+const FALLBACK_ENTRY: ChartCatalogEntry = (() => {
+  const first = CHART_CATALOG[0];
+  if (first === undefined || first.type !== 'bar') {
+    throw new Error('[chartPlaceholder] catalog invariant violated: first entry must be "bar"');
+  }
+  return first;
+})();
+
 /**
  * getChart — chartType 문자열로 카탈로그 엔트리를 조회.
  *
@@ -318,11 +333,11 @@ const CATALOG_INDEX: ReadonlyMap<ChartType, ChartCatalogEntry> = new Map(
  * - 알 수 없는 string → bar 폴백 + dev 환경에서 console.warn 1회
  */
 export function getChart(type: string | undefined): ChartCatalogEntry {
-  if (type !== undefined && CATALOG_INDEX.has(type as ChartType)) {
-    return CATALOG_INDEX.get(type as ChartType)!;
-  }
-  if (type !== undefined && !isProductionEnv()) {
+  if (type === undefined) return FALLBACK_ENTRY;
+  const entry = CATALOG_INDEX.get(type as ChartType);
+  if (entry) return entry;
+  if (!isProductionEnv()) {
     console.warn(`[chartPlaceholder] unknown chartType: "${type}", falling back to bar`);
   }
-  return CATALOG_INDEX.get('bar')!;
+  return FALLBACK_ENTRY;
 }
