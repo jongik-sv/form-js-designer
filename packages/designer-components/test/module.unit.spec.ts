@@ -119,8 +119,8 @@ describe('DesignerComponentsModule registration', () => {
     expect(registered.config?.type).toBe('modal');
   });
 
-  it('registers exactly 4 components (card, tabs, modal, tabPanel)', () => {
-    expect(registry.register).toHaveBeenCalledTimes(4);
+  it('registers exactly 5 components (card, tabs, modal, tabPanel, tree)', () => {
+    expect(registry.register).toHaveBeenCalledTimes(5);
   });
 
   it('registers "tabPanel" component (Preact component with static .config)', () => {
