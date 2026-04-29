@@ -22,7 +22,7 @@
       "properties": {
         "type": {
           "type": "string",
-          "enum": ["string", "number", "boolean", "enum", "color", "spacing", "expression", "i18n", "array"]
+          "enum": ["string", "number", "boolean", "enum", "color", "spacing", "expression", "i18n", "array", "tree"]
         },
         "label": {
           "type": "string"

@@ -165,3 +165,51 @@ export const ModalIcon: ComponentType<IconProps> = (props) => (
   </svg>
 );
 
+export const TreeIcon: ComponentType<IconProps> = (props) => (
+  <svg {...SVG_BASE} {...props}>
+    <rect
+      x={20}
+      y={6}
+      width={14}
+      height={10}
+      rx={2}
+      stroke="currentColor"
+      strokeWidth={2}
+    />
+    <rect
+      x={6}
+      y={32}
+      width={14}
+      height={10}
+      rx={2}
+      stroke="currentColor"
+      strokeWidth={2}
+    />
+    <rect
+      x={20}
+      y={32}
+      width={14}
+      height={10}
+      rx={2}
+      stroke="currentColor"
+      strokeWidth={2}
+    />
+    <rect
+      x={34}
+      y={32}
+      width={14}
+      height={10}
+      rx={2}
+      stroke="currentColor"
+      strokeWidth={2}
+    />
+    <path
+      d="M27 16 V24 M13 24 H41 M13 24 V32 M27 24 V32 M41 24 V32"
+      stroke="currentColor"
+      strokeWidth={1.5}
+      fill="none"
+      strokeLinecap="round"
+    />
+  </svg>
+);
+

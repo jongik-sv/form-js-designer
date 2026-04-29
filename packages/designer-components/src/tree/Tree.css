@@ -1,0 +1,19 @@
+@layer components {
+  .dc-tree {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 12px;
+    color: #1e293b;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 8px;
+    background: #f8fafc;
+    border: 1px dashed #cbd5e1;
+    border-radius: 4px;
+  }
+
+  .dc-tree pre {
+    margin: 0;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+}

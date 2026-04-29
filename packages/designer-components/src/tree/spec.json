@@ -1,0 +1,19 @@
+{
+  "type": "tree",
+  "name": "designer.components.tree.name",
+  "group": "presentation",
+  "propsSchema": {
+    "properties": {
+      "label": {
+        "type": "i18n",
+        "label": "designer.components.tree.label",
+        "default": "트리"
+      },
+      "nodes": {
+        "type": "tree",
+        "label": "designer.components.tree.nodes",
+        "default": []
+      }
+    }
+  }
+}

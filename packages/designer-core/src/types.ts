@@ -43,7 +43,7 @@ export interface PureRenderProps<F extends FieldSchema = FieldSchema> {
 
 export interface PropsSchema {
   properties: Record<string, {
-    type: 'string' | 'number' | 'boolean' | 'enum' | 'spacing' | 'color' | 'expression' | 'i18n' | 'array';
+    type: 'string' | 'number' | 'boolean' | 'enum' | 'spacing' | 'color' | 'expression' | 'i18n' | 'array' | 'tree';
     label?: string;
     description?: string;
     default?: unknown;
