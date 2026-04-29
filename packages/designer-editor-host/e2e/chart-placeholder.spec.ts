@@ -5,13 +5,11 @@
  * 1) 팔레트에서 chartPlaceholder 항목 → 캔버스에 드래그·드롭
  * 2) 캔버스에 [data-component="chartPlaceholder"] + [data-chart-type="bar"] 출현
  * 3) .dc-chart-placeholder__canvas 안에 <svg> 마크업이 dangerouslySetInnerHTML로 들어가 있음
- * 4) 우측 properties panel에서 chartType enum select가 보이고 옵션 11개 노출
+ * 4) 캔버스 클릭으로 chart 선택 → 우측 properties panel에 chartType enum select(11개) 노출
  * 5) chartType 값을 'pie'로 변경 → wrapper data-chart-type="pie"로 갱신
  *
- * 주: chartPlaceholder는 keyed:false + escapeGridRender:true 조합이라
- * editor 캔버스에서 자체 .fjs-element 래퍼가 없어 click 기반 선택이 동작하지 않는다.
- * 대신 form-js Selection 서비스(window.__editor.get('selection'))로 직접 선택한다.
- * 이미 선택된 상태에서 selection.set(field)는 no-op이므로 set(null) → set(field) 패턴 사용.
+ * 주: chartPlaceholder는 escapeGridRender:false 컨벤션을 따르므로 form-js editor가
+ * `.fjs-element` wrapper를 만들어 캔버스 클릭으로 자연스럽게 선택 가능하다.
  */
 
 import { test, expect } from '@playwright/test';
@@ -40,6 +38,15 @@ test.describe('chartPlaceholder — palette drop + props panel', () => {
   });
 
   test('팔레트 → 캔버스 드롭 → SVG 렌더 + chartType enum 11개 + pie 전환', async ({ page }) => {
+    // 0) properties panel 사이드바를 먼저 열어 PropsPanelContainer 마운트 + 리스너 등록
+    //    (드롭 직후 form-js editor가 자동으로 새 필드를 selection.set 하므로,
+    //    PropsPanelContainer가 그 이벤트를 수신해야 props panel이 갱신된다.)
+    const propsLink = page.locator('[data-testid="sidebar-props"]');
+    if (await propsLink.count()) {
+      await propsLink.click();
+    }
+    await expect(page.locator('[data-testid="props-stack"]')).toBeVisible({ timeout: 5000 });
+
     // 1) 컴포넌트 탭 활성화 (이미 active일 수 있음)
     const componentsTab = page.locator('[data-testid="left-tab-components"]');
     if (await componentsTab.count()) {
@@ -100,47 +107,22 @@ test.describe('chartPlaceholder — palette drop + props panel', () => {
     const innerHTML = await chartCanvas.evaluate((el) => el.innerHTML);
     expect(innerHTML).toContain('<svg');
 
-    // 7) properties panel 사이드바 열기 → PropsPanelContainer 마운트 + 리스너 등록 대기
-    const propsLink = page.locator('[data-testid="sidebar-props"]');
-    if (await propsLink.count()) {
-      await propsLink.click();
+    // 7) 캔버스에서 chartPlaceholder 클릭으로 자연스러운 선택
+    //    escapeGridRender:false 이므로 form-js editor가 .fjs-element 래퍼를 만들어
+    //    캔버스 클릭만으로 chart 선택이 가능. 단, drop 직후 form-js가 자동 select하면서
+    //    PropsPanelContainer 마운트 이전에 selection.changed가 발생할 수 있으므로
+    //    Form root( .fjs-element[data-field-type="default"] )을 한 번 클릭해 deselect 후
+    //    chart 를 다시 클릭해 selection.changed 이벤트를 재발생시킨다.
+    const chartElement = page.locator(`.fjs-element[data-field-type="${FIELD_TYPE}"]`).first();
+    await expect(chartElement).toBeVisible({ timeout: 5000 });
+
+    const formRoot = page.locator('.fjs-element[data-field-type="default"]').first();
+    if (await formRoot.count()) {
+      await formRoot.click({ position: { x: 5, y: 5 } });
     }
-    await expect(page.locator('[data-testid="props-stack"]')).toBeVisible({ timeout: 5000 });
-    await expect(page.locator('[data-testid="props-empty"]')).toBeVisible({ timeout: 5000 });
+    await chartElement.click();
 
-    // 8) chartPlaceholder 필드를 form-js Selection 서비스로 직접 선택
-    // (드래그·드롭 직후에는 이미 chart가 선택된 상태라 set 만으로는 selection.changed 이벤트가
-    //  발생하지 않는다. clear → set 시퀀스로 강제 fire.)
-    const selectionResult = await page.evaluate(async () => {
-      const editor = (window as unknown as {
-        __editor?: { get: (name: string, optional?: boolean) => unknown };
-      }).__editor;
-      if (!editor) return { ok: false, reason: 'no-editor' };
-      const registry = editor.get('formFieldRegistry', false) as
-        | { _formFields?: Map<string, unknown>; getAll?: () => unknown[] }
-        | undefined;
-      const selection = editor.get('selection', false) as
-        | { set: (field: unknown) => void; get: () => unknown }
-        | undefined;
-      if (!registry || !selection) return { ok: false, reason: 'no-services' };
-      let all: unknown[] = [];
-      try {
-        if (registry.getAll) all = registry.getAll();
-      } catch { /* ignore */ }
-      if (all.length === 0 && registry._formFields) {
-        all = Array.from(registry._formFields.values());
-      }
-      const chartField = all.find((f) => (f as { type?: string }).type === 'chartPlaceholder');
-      if (!chartField) return { ok: false, reason: 'no-chart-field' };
-      // clear → set 으로 selection.changed 이벤트 강제 fire
-      selection.set(null);
-      await new Promise((r) => setTimeout(r, 50));
-      selection.set(chartField);
-      return { ok: true };
-    });
-    expect(selectionResult.ok, JSON.stringify(selectionResult)).toBe(true);
-
-    // 9) chartType entry + enum select + 옵션 11개
+    // 8) chartType entry + enum select + 옵션 11개
     const chartTypeEntry = page.locator('[data-testid="props-entry-chartType"]');
     await expect(chartTypeEntry).toBeVisible({ timeout: 10000 });
 
@@ -152,7 +134,7 @@ test.describe('chartPlaceholder — palette drop + props panel', () => {
     expect(optionValues).toEqual([...CHART_OPTIONS]);
     expect(optionValues).toHaveLength(11);
 
-    // 10) chartType='pie' 선택 → wrapper data-chart-type='pie' 갱신
+    // 9) chartType='pie' 선택 → wrapper data-chart-type='pie' 갱신
     await select.selectOption('pie');
     await expect(wrapper).toHaveAttribute('data-chart-type', 'pie', { timeout: 3000 });
   });

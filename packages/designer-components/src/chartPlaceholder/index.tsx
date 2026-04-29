@@ -40,7 +40,7 @@ export const ChartPlaceholderComponent = defineComponent<ChartPlaceholderSchema>
   icon: ChartIcon,
   keyed: false,
   pathed: false,
-  escapeGridRender: true,
+  escapeGridRender: false,
   propsSchema: chartPlaceholderPropsSchema,
   create: (options = {}) => ({
     type: 'chartPlaceholder',
