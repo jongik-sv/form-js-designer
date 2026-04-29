@@ -21,6 +21,7 @@ import { TabsComponent } from './tabs/Tabs';
 import { ModalComponent } from './modal/Modal';
 import { TabPanelComponent } from './tabPanel/index';
 import { TreeComponent } from './tree/index';
+import { ChartPlaceholderComponent } from './chartPlaceholder/index';
 
 /** form-js didi 컨테이너가 주입하는 FormFields 최소 인터페이스 */
 interface FormFields {
@@ -28,7 +29,7 @@ interface FormFields {
   _formFields?: Record<string, unknown>;
 }
 
-const COMPONENTS = [CardComponent, TabsComponent, ModalComponent, TabPanelComponent, TreeComponent] as const;
+const COMPONENTS = [CardComponent, TabsComponent, ModalComponent, TabPanelComponent, TreeComponent, ChartPlaceholderComponent] as const;
 
 /**
  * 팔레트에서 숨길 타입 목록.

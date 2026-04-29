@@ -1,0 +1,25 @@
+{
+  "type": "chartPlaceholder",
+  "name": "designer.components.chartPlaceholder.name",
+  "group": "presentation",
+  "propsSchema": {
+    "properties": {
+      "chartType": {
+        "type": "enum",
+        "label": "designer.components.chartPlaceholder.chartType",
+        "default": "bar",
+        "enum": ["bar", "line", "pie", "donut", "area", "scatter", "stackedBar", "horizontalBar", "gauge", "heatmap", "treemap"]
+      },
+      "title": {
+        "type": "i18n",
+        "label": "designer.components.chartPlaceholder.title",
+        "default": ""
+      },
+      "description": {
+        "type": "i18n",
+        "label": "designer.components.chartPlaceholder.description",
+        "default": ""
+      }
+    }
+  }
+}

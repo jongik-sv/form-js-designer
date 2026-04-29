@@ -9,6 +9,7 @@ const FormJsBlock = withDesigner(RawFormJsBlock);
 import simple from './seed/simple.json';
 import tabs from './seed/tabs.json';
 import modal from './seed/modal.json';
+import chart from './seed/chart.json';
 
 const editorEl = document.querySelector<HTMLElement>('#editor')!;
 const dumpEl = document.querySelector<HTMLElement>('#dump')!;
@@ -97,6 +98,9 @@ document.querySelector('[data-testid="insert-tabs"]')!.addEventListener('click',
 });
 document.querySelector('[data-testid="insert-modal"]')!.addEventListener('click', () => {
   editor.commands.insertFormJsBlock(modal as Record<string, unknown>, 'modal-1');
+});
+document.querySelector('[data-testid="insert-chart"]')!.addEventListener('click', () => {
+  editor.commands.insertFormJsBlock(chart as Record<string, unknown>, 'chart-1');
 });
 document.querySelector('[data-testid="dump-html"]')!.addEventListener('click', () => {
   dumpEl.textContent = editor.getHTML();

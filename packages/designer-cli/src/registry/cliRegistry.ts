@@ -41,6 +41,7 @@ const DESIGNER_COMPONENTS_TYPES = new Set([
   'tabs',
   'modal',
   'tree',
+  'chartPlaceholder',
 ]);
 
 const ALL_TYPES = new Set([

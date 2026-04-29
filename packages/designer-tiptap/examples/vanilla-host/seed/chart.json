@@ -1,0 +1,11 @@
+{
+  "type": "default",
+  "components": [
+    {
+      "type": "chartPlaceholder",
+      "id": "chart-1",
+      "chartType": "bar",
+      "title": "분기별 매출"
+    }
+  ]
+}

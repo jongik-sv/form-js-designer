@@ -97,6 +97,8 @@ if (isTestMode) {
     // TSK-04-02: 접근성 (axe) + 테마 전환 E2E 통합 테스트
     { in: 'test/integration/suite/a11y.test.ts', out: 'dist/test/integration/suite/a11y.test.js', external: ['vscode', 'mocha', 'assert', 'path'] },
     { in: 'test/integration/suite/themeSwitch.test.ts', out: 'dist/test/integration/suite/themeSwitch.test.js', external: ['vscode', 'mocha', 'assert', 'path'] },
+    // Task 1.15: chartPlaceholder 통합 테스트
+    { in: 'test/integration/suite/chartPlaceholder.test.ts', out: 'dist/test/integration/suite/chartPlaceholder.test.js', external: ['vscode', 'mocha', 'assert', 'path', 'fs', 'markdown-it'] },
   ];
   for (const { in: entry, out, external } of testEntries) {
     testBundles.push(build({

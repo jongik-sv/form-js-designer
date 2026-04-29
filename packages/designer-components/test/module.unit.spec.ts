@@ -119,8 +119,16 @@ describe('DesignerComponentsModule registration', () => {
     expect(registered.config?.type).toBe('modal');
   });
 
-  it('registers exactly 5 components (card, tabs, modal, tabPanel, tree)', () => {
-    expect(registry.register).toHaveBeenCalledTimes(5);
+  it('registers exactly 6 components (card, tabs, modal, tabPanel, tree, chartPlaceholder)', () => {
+    expect(registry.register).toHaveBeenCalledTimes(6);
+  });
+
+  it('registers "chartPlaceholder" component (Preact component with static .config)', () => {
+    const call = registry.register.mock.calls.find((c) => c[0] === 'chartPlaceholder');
+    expect(call).toBeDefined();
+    const registered = call![1] as { config?: { type?: string } };
+    expect(typeof registered).toBe('function');
+    expect(registered.config?.type).toBe('chartPlaceholder');
   });
 
   it('registers "tabPanel" component (Preact component with static .config)', () => {
