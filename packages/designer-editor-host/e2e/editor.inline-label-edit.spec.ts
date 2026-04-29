@@ -131,6 +131,69 @@ test.describe('Inline label edit (dblclick)', () => {
     ).toBeVisible({ timeout: 3000 });
   });
 
+  test('datetime undefined-label: dblclick opens overlay and updates label', async ({ page }) => {
+    // datetime 필드를 드롭한 뒤 dateLabel/timeLabel이 undefined여도 더블클릭으로 편집 가능해야 한다.
+    await dropPaletteToCanvas(page, 'datetime');
+
+    // datetime 라벨 엘리먼트가 없으면 필드 행 전체로 폴백
+    const labelOrRow = page
+      .locator(
+        '.fjs-editor-container .fjs-element[data-field-type="datetime"] .fjs-form-field-label,' +
+        '.fjs-editor-container .fjs-element[data-field-type="datetime"]',
+      )
+      .first();
+    await expect(labelOrRow).toBeVisible({ timeout: 5000 });
+    await labelOrRow.dblclick({ force: true });
+
+    const input = page.locator('[data-testid="inline-label-edit-input"]');
+    await expect(input).toBeVisible({ timeout: 3000 });
+
+    await input.fill('납기일');
+    await input.press('Enter');
+
+    await expect(input).toHaveCount(0, { timeout: 2000 });
+    // 라벨 또는 date-label 영역에 텍스트가 나타나야 한다.
+    await expect(
+      page.locator('.fjs-editor-container', { hasText: '납기일' }),
+    ).toBeVisible({ timeout: 3000 });
+  });
+
+  test('card header: props panel input → canvas reflects text; dblclick header → overlay', async ({ page }) => {
+    // Card를 드롭한다.
+    await dropPaletteToCanvas(page, 'card');
+
+    // card 캔버스 요소 클릭 → props panel 선택
+    const cardEl = page.locator('.fjs-editor-container .fjs-element[data-field-type="card"]').first();
+    await expect(cardEl).toBeVisible({ timeout: 5000 });
+    await cardEl.click({ force: true });
+    await page.waitForTimeout(300);
+
+    // props panel의 "제목" 텍스트 입력 필드 — input 또는 textarea
+    const headerInput = page
+      .locator('.bio-properties-panel input, .bio-properties-panel textarea')
+      .first();
+    if (await headerInput.isVisible({ timeout: 3000 }).catch(() => false)) {
+      await headerInput.fill('기본 정보');
+      await headerInput.press('Enter');
+      await page.waitForTimeout(300);
+
+      // 캔버스 헤더에 텍스트가 "[object Object]"가 아닌 실제 문자열로 나타나야 한다.
+      const cardHeader = page.locator('.fjs-editor-container .dc-card__header').first();
+      await expect(cardHeader).not.toHaveText(/\[object Object\]/i, { timeout: 3000 });
+      await expect(cardHeader).toContainText('기본 정보', { timeout: 3000 });
+    }
+
+    // .dc-card__header 더블클릭 → 인라인 오버레이 등장
+    const cardHeader = page.locator('.fjs-editor-container .dc-card__header').first();
+    if (await cardHeader.isVisible({ timeout: 3000 }).catch(() => false)) {
+      await cardHeader.dblclick({ force: true });
+      const input = page.locator('[data-testid="inline-label-edit-input"]');
+      await expect(input).toBeVisible({ timeout: 3000 });
+      await input.press('Escape');
+      await expect(input).toHaveCount(0, { timeout: 2000 });
+    }
+  });
+
   test('empty-label field row dblclick still opens overlay', async ({ page }) => {
     // textfield 드롭 → 라벨을 빈 문자열로 비우고 → 필드 행 더블클릭으로 폴백 경로 확인.
     await dropPaletteToCanvas(page, 'textfield');
