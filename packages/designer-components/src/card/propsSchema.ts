@@ -32,8 +32,8 @@ export const cardPropsSchema: PropsSchema = {
       max: 3,
     },
     header: {
-      type: 'i18n',
-      label: 'designer.components.card.header',
+      type: 'string',
+      label: '제목',
       default: '',
     },
     headerTag: {

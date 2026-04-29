@@ -187,13 +187,18 @@ describe('InlineLabelEditModule dblclick filter', () => {
     expect(document.querySelector('.fjs-inline-label-edit-input')).toBeNull();
   });
 
-  it('does not mount overlay when field has no label property', () => {
+  it('mounts overlay with empty value on label dblclick even when field has no label property (guard relaxed)', () => {
+    // After the guard relaxation, undefined label → '' starting value.
+    // The overlay opens; on blur without typing, no editFormField call is made
+    // (value unchanged). This is benign for label-less fields like spacer.
     const fields = { 'f1': { id: 'f1', type: 'spacer' } };
     const { service } = createService({ formFieldRegistry: createMockFormFieldRegistry(fields) });
     cleanup.push(() => service.destroy());
     const { labelEl } = buildCanvasWithField('f1', '');
     dispatchDblclick(labelEl);
-    expect(document.querySelector('.fjs-inline-label-edit-input')).toBeNull();
+    const input = document.querySelector('.fjs-inline-label-edit-input') as HTMLInputElement | null;
+    expect(input).not.toBeNull();
+    expect(input!.value).toBe('');
   });
 
   it('appends overlay into closest .fjd-embedded-designer-root for portal stacking', () => {
@@ -530,7 +535,9 @@ describe('InlineLabelEditModule empty-label fallback', () => {
     expect(input!.getAttribute('data-field-id')).toBe('f1');
   });
 
-  it('does not mount when field has no label property at all (e.g., spacer)', () => {
+  it('mounts overlay with empty value on [data-id] dblclick even when field has no label property (guard relaxed)', () => {
+    // After the guard relaxation, undefined label → '' starting value.
+    // The overlay opens; on blur without typing, no editFormField call is made.
     const fields = { 'sp1': { id: 'sp1', type: 'spacer' } };
     const { service } = createService({
       formFieldRegistry: createMockFormFieldRegistry(fields),
@@ -545,7 +552,9 @@ describe('InlineLabelEditModule empty-label fallback', () => {
     document.body.appendChild(canvas);
 
     dispatchDblclick(fieldEl);
-    expect(document.querySelector('.fjs-inline-label-edit-input')).toBeNull();
+    const input = document.querySelector('.fjs-inline-label-edit-input') as HTMLInputElement | null;
+    expect(input).not.toBeNull();
+    expect(input!.value).toBe('');
   });
 });
 
@@ -665,20 +674,47 @@ describe('InlineLabelEditModule datetime field (dateLabel/timeLabel)', () => {
     expect(modeling.editFormField).toHaveBeenCalledWith(fields.dt4, { timeLabel: 'New Time' });
   });
 
-  it('does not mount when datetime field has neither dateLabel nor timeLabel as string', () => {
+  it('mounts overlay with empty value when datetime field has undefined dateLabel (relaxed guard)', () => {
+    // After the guard relaxation (undefined → ''), fresh datetime fields where the
+    // model has no dateLabel yet should still be editable — the overlay opens with
+    // an empty string so the user can type the first value.
     const fields = {
-      'dt5': { id: 'dt5', type: 'datetime' },  // no labels
+      'dt5': { id: 'dt5', type: 'datetime' },  // no labels in model
     };
     const { service } = createService({
       formFieldRegistry: createMockFormFieldRegistry(fields),
     });
     cleanup.push(() => service.destroy());
-    // Render a date sub-label DOM but with no corresponding string in the model
+    // DOM renders a date sub-label (form-js still shows an i18n default in the DOM
+    // even when the model property is absent).
     const { labelEl } = buildCanvasWithDatetime('dt5', { dateLabel: '', whichLabel: 'date' });
-    // override DOM textContent to simulate a partially-rendered state — model still
-    // missing the dateLabel property entirely
-    labelEl.textContent = '';
     dispatchDblclick(labelEl);
+    const input = document.querySelector('.fjs-inline-label-edit-input') as HTMLInputElement | null;
+    expect(input).not.toBeNull();
+    expect(input!.value).toBe('');
+    expect(input!.getAttribute('data-field-id')).toBe('dt5');
+  });
+
+  it('datetime, dateLabel undefined — Enter commits dateLabel with typed value', () => {
+    const fields = {
+      'dt-new': { id: 'dt-new', type: 'datetime' },  // no dateLabel in model
+    };
+    const { service, modeling } = createService({
+      formFieldRegistry: createMockFormFieldRegistry(fields),
+    });
+    cleanup.push(() => service.destroy());
+    const { labelEl } = buildCanvasWithDatetime('dt-new', { dateLabel: '', whichLabel: 'date' });
+    dispatchDblclick(labelEl);
+
+    const input = document.querySelector('.fjs-inline-label-edit-input') as HTMLInputElement;
+    expect(input).not.toBeNull();
+    expect(input.value).toBe('');
+
+    input.value = 'Start Date';
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+
+    expect(modeling.editFormField).toHaveBeenCalledTimes(1);
+    expect(modeling.editFormField).toHaveBeenCalledWith(fields['dt-new'], { dateLabel: 'Start Date' });
     expect(document.querySelector('.fjs-inline-label-edit-input')).toBeNull();
   });
 });
@@ -722,5 +758,123 @@ describe('InlineLabelEditModule text type → feelers popup', () => {
 
     // 인라인 input 미생성 확인
     expect(document.querySelector('.fjs-inline-label-edit-input')).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Card field — header property + .dc-card__header anchor
+// ---------------------------------------------------------------------------
+
+function buildCanvasWithCard(cardId: string, opts: { header?: string } = {}): {
+  canvas: HTMLElement;
+  cardContainerEl: HTMLElement;
+  cardHeaderEl: HTMLElement | null;
+} {
+  const canvas = document.createElement('div');
+  canvas.className = 'fjs-editor-container';
+
+  // The card field row carries data-id (form-js convention)
+  const cardContainerEl = document.createElement('div');
+  cardContainerEl.setAttribute('data-id', cardId);
+  cardContainerEl.className = 'dc-card';
+
+  let cardHeaderEl: HTMLElement | null = null;
+  if ('header' in opts) {
+    // When header is set (even empty string), form-js renders the header element
+    cardHeaderEl = document.createElement('h3');
+    cardHeaderEl.className = 'dc-card__header';
+    cardHeaderEl.textContent = opts.header ?? '';
+    cardContainerEl.appendChild(cardHeaderEl);
+  }
+
+  const body = document.createElement('div');
+  body.className = 'dc-card__body';
+  cardContainerEl.appendChild(body);
+
+  canvas.appendChild(cardContainerEl);
+  document.body.appendChild(canvas);
+
+  return { canvas, cardContainerEl, cardHeaderEl };
+}
+
+describe('InlineLabelEditModule card field (header property)', () => {
+  let cleanup: Array<() => void> = [];
+  beforeEach(() => { cleanup = []; });
+  afterEach(() => {
+    cleanup.forEach((fn) => fn());
+    document.body.innerHTML = '';
+  });
+
+  it('card, header undefined, click on .dc-card__header — mounts overlay with empty value', () => {
+    // Registry has a card field with NO header set (fresh card).
+    // The DOM still renders .dc-card__header (e.g., form-js shows a placeholder).
+    // Dblclick on it must open the overlay with empty string.
+    const cardId = 'c1';
+    const fields = { [cardId]: { id: cardId, type: 'card' } };
+    const { service } = createService({
+      formFieldRegistry: createMockFormFieldRegistry(fields),
+    });
+    cleanup.push(() => service.destroy());
+    const { cardHeaderEl } = buildCanvasWithCard(cardId, { header: '' });
+    expect(cardHeaderEl).not.toBeNull();
+
+    dispatchDblclick(cardHeaderEl!);
+
+    const input = document.querySelector('.fjs-inline-label-edit-input') as HTMLInputElement | null;
+    expect(input).not.toBeNull();
+    expect(input!.value).toBe('');
+    expect(input!.getAttribute('data-field-id')).toBe(cardId);
+  });
+
+  it('card, header undefined, click on .dc-card__header — Enter commits header with typed value', () => {
+    const cardId = 'c2';
+    const fields = { [cardId]: { id: cardId, type: 'card' } };
+    const { service, modeling } = createService({
+      formFieldRegistry: createMockFormFieldRegistry(fields),
+    });
+    cleanup.push(() => service.destroy());
+    const { cardHeaderEl } = buildCanvasWithCard(cardId, { header: '' });
+
+    dispatchDblclick(cardHeaderEl!);
+
+    const input = document.querySelector('.fjs-inline-label-edit-input') as HTMLInputElement;
+    expect(input).not.toBeNull();
+    expect(input.value).toBe('');
+
+    input.value = 'Project Overview';
+    input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+
+    expect(modeling.editFormField).toHaveBeenCalledTimes(1);
+    expect(modeling.editFormField).toHaveBeenCalledWith(fields[cardId], { header: 'Project Overview' });
+    expect(document.querySelector('.fjs-inline-label-edit-input')).toBeNull();
+  });
+
+  it('card, header undefined, click on [data-id] fallback — mounts overlay with empty value', () => {
+    // When no .dc-card__header element exists (card has no header set and form-js
+    // renders nothing), the [data-id] fallback resolves the anchor. _resolveLabelKey
+    // must return 'header' for type=card, and the relaxed guard must allow undefined.
+    const cardId = 'c3';
+    const fields = { [cardId]: { id: cardId, type: 'card' } };
+    const { service, modeling } = createService({
+      formFieldRegistry: createMockFormFieldRegistry(fields),
+    });
+    cleanup.push(() => service.destroy());
+    // Build card WITHOUT header element (no header option passed)
+    const { cardContainerEl } = buildCanvasWithCard(cardId);
+    expect(cardContainerEl.querySelector('.dc-card__header')).toBeNull();
+
+    // Click on the card body (falls through to [data-id] fallback)
+    const body = cardContainerEl.querySelector('.dc-card__body') as HTMLElement;
+    dispatchDblclick(body);
+
+    const input = document.querySelector('.fjs-inline-label-edit-input') as HTMLInputElement | null;
+    expect(input).not.toBeNull();
+    expect(input!.value).toBe('');
+    expect(input!.getAttribute('data-field-id')).toBe(cardId);
+
+    // Confirm it commits to 'header' key, not 'label'
+    input!.value = 'My Card Title';
+    input!.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    expect(modeling.editFormField).toHaveBeenCalledWith(fields[cardId], { header: 'My Card Title' });
   });
 });

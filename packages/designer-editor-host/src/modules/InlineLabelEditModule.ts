@@ -21,6 +21,7 @@ export interface FormFieldLike {
   dateLabel?: string;
   timeLabel?: string;
   text?: string;
+  header?: string;
 }
 
 export interface FormFieldRegistryLike {
@@ -86,8 +87,11 @@ export class InlineLabelEditService {
     }
 
     const labelKey = this._resolveLabelKey(field, anchor);
-    const currentLabel = (field as Record<string, unknown>)[labelKey];
-    if (typeof currentLabel !== 'string') return;
+    const rawLabel = (field as unknown as Record<string, unknown>)[labelKey];
+    // Allow editing when the model has no string yet (e.g. fresh datetime fields
+    // where dateLabel/timeLabel are undefined while form-js still draws an i18n
+    // default in the DOM, or fresh cards where header is unset). Start with empty.
+    const currentLabel = typeof rawLabel === 'string' ? rawLabel : '';
 
     e.preventDefault();
     e.stopPropagation();
@@ -108,6 +112,7 @@ export class InlineLabelEditService {
       if (forAttr.endsWith('-time')) return 'timeLabel';
       return 'dateLabel';
     }
+    if (field.type === 'card') return 'header';
     return 'label';
   }
 
@@ -156,6 +161,14 @@ export class InlineLabelEditService {
     if (tabTrigger) {
       const tabId = tabTrigger.getAttribute('data-tab-id');
       if (tabId) return { fieldId: tabId, anchor: tabTrigger };
+      return null;
+    }
+
+    const cardHeaderEl = target.closest('.dc-card__header') as HTMLElement | null;
+    if (cardHeaderEl) {
+      const fieldEl = cardHeaderEl.closest('[data-id]') as HTMLElement | null;
+      const fieldId = fieldEl?.getAttribute('data-id');
+      if (fieldId) return { fieldId, anchor: cardHeaderEl };
       return null;
     }
 
