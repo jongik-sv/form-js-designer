@@ -1,6 +1,6 @@
 /**
  * PanelWidgetRegistry 단위 테스트
- * - register/get/list/중복 에러/기본 9종 선등록 검증
+ * - register/get/list/중복 에러/기본 8종 선등록 검증
  */
 import { describe, it, expect } from 'vitest';
 import { PanelWidgetRegistry, createDefaultRegistry } from '../PanelWidgetRegistry';
@@ -73,14 +73,14 @@ describe('PanelWidgetRegistry', () => {
 });
 
 describe('createDefaultRegistry', () => {
-  it('(정상) 기본 9종 위젯이 모두 등록됨', () => {
+  it('(정상) 기본 8종 위젯이 모두 등록됨', () => {
     const registry = createDefaultRegistry();
     const list = registry.list();
-    const expected = ['string', 'number', 'boolean', 'enum', 'color', 'spacing', 'expression', 'i18n', 'tree'];
+    const expected = ['string', 'number', 'boolean', 'enum', 'color', 'spacing', 'expression', 'i18n'];
     for (const type of expected) {
       expect(list).toContain(type);
     }
-    expect(list.length).toBe(9);
+    expect(list.length).toBe(8);
   });
 
   it('(정상) 각 기본 위젯이 {render, edit, validate} 3 계약 모두 구현', () => {

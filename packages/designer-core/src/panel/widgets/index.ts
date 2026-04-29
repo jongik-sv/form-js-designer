@@ -1,5 +1,5 @@
 /**
- * 위젯 9종 barrel re-export + BUILTIN_WIDGETS 맵
+ * 위젯 8종 barrel re-export + BUILTIN_WIDGETS 맵
  */
 import type { PanelWidget } from '../types';
 import { StringWidget } from './StringWidget';
@@ -10,7 +10,6 @@ import { ColorWidget } from './ColorWidget';
 import { SpacingWidget } from './SpacingWidget';
 import { ExpressionWidget } from './ExpressionWidget';
 import { I18nWidget } from './I18nWidget';
-import { TreeWidget } from './TreeWidget';
 
 export { StringWidget } from './StringWidget';
 export { NumberWidget } from './NumberWidget';
@@ -20,10 +19,9 @@ export { ColorWidget } from './ColorWidget';
 export { SpacingWidget } from './SpacingWidget';
 export { ExpressionWidget } from './ExpressionWidget';
 export { I18nWidget } from './I18nWidget';
-export { TreeWidget } from './TreeWidget';
 
 /**
- * 기본 9종 위젯 맵. PanelWidgetRegistry에서 createDefaultRegistry()가 이를 사용.
+ * 기본 8종 위젯 맵. PanelWidgetRegistry에서 createDefaultRegistry()가 이를 사용.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const BUILTIN_WIDGETS: Record<string, PanelWidget<any>> = {
@@ -35,5 +33,4 @@ export const BUILTIN_WIDGETS: Record<string, PanelWidget<any>> = {
   spacing: SpacingWidget,
   expression: ExpressionWidget,
   i18n: I18nWidget,
-  tree: TreeWidget,
 };

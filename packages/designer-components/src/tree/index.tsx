@@ -1,17 +1,21 @@
 /**
- * TreeComponent — 트리 표시 컴포넌트 (read-only viewer, Phase 1A Task 3)
+ * TreeComponent — 트리 표시 컴포넌트 (Phase 1B: dataSource pattern)
  *
- * Recursive ul/li display with expand/collapse toggle. Used in:
+ * Mirrors form-js Table pattern: user supplies a FEEL expression that
+ * evaluates to an array of nodes; TreeRender renders read-only.
+ *
+ * Used in:
  *   - form-js viewer / preview
- *   - VS Code markdown preview (morphdom-safe via stable node-id keys)
+ *   - VS Code markdown preview
  *   - TipTap viewer node
- *
- * No editing here — TreeWidget (designer-core) handles authoring.
  *
  * CSP-safe: pure preact JSX, no eval / new Function / dangerouslySetInnerHTML.
  */
 import { h, Fragment } from 'preact';
-import { useState, useMemo, useCallback } from 'preact/hooks';
+import { useState, useCallback } from 'preact/hooks';
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore — useExpressionEvaluation is exported at runtime by form-js-viewer
+import { useExpressionEvaluation } from '@bpmn-io/form-js-viewer';
 import { defineComponent } from '@form-js-designer/designer-core';
 import type { PureRenderProps } from '@form-js-designer/designer-core';
 import { treePropsSchema } from './propsSchema';
@@ -20,35 +24,36 @@ import { TreeIcon } from '../icons';
 import './Tree.css';
 
 void h;
+void Fragment;
 
 export type { TreeSchema, TreeNode } from './propsSchema';
 
-// ---------------------------------------------------------------------------
-// Build a record of all node ids (recursively) → initialExpanded flag.
-// ---------------------------------------------------------------------------
-function collectIds(nodes: TreeNode[], acc: string[] = []): string[] {
-  for (const node of nodes) {
-    if (!node || typeof node.id !== 'string') continue;
-    acc.push(node.id);
-    if (Array.isArray(node.children) && node.children.length > 0) {
-      collectIds(node.children, acc);
-    }
-  }
-  return acc;
-}
-
 interface TreeRowProps {
   node: TreeNode;
-  expanded: Record<string, boolean>;
-  onToggle: (id: string) => void;
+  path: string;
+  labelKey: string;
+  childrenKey: string;
+  expandedByDefault: boolean;
+  overrides: Record<string, boolean>;
+  onToggle: (path: string) => void;
 }
 
-function TreeRow({ node, expanded, onToggle }: TreeRowProps) {
-  const hasChildren = Array.isArray(node.children) && node.children.length > 0;
-  const isOpen = expanded[node.id] === true;
+function getStringLabel(value: unknown): string {
+  if (value == null) return '';
+  if (typeof value === 'string') return value;
+  if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+  return '';
+}
+
+function TreeRow({ node, path, labelKey, childrenKey, expandedByDefault, overrides, onToggle }: TreeRowProps) {
+  const rawChildren = node[childrenKey];
+  const children = Array.isArray(rawChildren) ? (rawChildren as TreeNode[]) : [];
+  const hasChildren = children.length > 0;
+  const isOpen = path in overrides ? overrides[path] : expandedByDefault;
+  const labelText = getStringLabel(node[labelKey]);
 
   return (
-    <li class="dc-tree__item" data-node-id={node.id}>
+    <li class="dc-tree__item" data-node-path={path}>
       <div class="dc-tree__row">
         {hasChildren ? (
           <button
@@ -56,25 +61,29 @@ function TreeRow({ node, expanded, onToggle }: TreeRowProps) {
             class="dc-tree__toggle"
             aria-expanded={isOpen}
             aria-label={isOpen ? '접기' : '펼치기'}
-            onClick={() => onToggle(node.id)}
+            onClick={() => onToggle(path)}
           >
             {isOpen ? '▼' : '▶'}
           </button>
         ) : (
           <span class="dc-tree__toggle dc-tree__toggle--leaf" aria-hidden="true" />
         )}
-        <span class="dc-tree__label">{node.label}</span>
+        <span class="dc-tree__label">{labelText}</span>
       </div>
       {hasChildren ? (
         <ul
           class="dc-tree__children"
           aria-hidden={isOpen ? 'false' : 'true'}
         >
-          {(node.children as TreeNode[]).map((child) => (
+          {children.map((child, idx) => (
             <TreeRow
-              key={child.id}
+              key={`${path}-${idx}`}
               node={child}
-              expanded={expanded}
+              path={`${path}-${idx}`}
+              labelKey={labelKey}
+              childrenKey={childrenKey}
+              expandedByDefault={expandedByDefault}
+              overrides={overrides}
               onToggle={onToggle}
             />
           ))}
@@ -86,29 +95,29 @@ function TreeRow({ node, expanded, onToggle }: TreeRowProps) {
 
 function TreeRender(props: PureRenderProps<TreeSchema>) {
   const field = props.field as TreeSchema;
-  const nodes: TreeNode[] = Array.isArray(field.nodes) ? field.nodes : [];
+  const dataSource = typeof field.dataSource === 'string' ? field.dataSource : '';
+  const labelKey = typeof field.labelKey === 'string' && field.labelKey ? field.labelKey : 'label';
+  const childrenKey = typeof field.childrenKey === 'string' && field.childrenKey ? field.childrenKey : 'children';
   const expandedByDefault = field.expandedByDefault !== false; // default true
   const showGuides = field.showGuides === true;
 
-  // Initial expanded state map. Recompute when default changes or set of node
-  // ids changes (we deliberately only seed this once via useState initializer
-  // and rely on toggles afterwards — schema mutation is not a concern for the
-  // viewer use case).
-  const initialExpanded = useMemo<Record<string, boolean>>(() => {
-    const ids = collectIds(nodes);
-    const map: Record<string, boolean> = {};
-    for (const id of ids) map[id] = expandedByDefault;
-    return map;
-    // We seed once based on initial props; subsequent prop changes won't
-    // re-seed (acceptable for read-only viewer). Tests cover both branches.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const evaluated = useExpressionEvaluation(dataSource) as unknown;
+  const nodes: TreeNode[] = Array.isArray(evaluated) ? (evaluated as TreeNode[]) : [];
 
-  const [expanded, setExpanded] = useState<Record<string, boolean>>(initialExpanded);
+  // overrides map keyed by node path string. Absence means "use the default".
+  // Toggling flips the effective state (default OR previous override) and
+  // stores the new value as an override.
+  const [overrides, setOverrides] = useState<Record<string, boolean>>({});
 
-  const handleToggle = useCallback((id: string) => {
-    setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
-  }, []);
+  const handleToggle = useCallback(
+    (path: string) => {
+      setOverrides((prev) => {
+        const current = path in prev ? prev[path] : expandedByDefault;
+        return { ...prev, [path]: !current };
+      });
+    },
+    [expandedByDefault],
+  );
 
   const rootClass = showGuides ? 'dc-tree dc-tree--guides' : 'dc-tree';
 
@@ -123,11 +132,15 @@ function TreeRender(props: PureRenderProps<TreeSchema>) {
   return (
     <div class={rootClass} data-component="tree" id={props.domId}>
       <ul class="dc-tree__list">
-        {nodes.map((node) => (
+        {nodes.map((node, idx) => (
           <TreeRow
-            key={node.id}
+            key={String(idx)}
             node={node}
-            expanded={expanded}
+            path={String(idx)}
+            labelKey={labelKey}
+            childrenKey={childrenKey}
+            expandedByDefault={expandedByDefault}
+            overrides={overrides}
             onToggle={handleToggle}
           />
         ))}
@@ -135,8 +148,6 @@ function TreeRender(props: PureRenderProps<TreeSchema>) {
     </div>
   );
 }
-
-void Fragment;
 
 export const TreeComponent = defineComponent<TreeSchema>({
   type: 'tree',
@@ -147,11 +158,15 @@ export const TreeComponent = defineComponent<TreeSchema>({
   pathed: false,
   escapeGridRender: false,
   propsSchema: treePropsSchema,
-  create: (options = {}) => ({
-    type: 'tree',
-    label: '트리',
-    nodes: [],
-    ...options,
-  }),
+  create: (options = {}) => {
+    const { id, ...rest } = options as { id?: string; [k: string]: unknown };
+    return {
+      type: 'tree',
+      label: '트리',
+      dataSource: typeof id === 'string' && id ? `=${id}` : '',
+      ...(id !== undefined ? { id } : {}),
+      ...rest,
+    };
+  },
   render: TreeRender,
 });

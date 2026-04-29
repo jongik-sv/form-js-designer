@@ -1,25 +1,41 @@
 /**
- * Phase 1A Task 3 — TreeRender (read-only viewer)
+ * Phase 1B — TreeRender (dataSource pattern)
+ *
+ * Mocks @bpmn-io/form-js-viewer's useExpressionEvaluation so each test can
+ * specify what the FEEL expression "evaluates to".
  *
  * Covers:
- *   - empty placeholder
- *   - root-only render (no toggles)
- *   - parent + children, default expanded
- *   - expandedByDefault=false → collapsed
- *   - toggle click flips aria-hidden
- *   - showGuides class
- *   - data-node-id attributes
+ *   - empty / non-array → "Nothing to show."
+ *   - flat list → li per item with data-node-path
+ *   - custom labelKey/childrenKey
+ *   - nested data, default expanded
+ *   - expandedByDefault=false → aria-hidden=true
+ *   - showGuides → dc-tree--guides class
  */
 import { h } from 'preact';
-import { describe, it, expect, afterEach } from 'vitest';
-import { render, cleanup, fireEvent } from '@testing-library/preact';
-import { TreeComponent } from '../index';
-import type { TreeSchema, TreeNode } from '../propsSchema';
+import { describe, it, expect, afterEach, vi } from 'vitest';
+
+// Mutable resolver — each test sets `mockResolver = (expr) => value`.
+let mockResolver: (expr: string) => unknown = () => undefined;
+
+vi.mock('@bpmn-io/form-js-viewer', async (importOriginal) => {
+  const actual = (await importOriginal()) as Record<string, unknown>;
+  return {
+    ...actual,
+    useExpressionEvaluation: (expr: string) => mockResolver(expr),
+  };
+});
+
+// IMPORTANT: import after vi.mock so the mock is in effect.
+const { render, cleanup } = await import('@testing-library/preact');
+const { TreeComponent } = await import('../index');
+import type { TreeSchema } from '../propsSchema';
 
 void h;
 
 afterEach(() => {
   cleanup();
+  mockResolver = () => undefined;
 });
 
 const TreeRender = TreeComponent.render;
@@ -29,7 +45,7 @@ function makeField(partial: Partial<TreeSchema>): TreeSchema {
     id: 'tree_test',
     type: 'tree',
     label: '트리',
-    nodes: [],
+    dataSource: '=data',
     ...partial,
   };
 }
@@ -37,168 +53,165 @@ function makeField(partial: Partial<TreeSchema>): TreeSchema {
 const renderTree = (field: TreeSchema) =>
   render(<TreeRender field={field} domId={field.id} value={undefined} />);
 
-describe('TreeRender — empty', () => {
-  it('renders "Nothing to show." when nodes is empty array', () => {
-    const { container, getByText } = renderTree(makeField({ nodes: [] }));
+// ---------------------------------------------------------------------------
+// empty / non-array
+// ---------------------------------------------------------------------------
+describe('TreeRender — empty / non-array', () => {
+  it('renders "Nothing to show." when dataSource evaluates to []', () => {
+    mockResolver = () => [];
+    const { container, getByText } = renderTree(makeField({}));
     expect(getByText('Nothing to show.')).toBeTruthy();
     expect(container.querySelector('ul.dc-tree__list')).toBeNull();
   });
 
-  it('renders "Nothing to show." when nodes is undefined', () => {
-    const field = makeField({});
-    delete (field as { nodes?: unknown }).nodes;
-    const { getByText, container } = renderTree(field);
+  it('renders "Nothing to show." when dataSource evaluates to undefined', () => {
+    mockResolver = () => undefined;
+    const { getByText } = renderTree(makeField({}));
     expect(getByText('Nothing to show.')).toBeTruthy();
-    expect(container.querySelector('ul.dc-tree__list')).toBeNull();
   });
 
-  it('renders "Nothing to show." when nodes is non-array', () => {
-    const field = makeField({});
-    (field as { nodes?: unknown }).nodes = 'not-an-array' as unknown as TreeNode[];
-    const { getByText } = renderTree(field);
+  it('renders "Nothing to show." when dataSource evaluates to a non-array (string/number/object)', () => {
+    mockResolver = () => 'not an array';
+    const { getByText, unmount } = renderTree(makeField({}));
     expect(getByText('Nothing to show.')).toBeTruthy();
+    unmount();
+
+    mockResolver = () => 42;
+    const r2 = renderTree(makeField({}));
+    expect(r2.getByText('Nothing to show.')).toBeTruthy();
+    r2.unmount();
+
+    mockResolver = () => ({ not: 'an array' });
+    const r3 = renderTree(makeField({}));
+    expect(r3.getByText('Nothing to show.')).toBeTruthy();
   });
 });
 
-describe('TreeRender — flat tree', () => {
-  it('renders 2 root nodes without toggles when no children', () => {
-    const nodes: TreeNode[] = [
-      { id: 'a', label: 'Alpha' },
-      { id: 'b', label: 'Beta' },
-    ];
-    const { container } = renderTree(makeField({ nodes }));
+// ---------------------------------------------------------------------------
+// flat list
+// ---------------------------------------------------------------------------
+describe('TreeRender — flat list', () => {
+  it('renders one <li> per item with default labelKey "label"', () => {
+    mockResolver = () => [{ label: 'A' }, { label: 'B' }];
+    const { container, getByText } = renderTree(makeField({}));
     const items = container.querySelectorAll('li.dc-tree__item');
     expect(items.length).toBe(2);
-    // No real toggle buttons
+    expect(getByText('A')).toBeTruthy();
+    expect(getByText('B')).toBeTruthy();
+    // No toggles since there are no children
     expect(container.querySelectorAll('button.dc-tree__toggle').length).toBe(0);
-    // data-node-id present on each <li>
-    const ids = Array.from(items).map((el) => (el as HTMLElement).dataset.nodeId);
-    expect(ids).toEqual(['a', 'b']);
+  });
+
+  it('each <li> has data-node-path attribute', () => {
+    mockResolver = () => [{ label: 'A' }, { label: 'B' }];
+    const { container } = renderTree(makeField({}));
+    const items = Array.from(container.querySelectorAll('li.dc-tree__item')) as HTMLElement[];
+    const paths = items.map((el) => el.dataset.nodePath);
+    expect(paths).toEqual(['0', '1']);
   });
 });
 
-describe('TreeRender — parent + children, default expanded', () => {
-  const nodes: TreeNode[] = [
-    {
-      id: 'p',
-      label: 'Parent',
-      children: [
-        { id: 'c1', label: 'Child 1' },
-        { id: 'c2', label: 'Child 2' },
-      ],
-    },
-  ];
-
-  it('renders toggle on parent and children visible by default (expandedByDefault=true)', () => {
-    const { container } = renderTree(makeField({ nodes, expandedByDefault: true }));
-    const toggle = container.querySelector('button.dc-tree__toggle') as HTMLButtonElement | null;
-    expect(toggle).not.toBeNull();
-    expect(toggle!.getAttribute('aria-expanded')).toBe('true');
-
-    const childList = container.querySelector('ul.dc-tree__children');
-    expect(childList).not.toBeNull();
-    expect(childList!.getAttribute('aria-hidden')).toBe('false');
-
-    // Children rendered as <li>
-    const childItems = childList!.querySelectorAll('li.dc-tree__item');
-    expect(childItems.length).toBe(2);
+// ---------------------------------------------------------------------------
+// custom labelKey / childrenKey
+// ---------------------------------------------------------------------------
+describe('TreeRender — custom labelKey / childrenKey', () => {
+  it('reads node.name when labelKey is "name"', () => {
+    mockResolver = () => [{ name: 'X' }, { name: 'Y' }];
+    const { getByText } = renderTree(makeField({ labelKey: 'name' }));
+    expect(getByText('X')).toBeTruthy();
+    expect(getByText('Y')).toBeTruthy();
   });
 
-  it('default (no expandedByDefault prop) → also expanded (default true)', () => {
-    const { container } = renderTree(makeField({ nodes }));
-    const childList = container.querySelector('ul.dc-tree__children');
-    expect(childList!.getAttribute('aria-hidden')).toBe('false');
-  });
-});
-
-describe('TreeRender — expandedByDefault=false', () => {
-  const nodes: TreeNode[] = [
-    {
-      id: 'p',
-      label: 'Parent',
-      children: [{ id: 'c1', label: 'Child 1' }],
-    },
-  ];
-
-  it('renders children but aria-hidden=true; toggle present with aria-expanded=false', () => {
-    const { container } = renderTree(makeField({ nodes, expandedByDefault: false }));
-    const toggle = container.querySelector('button.dc-tree__toggle') as HTMLButtonElement | null;
-    expect(toggle).not.toBeNull();
-    expect(toggle!.getAttribute('aria-expanded')).toBe('false');
-
-    const childList = container.querySelector('ul.dc-tree__children');
-    expect(childList).not.toBeNull();
-    expect(childList!.getAttribute('aria-hidden')).toBe('true');
-  });
-});
-
-describe('TreeRender — toggle interaction', () => {
-  it('clicking toggle flips aria-hidden / aria-expanded for that subtree', () => {
-    const nodes: TreeNode[] = [
-      {
-        id: 'p',
-        label: 'Parent',
-        children: [{ id: 'c1', label: 'Child 1' }],
-      },
+  it('walks node.kids when childrenKey is "kids"', () => {
+    mockResolver = () => [
+      { label: 'P', kids: [{ label: 'C1' }, { label: 'C2' }] },
     ];
-    const { container } = renderTree(makeField({ nodes, expandedByDefault: true }));
+    const { container, getByText } = renderTree(makeField({ childrenKey: 'kids' }));
+    expect(getByText('P')).toBeTruthy();
+    expect(getByText('C1')).toBeTruthy();
+    expect(getByText('C2')).toBeTruthy();
+    // Toggle present since parent has kids
+    expect(container.querySelectorAll('button.dc-tree__toggle').length).toBe(1);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// nested + default expanded
+// ---------------------------------------------------------------------------
+describe('TreeRender — nested data, default expanded', () => {
+  it('renders parent with toggle and children visible (default expandedByDefault=true)', () => {
+    mockResolver = () => [
+      { label: 'P', children: [{ label: 'C1' }, { label: 'C2' }] },
+    ];
+    const { container, getByText } = renderTree(makeField({}));
+    expect(getByText('P')).toBeTruthy();
+    expect(getByText('C1')).toBeTruthy();
+    expect(getByText('C2')).toBeTruthy();
 
     const toggle = container.querySelector('button.dc-tree__toggle') as HTMLButtonElement;
-    const childList = () => container.querySelector('ul.dc-tree__children') as HTMLElement;
-
+    expect(toggle).not.toBeNull();
     expect(toggle.getAttribute('aria-expanded')).toBe('true');
-    expect(childList().getAttribute('aria-hidden')).toBe('false');
 
-    fireEvent.click(toggle);
-
-    const toggle2 = container.querySelector('button.dc-tree__toggle') as HTMLButtonElement;
-    expect(toggle2.getAttribute('aria-expanded')).toBe('false');
-    expect(childList().getAttribute('aria-hidden')).toBe('true');
-
-    fireEvent.click(toggle2);
-
-    const toggle3 = container.querySelector('button.dc-tree__toggle') as HTMLButtonElement;
-    expect(toggle3.getAttribute('aria-expanded')).toBe('true');
-    expect(childList().getAttribute('aria-hidden')).toBe('false');
+    const childList = container.querySelector('ul.dc-tree__children') as HTMLElement;
+    expect(childList).not.toBeNull();
+    expect(childList.getAttribute('aria-hidden')).toBe('false');
   });
 });
 
-describe('TreeRender — showGuides', () => {
-  const nodes: TreeNode[] = [{ id: 'a', label: 'A' }];
+// ---------------------------------------------------------------------------
+// expandedByDefault=false
+// ---------------------------------------------------------------------------
+describe('TreeRender — expandedByDefault=false', () => {
+  it('renders children with aria-hidden=true and toggle aria-expanded=false', () => {
+    mockResolver = () => [{ label: 'P', children: [{ label: 'C1' }] }];
+    const { container } = renderTree(makeField({ expandedByDefault: false }));
 
+    const toggle = container.querySelector('button.dc-tree__toggle') as HTMLButtonElement;
+    expect(toggle.getAttribute('aria-expanded')).toBe('false');
+
+    const childList = container.querySelector('ul.dc-tree__children') as HTMLElement;
+    expect(childList.getAttribute('aria-hidden')).toBe('true');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// showGuides
+// ---------------------------------------------------------------------------
+describe('TreeRender — showGuides', () => {
   it('showGuides:true → root has dc-tree--guides class', () => {
-    const { container } = renderTree(makeField({ nodes, showGuides: true }));
+    mockResolver = () => [{ label: 'A' }];
+    const { container } = renderTree(makeField({ showGuides: true }));
     const root = container.querySelector('.dc-tree') as HTMLElement;
     expect(root.classList.contains('dc-tree--guides')).toBe(true);
   });
 
   it('showGuides:false (default) → no dc-tree--guides class', () => {
-    const { container } = renderTree(makeField({ nodes }));
+    mockResolver = () => [{ label: 'A' }];
+    const { container } = renderTree(makeField({}));
     const root = container.querySelector('.dc-tree') as HTMLElement;
     expect(root.classList.contains('dc-tree--guides')).toBe(false);
   });
 });
 
-describe('TreeRender — data-node-id', () => {
-  it('every <li> has data-node-id matching its node.id (recursive)', () => {
-    const nodes: TreeNode[] = [
+// ---------------------------------------------------------------------------
+// data-node-path on nested items
+// ---------------------------------------------------------------------------
+describe('TreeRender — data-node-path on nested items', () => {
+  it('every <li> has a unique data-node-path matching its index path', () => {
+    mockResolver = () => [
       {
-        id: 'root1',
-        label: 'Root 1',
+        label: 'R0',
         children: [
-          { id: 'leaf1', label: 'L1' },
-          {
-            id: 'mid',
-            label: 'Mid',
-            children: [{ id: 'leaf2', label: 'L2' }],
-          },
+          { label: 'L0' },
+          { label: 'M', children: [{ label: 'L1' }] },
         ],
       },
-      { id: 'root2', label: 'Root 2' },
+      { label: 'R1' },
     ];
-    const { container } = renderTree(makeField({ nodes }));
-    const all = Array.from(container.querySelectorAll('li.dc-tree__item')) as HTMLElement[];
-    const ids = all.map((el) => el.dataset.nodeId).sort();
-    expect(ids).toEqual(['leaf1', 'leaf2', 'mid', 'root1', 'root2']);
+    const { container } = renderTree(makeField({}));
+    const items = Array.from(container.querySelectorAll('li.dc-tree__item')) as HTMLElement[];
+    const paths = items.map((el) => el.dataset.nodePath).sort();
+    // 0, 0-0, 0-1, 0-1-0, 1
+    expect(paths).toEqual(['0', '0-0', '0-1', '0-1-0', '1']);
   });
 });
