@@ -92,6 +92,38 @@
 
 ---
 
+## visible Playwright 회귀 (tiptap demo, http://localhost:5179, 2026-04-30)
+
+> branch `feat/simple-props-panel` worktree `/Users/jji/project/form-js-designer-simple-props`  
+> dev server: `npm --prefix packages/designer-tiptap run dev` (vite 5179)  
+> 콘솔 critical error: **없음** (favicon.ico 404 1건만, 무해)
+
+| # | 시나리오 | FU | 결과 | 핵심 evidence |
+|---|---|---|---|---|
+| T1 | tiptap demo 페이지 navigate → form-js-block 슬롯 가시 + 콘솔 critical error 없음 | 전체 | ✅ | `data-type="form-js-block"` 존재, console errors 1건(favicon 404만) |
+| T2 | form-js-block dblclick → embedded modal 오픈 (canvas + props panel 가시) + Simple mode 고정 (토글 없음) | FU-C | ✅ | modal display:flex, canvasVisible true, propsPanel "TEXT FIELD / Field label / Default value / Required / Layout" — tiptap은 toggle 없이 simple 고정(설계 의도) |
+| T3 | 캔버스 필드 라벨 dblclick → `.fjs-inline-label-edit-input` overlay mount + value seed + focused | FU-B | ✅ | overlayCount 1, inputValue "이름", focused true |
+| T4 | spacer drop + select → 패널에 높이(px) 입력란 노출 / textfield select → height entry 부재 + `fjs-field-resize-handle` 노출 | FU-A | ✅ | spacer: customProps "SPACER / Layout / 높이(px)", heightInputCount 1; textfield: heightInputPresent false, resizeHandle (fjs-field-resize-handle-left/right) 2건 |
+
+### 스크린샷
+
+| 시나리오 | 파일 |
+|---|---|
+| T1 | `/Users/jji/project/form-js-designer/regression-tiptap-T1.png` |
+| T2 | `/Users/jji/project/form-js-designer/regression-tiptap-T2.png` |
+| T3 | `/Users/jji/project/form-js-designer/regression-tiptap-T3.png` |
+| T4 | `/Users/jji/project/form-js-designer/regression-tiptap-T4.png` |
+
+### FU-C tiptap 구현 설계 노트
+
+tiptap embedded modal은 `initialPanelMode: 'simple'` 을 withDesigner가 mountEmbeddedEditorModal에 하드코딩으로 전달(`withDesigner.ts` line 56). embeddedDesigner.tsx의 `_setPanelMode` setter는 **의도적으로 노출되지 않으며** 모달 수명 동안 simple 고정 (`embeddedDesigner.tsx` lines 163-169). 따라서 web 의 `[role="tablist"][aria-label="속성 패널 모드"]` 토글은 tiptap modal에 존재하지 않는다 — 이는 회귀가 아니라 FU-C 설계 의도.
+
+### 발견 회귀 / 미적용 항목
+
+없음. T1~T4 전 항목 PASS. FU-A/B/C 모두 tiptap embedded modal에서 정상 동작 확인.
+
+---
+
 ## 후속 backlog (수정대기.md로 이관)
 
 - form-js native bio-properties-panel 라벨 한국어화 — translate provider 등록 별도 작업
