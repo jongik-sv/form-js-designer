@@ -921,3 +921,17 @@
 /* NOTE: 캔버스 컴포넌트 spacing override 는
  * `@form-js-designer/designer-components/canvas-spacing.css` (단일 source of truth)
  * 로 분리되었다. App.tsx / embeddedDesigner.tsx 에서 이 파일 다음 순서로 import. */
+
+/* FU-B: Inline label edit overlay input */
+.fjs-inline-label-edit-input {
+  position: fixed;
+  z-index: 9999;
+  border: 2px solid #3b82f6;
+  border-radius: 3px;
+  padding: 2px 4px;
+  font: inherit;
+  background: #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+  outline: none;
+  min-width: 80px;
+}

@@ -134,12 +134,12 @@ dev-test 단계에서 검증할 항목. 각 항목은 pass/fail로 판정 가능
 - [x] (단위) `LAYOUT_HEIGHT_TARGET_TYPES.length === 19` 그리고 19종 각각 포함 검증 (design.md 목록 기준 실제 19종)
 
 **FU-B 더블클릭 인라인 편집:**
-- [ ] (정상) textfield 라벨 더블클릭 → `<input>` 가시 → "새 라벨" 입력 → Enter → 라벨 변경 + input unmount
-- [ ] (엣지) Esc 누르면 변경 취소 + input unmount
-- [ ] (엣지) IME 한글 조합 중 Enter는 무시(commit 미발생)
-- [ ] (에러) 라벨 외 영역(value, helper text) 더블클릭 시 input mount 안 됨
-- [ ] (회귀) form-js native dblclick 동작(예: form-element-template 편집)과 충돌 없음
-- [ ] (3타겟) web/tiptap/vscode 모두 동일 동작 — visible Playwright 스크린샷 3장
+- [x] (정상) textfield 라벨 더블클릭 → `<input>` 가시 → "새 라벨" 입력 → Enter → 라벨 변경 + input unmount
+- [x] (엣지) Esc 누르면 변경 취소 + input unmount
+- [x] (엣지) IME 한글 조합 중 Enter는 무시(commit 미발생)
+- [x] (에러) 라벨 외 영역(value, helper text) 더블클릭 시 input mount 안 됨
+- [x] (회귀) form-js native dblclick 동작(예: form-element-template 편집)과 충돌 없음 — form-js dist grep 결과 dblclick handler 0건 확인
+- [ ] (3타겟) web/tiptap/vscode 모두 동일 동작 — visible Playwright 스크린샷 3장 (FU-G에서 검증)
 
 **FU-C vscode/tiptap 디폴트 simple:**
 - [ ] (정상) vscode webview 첫 오픈 시 props panel 모드 = 'simple' (PropsPanelModeToggle의 simple 버튼 active)
