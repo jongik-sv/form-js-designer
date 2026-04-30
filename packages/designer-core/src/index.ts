@@ -29,6 +29,13 @@ export type {
   WidgetValidationResult,
 } from './panel/types';
 export { UnknownWidgetError, DuplicateWidgetError } from './panel/types';
+export {
+  SIMPLE_MODE_WHITELIST,
+  SIMPLE_MODE_HIDDEN_GROUPS,
+  SIMPLE_MODE_PASSTHROUGH_GROUPS,
+  SIMPLE_MODE_DEFAULT_ALLOWED,
+  getAllowedEntryIds,
+} from './panel/simpleModeWhitelist';
 
 // Host module — TSK-03-03 (PRD §4 AC #4, #4-1)
 export { ViewerHost, EditorHost, useViewportWidth } from './host';
