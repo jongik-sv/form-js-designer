@@ -9,6 +9,7 @@ import { LayoutHeightModule } from '@form-js-designer/designer-runtime';
 import { PaletteModule } from './modules/PaletteModule';
 import { OutlineModule } from './modules/OutlineModule';
 import { MarqueeModule } from './modules/MarqueeModule';
+import { InlineLabelEditModule } from './modules/InlineLabelEditModule';
 import { ShortcutModule } from './modules/ShortcutModule';
 import { PropsPanelModule } from './modules/PropsPanelModule';
 import { PropsPanelService } from './modules/PropsPanelService';
@@ -182,6 +183,7 @@ export async function mountEmbeddedEditorModal(
         PaletteModule,
         OutlineModule,
         MarqueeModule,
+        InlineLabelEditModule,
         ShortcutModule,
         PropsPanelModule,
         LivePreviewModule,

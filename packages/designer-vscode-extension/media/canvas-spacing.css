@@ -12,13 +12,14 @@
  * 같은 descendant 셀렉터는 매칭되지 않는다. 두 클래스를 각각 단독 셀렉터로 사용.
  */
 
-/* element wrapper padding 2px 0 → 1px 0 (margin은 .fjs-form 안에서 0) */
+/* element wrapper padding 2px 0 → 1px 0, element 간 gap 축소 */
 .fjs-editor-container .fjs-element,
 .fjs-container .fjs-element {
   padding: 1px 0;
+  margin-top: 4px;
 }
 
-/* 첫 element 위쪽 8px gap → 4px */
+/* 첫 element 위쪽 margin 동일하게 유지 */
 .fjs-editor-container .fjs-element:first-of-type,
 .fjs-container .fjs-element:first-of-type {
   margin-top: 4px;
@@ -35,10 +36,16 @@
   margin: 2px 0;
 }
 
-/* group/card/tabPanel 내부 좌우 padding 0 2rem → 0 1rem */
+/* 폼 루트 및 group/card/tabPanel 내부 좌우 padding 축소 (Carbon 기본 32px → 8px) */
+.fjs-editor-container .cds--grid,
+.fjs-container .cds--grid {
+  padding-left: 8px;
+  padding-right: 8px;
+}
+
 .fjs-editor-container .fjs-form-field-grouplike .cds--grid,
 .fjs-container .fjs-form-field-grouplike .cds--grid {
-  padding: 0 1rem;
+  padding: 0 8px;
 }
 
 /* ── editor click-target border → outline 전환 ──

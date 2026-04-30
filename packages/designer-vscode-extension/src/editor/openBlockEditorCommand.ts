@@ -71,6 +71,13 @@ export async function openBlockEditorCommand(
     }
   }
 
+  // 빈 펜스(```form-js\n```) 본문은 빈 문자열로 추출되며 JSON.parse에서 즉시 실패한다.
+  // resolveCustomTextEditor의 `schema ?? default` 는 nullish 체크라 빈 문자열을 통과시키므로
+  // 여기서 기본 스키마로 명시 치환하여 webview가 항상 유효한 JSON을 받게 한다.
+  if (typeof schema !== 'string' || schema.trim().length === 0) {
+    schema = '{"type":"default","components":[]}';
+  }
+
   // single-editor lock: 문서 URI당 패널 1개만 유지.
   //   - 같은 블록 클릭(mdStart/mdEnd 일치): 기존 패널을 reveal만 한다.
   //   - 다른 블록 클릭: 기존 패널을 재사용하여 새 블록 schema로 `edit-opened` 재전송.
@@ -86,6 +93,7 @@ export async function openBlockEditorCommand(
 
     const sameBlock = existing.mdStart === mdStart && existing.mdEnd === mdEnd;
 
+    let revealOk = false;
     if (!sameBlock) {
       // 다른 블록: 세션 블록 정보 갱신 + 새 schema로 edit-opened 재전송
       existing.mdStart = mdStart;
@@ -117,16 +125,23 @@ export async function openBlockEditorCommand(
       if (typeof panel.reveal === 'function') {
         // column을 지정하지 않으면 현재 column에서 reveal하여 새 탭이 생기지 않는다
         panel.reveal();
+        revealOk = true;
       }
     } catch {
-      // reveal 실패는 무시
+      // reveal 실패: stale 세션(이미 dispose된 패널)일 가능성 — 정리 후 새로 연다.
+      revealOk = false;
     }
-    return;
+
+    if (revealOk) return;
+
+    // 안전망: reveal 실패 = 패널이 죽었다고 간주하고 세션 정리 후 새로 여는 흐름으로 폴백.
+    editSessionRegistry.endSession(uri);
+    editSessionRegistry.unmarkOpening?.(uri);
   }
 
-  // 현재 opening이거나 active인 경우: 무시
-  // (supportsMultipleEditorsPerDocument: false 로 등록되어 있어 VSCode도 중복을 차단하지만
-  //  openWith 호출 전 단계에서 early return하여 불필요한 openWith 호출을 방지한다)
+  // 현재 opening인 경우: 일반적으로 중복 호출을 막는 빠른 경로지만,
+  // resolveCustomTextEditor가 호출되지 않은 채 openWith가 종료되는 엣지 케이스에서
+  // 영구 잠금이 되지 않도록 finally에서 반드시 unmarkOpening을 호출한다.
   if (editSessionRegistry.isOpeningOrActive(uri)) {
     return;
   }
@@ -142,13 +157,15 @@ export async function openBlockEditorCommand(
       'form-js.block-editor',
       vscode.ViewColumn.Active
     );
-    // vscode.openWith 반환 후에도 resolveCustomTextEditor가 아직 실행 중일 수 있다.
-    // opening 상태는 unmarkOpening에서 정리한다.
   } catch (err) {
-    // openWith 실패 시 opening과 schema 제거 (rollback)
-    editSessionRegistry.unmarkOpening(uri);
+    // openWith 실패 시 schema 제거 (rollback)
     pendingEditSchemas.delete(uri);
     throw err;
+  } finally {
+    // 안전망: resolveCustomTextEditor가 어떤 이유로든 clearPendingOpen을 호출하지 못해도
+    // openWith 반환 후엔 반드시 opening 잠금을 풀어 stale lock에 의한 무한 무시를 방지한다.
+    // (clearPendingOpen이 이미 실행됐다면 idempotent로 no-op)
+    editSessionRegistry.unmarkOpening(uri);
   }
 }
 

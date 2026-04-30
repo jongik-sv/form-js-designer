@@ -135,13 +135,16 @@ export function formJsMarkdownPlugin(md: MarkdownIt): void {
       return e?.currentDocument?.toString();
     })();
 
+    // 빈 펜스는 빈 스키마로 처리 — "Unexpected end of JSON input" 대신 ✏️ 편집 가능 블록 렌더
+    const effective = raw.trim() === '' ? '{"type":"default","components":[]}' : raw;
+
     try {
       // JSON 파싱 시도 — 실패 시 catch로 진입
-      JSON.parse(raw);
+      JSON.parse(effective);
 
       // 성공: schemaHash로 ID 생성 후 플레이스홀더 HTML 반환
-      const id = schemaHash(raw);
-      return renderFormJsBlock(raw, id, start, end, docUri);
+      const id = schemaHash(effective);
+      return renderFormJsBlock(effective, id, start, end, docUri);
     } catch (err) {
       // 실패: 블록 단위 오류 배너만 반환, 전체 preview 미중단
       const message = err instanceof Error ? err.message : String(err);

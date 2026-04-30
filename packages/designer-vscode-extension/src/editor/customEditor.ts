@@ -34,6 +34,8 @@ import { PropsPanelModeToggle } from './propsPanel/PropsPanelModeToggle';
 // 선택된 대상 컴포넌트 하단에 height resize 핸들을 띄우는 Preact 오버레이.
 import { ComponentResizeOverlay } from './resize/ComponentResizeOverlay';
 import { OutlineModule } from '@form-js-designer/designer-editor-host/modules/outline';
+import { InlineLabelEditModule } from '@form-js-designer/designer-editor-host/modules/inline-label-edit';
+import { ShortcutModule } from '@form-js-designer/designer-editor-host/modules/shortcut';
 import { LeftRailTabs, type LeftRailTab } from './leftRail/LeftRailTabs';
 import { relocatePalette } from './leftRail/relocatePalette';
 import { mountPanelResize, reattachRightHandle } from './leftRail/PanelResizeModule';
@@ -70,6 +72,8 @@ const EDITOR_MODULES = [
   PropsPanelModule,
   LayoutHeightModule,
   OutlineModule,
+  InlineLabelEditModule,
+  ShortcutModule,
 ];
 
 const RESIZE_OVERLAY_ROOT_ID = 'component-resize-overlay-root';

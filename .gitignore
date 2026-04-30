@@ -36,3 +36,6 @@ packages/*/spike/*/tests/artifacts/
 .claude/worktrees/
 .superpowers/
 **/.vscode-test/
+
+# superpowers plugin local state
+.superpowers/

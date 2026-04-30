@@ -49,7 +49,7 @@ description: "form-js 호환 JSON 스키마를 생성·수정·검증하는 AI S
 | `checkbox` | input | ✓ | `key`, `label`, `description` | 단일 체크박스 |
 | `select` | input | ✓ | `key`, `label`, `values: [{label, value}]`, `valuesExpression`, `searchable` | 드롭다운 선택 |
 | `radio` | input | ✓ | `key`, `label`, `values: [{label, value}]` | 라디오 그룹 |
-| `datetime` | input | ✓ | `key`, `label`, `subtype` ('date'|'time'|'datetime') | 날짜/시간 입력 |
+| `datetime` | input | ✓ | `key`, `subtype` ('date'\|'time'\|'datetime'), **`dateLabel`** (subtype `date`/`datetime` 시 라벨), **`timeLabel`** (subtype `time`/`datetime` 시 라벨), `timeSerializingFormat`, `timeInterval`, `use24h` | 날짜/시간 입력. ⚠️ **`label` 키 사용 금지 — 라벨은 `dateLabel`/`timeLabel`에 기재** |
 | `button` | action | ✗ | `label`, `action` ('submit'\|'reset') | 액션 버튼 |
 | `text` | presentation | ✗ | `text` (markdown 허용) | 정적 텍스트/제목/설명 |
 | `image` | presentation | ✗ | `source`, `alt` | 이미지 |
@@ -100,7 +100,7 @@ description: "form-js 호환 JSON 스키마를 생성·수정·검증하는 AI S
 | 체크박스 단일 | `checkbox` | |
 | 라디오 그룹 | `radio` | `values` 명시 |
 | 드롭다운 / 콤보박스 / "All statuses" 필터 | `select` | `values` 또는 `valuesExpression`. 검색 가능 시 `searchable: true` |
-| 날짜 / 기간 / 마감일 | `datetime` (`subtype` 명시) | |
+| 날짜 / 기간 / 마감일 | `datetime` (`subtype` 명시) | 라벨은 `label`이 아니라 **`dateLabel`**(date/datetime) / **`timeLabel`**(time/datetime)에 기재 |
 | 액션 버튼 ("+ Produce New Batch", "Submit", "View", "Enable Pickup") | `button` | `action` 미지정 시 일반 액션, submit/reset만 form-js 기본 지원 |
 | 페이지네이션 컨트롤 ("Previous" / "Next") | `button` x N | 화살표 아이콘은 라벨 텍스트로 흡수 |
 | 데이터 그리드 / 행 목록 / 배치 테이블 | `table` | `columns: [{label, key}]` 명시. 행 데이터는 `dataSource: =배열식` |
@@ -286,6 +286,7 @@ form-js는 **Carbon 16-column Grid** 위에서 `layout` 객체로 가로/세로 
 8. 컨테이너(card/modal/tabPanel/group, tabs)에 `components`(또는 tabs의 `tabs/components`) 필드가 누락되지 않았는지 확인 (비어 있어도 `[]`로 명시)
 9. **`keyed` 입력 컴포넌트(`textfield/number/select/checkbox/radio/textarea/datetime/expression-field`)는 `key` 필드 필수** — dot.path 컨벤션
 10. spec.json/propsSchema.ts (custom) 또는 §2 A 표 (form-js 기본)에 정의되지 않은 prop 키를 추가하지 않았는지 확인
+11. **`datetime` 컴포넌트는 `label` 키 사용 금지** — 라벨은 반드시 `dateLabel`(subtype `date`/`datetime`) 또는 `timeLabel`(subtype `time`/`datetime`)에 기재. 예: `{"type":"datetime","subtype":"date","key":"filters.startDate","dateLabel":"시작일"}`
 
 ---
 

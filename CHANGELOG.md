@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- `vscode/datetime: 빈 dateLabel/timeLabel 상태에서도 라벨 더블클릭이 인라인 편집을 연다`
+- `vscode/card: 헤더(제목)를 프로퍼티 패널 단일 텍스트 입력과 .dc-card__header 더블클릭으로 편집할 수 있다 (이전에는 i18n 위젯 미스매치로 [object Object] 렌더 위험)`
+
 ### Removed (BREAKING)
 
 - `Stack` 컨테이너 컴포넌트 제거 (`packages/designer-components/src/stack/`).
