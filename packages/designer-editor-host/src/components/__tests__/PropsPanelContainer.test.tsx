@@ -132,7 +132,7 @@ describe('PropsPanelContainer', () => {
       eventBus.fire('selection.changed', { selection: [{ id: 'f1', type: 'text' }] });
     });
 
-    expect(service.getGroups).toHaveBeenCalledWith({ id: 'f1', type: 'text' });
+    expect(service.getGroups).toHaveBeenCalledWith({ id: 'f1', type: 'text' }, { mode: 'full' });
   });
 
   // Case 5: 서비스가 null이면 empty placeholder 표시
@@ -145,5 +145,63 @@ describe('PropsPanelContainer', () => {
       );
     });
     expect(container.querySelector('[data-testid="props-empty"]')).toBeTruthy();
+  });
+});
+
+describe('PropsPanelContainer mode prop', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  // Case 6: mode=simple 시 selection.changed 핸들러가 getGroups(field, { mode: 'simple' }) 호출
+  it('6: mode=simple, getGroups receives { mode: "simple" } on selection.changed', () => {
+    const eventBus = makeEventBus();
+    const service = makePropsPanelService(makeGroups());
+    act(() => {
+      render(
+        h(PropsPanelContainer, { propsPanelService: service, eventBus, mode: 'simple' }),
+        container,
+      );
+    });
+
+    act(() => {
+      eventBus.fire('selection.changed', { selection: [{ id: 'C1', type: 'card' }] });
+    });
+
+    expect(service.getGroups).toHaveBeenLastCalledWith(
+      { id: 'C1', type: 'card' },
+      { mode: 'simple' },
+    );
+  });
+
+  // Case 7: mode 변경 시 현재 selection으로 재계산
+  it('7: mode 변경 시 현재 selection으로 재계산', () => {
+    const eventBus = makeEventBus();
+    const service = makePropsPanelService(makeGroups());
+
+    act(() => {
+      render(
+        h(PropsPanelContainer, { propsPanelService: service, eventBus, mode: 'simple' }),
+        container,
+      );
+    });
+
+    act(() => {
+      eventBus.fire('selection.changed', { selection: [{ id: 'f1', type: 'text' }] });
+    });
+
+    service.getGroups.mockClear();
+
+    act(() => {
+      render(
+        h(PropsPanelContainer, { propsPanelService: service, eventBus, mode: 'full' }),
+        container,
+      );
+    });
+
+    expect(service.getGroups).toHaveBeenLastCalledWith(
+      { id: 'f1', type: 'text' },
+      { mode: 'full' },
+    );
   });
 });
