@@ -91,8 +91,13 @@ function ensureResizeOverlayRoot(): HTMLElement {
  * Current Simple/Full mode for the webview. Module-level so re-mounts share
  * the value (sessionStorage backs the persisted reload value, this just keeps
  * the in-memory render in sync between toggle clicks).
+ *
+ * FU-C: vscode always starts in Simple mode — sessionStorage is intentionally
+ * ignored on boot. The toggle UI remains so users can switch to Full within
+ * the session. Any Full preference stored in sessionStorage from a prior
+ * session is silently discarded on next open.
  */
-let currentPanelMode: PanelMode = readStoredPanelMode();
+let currentPanelMode: PanelMode = 'simple';
 
 /**
  * Mount the Simple/Full toggle inside `.fjs-properties-container`. form-js

@@ -2,8 +2,9 @@ import { h, render } from 'preact';
 import { useLayoutEffect, useRef, useState } from 'preact/hooks';
 // @ts-ignore — form-js-editor has no bundled type declarations
 import { FormEditor } from '@bpmn-io/form-js-editor';
-import { DesignerContainerModule } from '@form-js-designer/designer-core';
+import { DesignerContainerModule, readStoredPanelMode } from '@form-js-designer/designer-core';
 import { DesignerComponentsModule, migrateLegacyTabsSchema } from '@form-js-designer/designer-components';
+import type { PanelMode } from './components/PropsPanelModeToggle';
 import { LayoutHeightModule } from '@form-js-designer/designer-runtime';
 import { PaletteModule } from './modules/PaletteModule';
 import { OutlineModule } from './modules/OutlineModule';
@@ -44,6 +45,11 @@ export interface MountEmbeddedEditorModalOptions {
   container?: HTMLElement;
   /** 디자이너 초기 스키마 */
   initialSchema: FormSchema;
+  /**
+   * FU-C: 첫 마운트 시 사용할 패널 모드. 지정하면 sessionStorage 보다 우선한다.
+   * 미지정 시 `readStoredPanelMode()`(sessionStorage) 로 폴백.
+   */
+  initialPanelMode?: PanelMode;
   /** 자동저장 콜백. close 시 항상 호출. async OK. 실패(reject/throw) 시 모달 유지 */
   onSave: (schema: FormSchema) => void | Promise<void>;
   /** 모달 unmount 직후 호출. triggerClose / destroy 양쪽 경로 모두에서 fire (정확히 1회) */
@@ -103,7 +109,7 @@ const PROPS_NATIVE_CLASS = 'fjd-embedded-designer-props-native';
 export async function mountEmbeddedEditorModal(
   opts: MountEmbeddedEditorModalOptions,
 ): Promise<EmbeddedEditorHandle> {
-  const { container = document.body, initialSchema, onSave, onClose } = opts;
+  const { container = document.body, initialSchema, initialPanelMode, onSave, onClose } = opts;
 
   // 1. Build modal shell
   const wrapper = document.createElement('div');
@@ -152,6 +158,15 @@ export async function mountEmbeddedEditorModal(
       eventBus: EventBusLike | null;
     }>({ propsPanel: null, eventBus: null });
     const [leftTab, setLeftTab] = useState<LeftRailTab>('components');
+    // FU-C: initialPanelMode (caller-supplied) takes precedence over sessionStorage.
+    // web App.tsx reads sessionStorage directly and manages its own state; embedded
+    // modal (tiptap) passes 'simple' explicitly so the first render is already correct.
+    // The setter is intentionally unused: the embedded modal does not expose a
+    // toggle — the mode is fixed for the lifetime of this modal instance.
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const [panelMode, _setPanelMode] = useState<PanelMode>(
+      initialPanelMode ?? readStoredPanelMode(),
+    );
 
     useLayoutEffect(() => {
       const editorEl = editorRef.current;
@@ -220,6 +235,10 @@ export async function mountEmbeddedEditorModal(
                   | PropsPanelService
                   | undefined;
                 const eventBus = editor.get('eventBus', false) as EventBusLike | undefined;
+                // FU-C: push the initial panel mode into the service so the
+                // native panel filter provider already sees 'simple' on the
+                // first selection.changed reflow — before any React effect runs.
+                propsPanelSvc?.setMode(panelMode);
                 setServices({
                   propsPanel: propsPanelSvc ?? null,
                   eventBus: eventBus ?? null,
@@ -290,9 +309,12 @@ export async function mountEmbeddedEditorModal(
           { class: 'props-panel-stack' },
           h('div', { class: `${PROPS_NATIVE_CLASS} props-panel-native`, ref: propsRef }),
           // designer-components 전용 속성 (padding, orientation, ...) — host App.tsx 와 동일
+          // FU-C: pass panelMode so PropsPanelContainer.getGroups() uses the
+          // correct mode from the first selection.changed event.
           h(PropsPanelContainer, {
             propsPanelService: services.propsPanel,
             eventBus: services.eventBus,
+            mode: panelMode,
           }),
         ),
       ),

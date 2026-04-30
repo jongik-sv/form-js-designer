@@ -142,9 +142,9 @@ dev-test 단계에서 검증할 항목. 각 항목은 pass/fail로 판정 가능
 - [ ] (3타겟) web/tiptap/vscode 모두 동일 동작 — visible Playwright 스크린샷 3장 (FU-G에서 검증)
 
 **FU-C vscode/tiptap 디폴트 simple:**
-- [ ] (정상) vscode webview 첫 오픈 시 props panel 모드 = 'simple' (PropsPanelModeToggle의 simple 버튼 active)
-- [ ] (정상) tiptap embedded modal 첫 오픈 시 동일
-- [ ] (정상) web은 sessionStorage 영속 동작 유지 (회귀 없음)
+- [x] (정상) vscode webview 첫 오픈 시 props panel 모드 = 'simple' (PropsPanelModeToggle의 simple 버튼 active)
+- [x] (정상) tiptap embedded modal 첫 오픈 시 동일
+- [x] (정상) web은 sessionStorage 영속 동작 유지 (회귀 없음)
 
 **FU-D CSS 통일 + collapse:**
 - [ ] (정상) designer-simple-merged 그룹 헤더 미렌더 (sunny-meteor 동작 보존)
@@ -174,7 +174,7 @@ dev-build/dev-test 단계에서 실행할 commit-segment 순서. 각 segment 완
 - [ ] **FU-G(전반부, 베이스라인)** — 변경 전 web/tiptap/vscode 12개 시나리오 visible Playwright 캡처 → `docs/features/simple-props-followup/regression-baseline.md` 기록
 - [x] **FU-A** — `LAYOUT_HEIGHT_TARGET_TYPES` 19종 확장 + 단위테스트 + `_buildLayoutGroup` Spacer 분기 + ComponentResizeOverlay 회귀 확인 → commit `feat(props-panel): align height handle target types + hide layout entry except Spacer`
 - [ ] **FU-B** — `InlineLabelEditService` + `InlineLabelEditModule` 신규 + 단위테스트 + App.tsx/embeddedDesigner.tsx/customEditor.ts 등록 + CSS → mini-회귀 → commit `feat(designer): inline label edit on canvas dblclick (host + vscode + tiptap)`
-- [ ] **FU-C** — vscode customEditor.ts/tiptap withDesigner.ts entry에서 `setMode('simple')` 강제 → mini-회귀 → commit `feat(props-panel): force default Simple in vscode/tiptap (toggle still available)`
+- [x] **FU-C** — vscode customEditor.ts/tiptap withDesigner.ts entry에서 `setMode('simple')` 강제 → mini-회귀 → commit `feat(props-panel): force default Simple in vscode/tiptap (toggle still available)`
 - [ ] **FU-D** — PropsPanelContainer 점검(현재 collapse 코드 없음) + app.css 토큰 통일 → 시각 비교 → commit `style(props-panel): match form-js native CSS + always-expanded groups`
 - [ ] **FU-E** — designer-i18n locales/{ko,en}.json 누락 키 보충 + `i18n:check` 통과 → mini-회귀 → commit `i18n(designer): add missing ko labels for image/table/chart simple-mode entries`
 - [ ] **FU-G(후반부, 최종 회귀)** — 변경 후 web/tiptap/vscode 12개 시나리오 visible Playwright 재실행 → 베이스라인 비교 → 회귀 0건 확인 → `docs/designer/수정대기.md` Simple Properties 섹션 close → commit `docs(designer): close Simple Properties follow-up backlog`

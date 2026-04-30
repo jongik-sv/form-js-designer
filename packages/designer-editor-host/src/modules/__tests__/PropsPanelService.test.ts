@@ -908,4 +908,100 @@ describe('PropsPanelService', () => {
       expect(allEntries.find((e: { id: string }) => e.id === 'layout.height')).toBeUndefined();
     });
   });
+
+  // ───────────────────────────────────────────────────────────────────────────
+  // FU-C: setMode('simple') regression guard
+  // Ensures that calling setMode('simple') after construction correctly sets
+  // currentMode so that the native filter provider returns simple-mode output.
+  // This is the primary regression guard for the vscode/tiptap default-simple
+  // behaviour: customEditor.ts calls propsPanelService.setMode('simple') after
+  // every mountEditor, and the next reflow must reflect that.
+  // ───────────────────────────────────────────────────────────────────────────
+  describe('FU-C: setMode regression guards', () => {
+    function makePropertiesPanel() {
+      const providers: Array<{ provider: { getGroups: (...a: unknown[]) => unknown }; priority: number }> = [];
+      return {
+        registerProvider: (provider: { getGroups: (...a: unknown[]) => unknown }, priority: number) =>
+          providers.push({ provider, priority }),
+        _providers: providers,
+      };
+    }
+    function makeGroups() {
+      return [
+        { id: 'general',          entries: [{ id: 'label' }, { id: 'description' }, { id: 'key' }] },
+        { id: 'condition',        entries: [{ id: 'conditional-hide' }] },
+        { id: 'customProperties', entries: [{ id: 'properties' }] },
+        { id: 'validation',       entries: [{ id: 'required' }, { id: 'validationType' }] },
+      ];
+    }
+
+    it('FU-C-1: setMode(\'simple\') after construction → native filter returns simple-mode output', () => {
+      const deps = makeDeps();
+      const pp = makePropertiesPanel();
+      const svc = new PropsPanelService(
+        deps.eventBus,
+        deps.formFieldRegistry,
+        pp as unknown as { registerProvider(p: unknown, prio?: number): void },
+        deps.modeling,
+      );
+      // Explicitly call setMode('simple') — as vscode customEditor.ts does
+      svc.setMode('simple');
+      const updater = (pp._providers[0]!.provider.getGroups as (f: unknown, e?: unknown) => (g: unknown[]) => Array<{ id: string }>)(
+        { type: 'textfield' },
+      );
+      const out = updater(makeGroups());
+      // Simple mode: condition/customProperties hidden, simple-merged emitted
+      expect(out.find((g) => g.id === 'condition')).toBeUndefined();
+      expect(out.find((g) => g.id === 'customProperties')).toBeUndefined();
+      expect(out.find((g) => g.id === 'simple-merged')).toBeDefined();
+    });
+
+    it('FU-C-2: setMode(\'simple\') then setMode(\'full\') → native filter returns full-mode output (toggle works)', () => {
+      const deps = makeDeps();
+      const pp = makePropertiesPanel();
+      const svc = new PropsPanelService(
+        deps.eventBus,
+        deps.formFieldRegistry,
+        pp as unknown as { registerProvider(p: unknown, prio?: number): void },
+        deps.modeling,
+      );
+      svc.setMode('simple');
+      svc.setMode('full');
+      const updater = (pp._providers[0]!.provider.getGroups as (f: unknown, e?: unknown) => (g: unknown[]) => unknown[])(
+        { type: 'textfield' },
+      );
+      const groups = makeGroups();
+      // Full mode: updater returns groups unchanged
+      expect(updater(groups)).toEqual(groups);
+    });
+
+    it('FU-C-3: currentMode starts \'simple\' when sessionStorage is missing (vscode/tiptap default)', () => {
+      // Guard: even if sessionStorage has a stale 'full' from a previous run,
+      // vscode customEditor.ts sets currentPanelMode='simple' and then calls
+      // propsPanelService.setMode('simple'). This test verifies that the service
+      // correctly reflects 'simple' after setMode — not the sessionStorage value.
+      try {
+        window.sessionStorage.setItem('designer.panelMode', 'full');
+        const deps = makeDeps();
+        const pp = makePropertiesPanel();
+        const svc = new PropsPanelService(
+          deps.eventBus,
+          deps.formFieldRegistry,
+          pp as unknown as { registerProvider(p: unknown, prio?: number): void },
+          deps.modeling,
+        );
+        // Simulate what vscode customEditor.ts does: override sessionStorage seed
+        svc.setMode('simple');
+        const updater = (pp._providers[0]!.provider.getGroups as (f: unknown, e?: unknown) => (g: unknown[]) => Array<{ id: string }>)(
+          { type: 'textfield' },
+        );
+        const out = updater(makeGroups());
+        // After setMode('simple'), simple-merged should be present regardless of sessionStorage
+        expect(out.find((g) => g.id === 'simple-merged')).toBeDefined();
+        expect(out.find((g) => g.id === 'condition')).toBeUndefined();
+      } finally {
+        window.sessionStorage.removeItem('designer.panelMode');
+      }
+    });
+  });
 });

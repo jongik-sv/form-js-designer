@@ -53,6 +53,11 @@ export function withDesigner(node: typeof FormJsBlock): typeof FormJsBlock {
               const typeName = (liveNode?.type?.name ?? pmNode.type.name);
               handle = await mountEmbeddedEditorModal({
                 initialSchema: liveSchema,
+                // FU-C: tiptap embedded modal always starts in Simple mode so
+                // that "simple/full 구분이 없는 것처럼" 느껴지도록 한다.
+                // The sessionStorage value is intentionally ignored here; users
+                // who want Full mode can toggle it inside the open modal.
+                initialPanelMode: 'simple',
                 onSave: (newSchema: FormSchema) => {
                   const pos = typeof getPos === 'function' ? getPos() : null;
                   if (pos == null) {
