@@ -1,0 +1,45 @@
+{
+  "name": "simple-props-followup",
+  "status": "[dd]",
+  "last": {
+    "event": "design.ok",
+    "at": "2026-04-30T05:49:37Z"
+  },
+  "phase_history": [
+    {
+      "event": "design.ok",
+      "from": "[ ]",
+      "to": "[dd]",
+      "at": "2026-04-30T05:49:37Z",
+      "elapsed_seconds": 0,
+      "verification": {
+        "ok": true,
+        "phase": "design",
+        "verified_at": "2026-04-30T05:49:32Z",
+        "checks": [
+          {
+            "name": "design.md_exists",
+            "kind": "structural",
+            "ok": true,
+            "path": "docs/features/simple-props-followup/design.md"
+          },
+          {
+            "name": "design.md_has_section",
+            "kind": "structural",
+            "ok": true,
+            "header_pattern": "^##+\\s*Implementation Steps"
+          },
+          {
+            "name": "design.md_checkbox_min_1",
+            "kind": "structural",
+            "ok": true,
+            "count": 34,
+            "required": 1
+          }
+        ]
+      }
+    }
+  ],
+  "updated": "2026-04-30T05:49:37Z",
+  "started_at": "2026-04-30T05:49:37Z"
+}
