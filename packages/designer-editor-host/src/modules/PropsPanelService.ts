@@ -244,7 +244,14 @@ export class PropsPanelService {
    *   - 필터 결과가 빈 배열이면 designer-custom-props 항목은 생성하지 않음
    *   - designer-custom-props + designer-layout entries를 단일
    *     `designer-simple-merged` 그룹으로 평탄화하고 label은 비워서 헤더가
-   *     렌더되지 않게 한다 (native filter provider의 simple-merged와 대칭).
+   *     렌더되지 않게 한다. 형태(flat single header-less group) 자체는 native
+   *     filter provider가 emit하는 `simple-merged` 그룹과 대칭이지만, id는
+   *     의도적으로 다르게 둔다:
+   *       · 이 self-rendered 경로는 다른 자체 그룹들(`designer-custom-props`,
+   *         `designer-layout`)과 동일한 `designer-` 네임스페이스 prefix를 사용
+   *       · native filter provider 경로는 native panel 자체 네임스페이스 안에서
+   *         돌기 때문에 prefix 없이 `simple-merged`를 emit
+   *     두 그룹이 한 화면에 동시 렌더될 경우 selector 충돌을 피하기 위함.
    *   - 어느 entries도 없을 때는 빈 그룹을 만들지 않는다.
    *
    * Full mode (`opts.mode === 'full'` or default):

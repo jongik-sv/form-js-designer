@@ -25,6 +25,7 @@ vi.mock('@form-js-designer/designer-core', () => ({
     const map: Record<string, ReadonlySet<string>> = {
       card: new Set(['header', 'headerTag', 'padding', 'elevation']),
       tabs: new Set<string>([]),
+      separator: new Set<string>([]),
       textfield: new Set(['label', 'defaultValue', 'required']),
       text: new Set(['text']),
     };
@@ -439,17 +440,21 @@ describe('PropsPanelService', () => {
     expect(merged.entries.map((e) => e.id)).toEqual(['layout.height']);
   });
 
-  // T3-4b: simple mode + non-layout-target with empty whitelist → empty array.
-  // (Belt-and-suspenders: ensure we don't emit a stray empty merged group.)
-  it('T3-4b: mode=simple, non-layout-target + empty whitelist → empty groups[]', () => {
+  // T3-4b: simple mode + non-layout-target with literally-empty whitelist → empty array.
+  // Uses `separator` — a real type whose whitelist mapping in simpleModeWhitelist is
+  // `new Set<string>([])` AND which is NOT in LAYOUT_HEIGHT_TARGET_TYPES, so neither the
+  // custom-props bucket nor the layout.height bucket can produce any entry → no merged
+  // group emitted. (Belt-and-suspenders: ensure we don't emit a stray empty merged group.)
+  it('T3-4b: mode=simple, non-layout-target + empty whitelist (separator) → empty groups[]', () => {
     const deps = makeDeps();
     deps.formFieldRegistry.get = vi.fn().mockReturnValue({
-      type: 'unknown-no-layout-target',
+      type: 'separator',
       propsSchema: { properties: {} },
     });
-    // Mock returns entries but none will match getAllowedEntryIds (unknown type → empty whitelist).
+    // Mock returns entries; none will match getAllowedEntryIds('separator') = empty set.
     mockPropsSchemaToPanel.mockReturnValue([
-      { key: 'foo', widgetType: 'string', widget: { render: vi.fn(), edit: vi.fn(), validate: vi.fn() }, label: 'Foo', meta: { type: 'string' } },
+      { key: 'label', widgetType: 'string', widget: { render: vi.fn(), edit: vi.fn(), validate: vi.fn() }, label: 'Label', meta: { type: 'string' } },
+      { key: 'defaultValue', widgetType: 'string', widget: { render: vi.fn(), edit: vi.fn(), validate: vi.fn() }, label: 'Default', meta: { type: 'string' } },
     ]);
     const service = new PropsPanelService(
       deps.eventBus,
@@ -457,7 +462,7 @@ describe('PropsPanelService', () => {
       deps.propertiesPanel,
       deps.modeling,
     );
-    const groups = service.getGroups({ type: 'unknown-no-layout-target' }, { mode: 'simple' });
+    const groups = service.getGroups({ type: 'separator' }, { mode: 'simple' });
     expect(groups).toEqual([]);
   });
 
