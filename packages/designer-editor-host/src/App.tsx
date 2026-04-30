@@ -253,15 +253,23 @@ export function App(): h.JSX.Element {
     const editor = editorInstanceRef.current;
     if (editor) {
       try {
-        const pp = editor.get('propertiesPanel', false) as { update?: () => void } | undefined;
+        // bio-properties-panel does not expose a public `update()`; prefer
+        // `_render()` (private but reliable) and fall back to a selection
+        // cycle so the native panel rebuilds against the new mode.
+        const pp = editor.get('propertiesPanel', false) as
+          { update?: () => void; _render?: () => void }
+          | undefined;
         if (typeof pp?.update === 'function') {
           pp.update();
+        } else if (typeof pp?._render === 'function') {
+          pp._render();
         } else {
-          const selection = editor.get('selection', false) as { get?: () => unknown[] } | undefined;
+          const selection = editor.get('selection', false) as
+            { get?: () => unknown[]; set?: (s: unknown) => void }
+            | undefined;
           const cur = selection?.get?.() ?? [];
-          const eb = editor.get('eventBus', false) as
-            { fire?: (event: string, payload: unknown) => void } | undefined;
-          eb?.fire?.('selection.changed', { selection: cur });
+          selection?.set?.(null);
+          selection?.set?.(cur);
         }
       } catch {
         // ignore — panel may not be initialized yet

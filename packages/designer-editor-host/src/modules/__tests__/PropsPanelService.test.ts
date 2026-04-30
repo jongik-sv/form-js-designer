@@ -44,6 +44,8 @@ vi.mock('@form-js-designer/designer-core', () => ({
   SIMPLE_MODE_PASSTHROUGH_GROUPS: new Set([
     'columns', 'layout',
     'group-columns', 'group-layout',
+    'staticOptions', 'group-staticOptions',
+    'valuesSource', 'group-valuesSource',
   ]),
 }));
 

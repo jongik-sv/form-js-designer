@@ -50,9 +50,19 @@ export const SIMPLE_MODE_HIDDEN_GROUPS: ReadonlySet<string> = new Set([
   'group-appearance', 'group-serialization', 'group-constraints', 'group-security',
 ]);
 
+// Passthrough groups have all their entries surfaced in Simple mode without
+// running through the entry-id whitelist. This is required for groups whose
+// entry ids carry per-row suffixes that the whitelist can't enumerate ahead
+// of time — e.g. form-js's `group-staticOptions` exposes entries like
+// `staticOptions-0-label`, `staticOptions-0-value`, etc., one set per row.
+// The companion `group-valuesSource` toggles between static/dynamic data
+// sources and must accompany staticOptions so users can switch modes.
+// Layout (columns) is included because grid placement is essential.
 export const SIMPLE_MODE_PASSTHROUGH_GROUPS: ReadonlySet<string> = new Set([
   'columns', 'layout',
   'group-columns', 'group-layout',
+  'staticOptions', 'group-staticOptions',
+  'valuesSource', 'group-valuesSource',
 ]);
 
 export const SIMPLE_MODE_DEFAULT_ALLOWED: ReadonlySet<string> = new Set(['label']);
