@@ -241,8 +241,14 @@ export class PropsPanelService {
    * Simple mode (`opts.mode === 'simple'`):
    *   - widget registry는 simpleRegistry (i18n → I18nSimpleWidget)
    *   - entries는 `getAllowedEntryIds(field.type)` whitelist로 필터링
-   *   - 필터 결과가 빈 배열이면 designer-custom-props 그룹은 생성하지 않음
-   *   - designer-layout 그룹은 두 모드 모두 동일하게 유지
+   *   - 필터 결과가 빈 배열이면 designer-custom-props 항목은 생성하지 않음
+   *   - designer-custom-props + designer-layout entries를 단일
+   *     `designer-simple-merged` 그룹으로 평탄화하고 label은 비워서 헤더가
+   *     렌더되지 않게 한다 (native filter provider의 simple-merged와 대칭).
+   *   - 어느 entries도 없을 때는 빈 그룹을 만들지 않는다.
+   *
+   * Full mode (`opts.mode === 'full'` or default):
+   *   - designer-custom-props + designer-layout 두 그룹을 각자 헤더와 함께 반환.
    */
   getGroups(
     field: { type: string; id?: string } | null,
@@ -253,7 +259,10 @@ export class PropsPanelService {
     const mode: 'simple' | 'full' = opts.mode ?? 'full';
     const registry = mode === 'simple' ? this.simpleRegistry : this.fullRegistry;
 
-    const groups: PropsGroup[] = [];
+    // Build raw entry buckets first; we decide grouping shape afterwards based
+    // on `mode` so Simple mode can flatten into a single header-less group.
+    let customPropsEntries: FormJsPanelEntry[] = [];
+    let layoutEntries: FormJsPanelEntry[] = [];
 
     // 타입 레지스트리에서 컴포넌트 조회 (defineComponent → formFields.register)
     const definition = this.formFields.get(field.type);
@@ -287,21 +296,47 @@ export class PropsPanelService {
             t: identityT,
           };
 
-          const panelEntries = effective.map((entry) => panelEntryAdapter(entry, ctx));
-          groups.push({
-            id: 'designer-custom-props',
-            label: 'Properties',
-            entries: panelEntries,
-          });
+          customPropsEntries = effective.map((entry) => panelEntryAdapter(entry, ctx));
         }
       }
     }
 
     // TSK-12-02: 대상 타입에 Layout 그룹 (layout.height) 추가 — 두 모드 모두 동일.
     if ((LAYOUT_HEIGHT_TARGET_TYPES as readonly string[]).includes(field.type)) {
-      groups.push(this._buildLayoutGroup(field as Record<string, unknown>));
+      layoutEntries = this._buildLayoutGroup(field as Record<string, unknown>).entries;
     }
 
+    // Simple mode: flatten everything into a single header-less group so the
+    // self-rendered PropsPanelContainer matches the native panel's UX
+    // (single flat list, no "Properties" / "Layout" headers).
+    if (mode === 'simple') {
+      const merged = [...customPropsEntries, ...layoutEntries];
+      if (merged.length === 0) return [];
+      return [
+        {
+          id: 'designer-simple-merged',
+          // No `label` → PropsPanelContainer skips the <h4> header.
+          entries: merged,
+        },
+      ];
+    }
+
+    // Full mode: keep both groups with their headers.
+    const groups: PropsGroup[] = [];
+    if (customPropsEntries.length > 0) {
+      groups.push({
+        id: 'designer-custom-props',
+        label: 'Properties',
+        entries: customPropsEntries,
+      });
+    }
+    if (layoutEntries.length > 0) {
+      groups.push({
+        id: 'designer-layout',
+        label: 'Layout',
+        entries: layoutEntries,
+      });
+    }
     return groups;
   }
 

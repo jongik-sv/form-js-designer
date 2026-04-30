@@ -333,8 +333,12 @@ describe('PropsPanelService', () => {
     ];
   }
 
-  // T3-1: simple mode → card entries filtered to whitelist (4 entries match all)
-  it('T3-1: mode=simple, card → header/headerTag/padding/elevation 4 entries', () => {
+  // T3-1: simple mode → card entries flattened into designer-simple-merged
+  // (FU-3: Simple mode merges custom-props + layout into a single header-less
+  // group so the self-rendered panel matches native panel UX). For `card` the
+  // type also has a layout.height entry, so it should appear in the merged
+  // group alongside the 4 whitelisted custom-prop entries.
+  it('T3-1: mode=simple, card → designer-simple-merged with custom-props + layout entries', () => {
     const deps = makeDeps();
     deps.formFieldRegistry.get = vi.fn().mockReturnValue({
       type: 'card',
@@ -348,12 +352,16 @@ describe('PropsPanelService', () => {
       deps.modeling,
     );
     const groups = service.getGroups({ type: 'card', id: 'C1' }, { mode: 'simple' });
-    const propsGroup = groups.find((g: { id: string }) => g.id === 'designer-custom-props') as
-      | { id: string; entries: Array<{ id: string }> }
-      | undefined;
-    expect(propsGroup).toBeDefined();
-    expect(propsGroup!.entries.map((e) => e.id).sort())
-      .toEqual(['elevation', 'header', 'headerTag', 'padding']);
+    expect(groups).toHaveLength(1);
+    const merged = groups[0] as { id: string; label?: string; entries: Array<{ id: string }> };
+    expect(merged.id).toBe('designer-simple-merged');
+    // No header label — PropsPanelContainer skips <h4> when label is missing.
+    expect(merged.label).toBeUndefined();
+    expect(merged.entries.map((e) => e.id).sort())
+      .toEqual(['elevation', 'header', 'headerTag', 'layout.height', 'padding']);
+    // Legacy two-group shape must NOT be returned in Simple mode.
+    expect(groups.find((g: { id: string }) => g.id === 'designer-custom-props')).toBeUndefined();
+    expect(groups.find((g: { id: string }) => g.id === 'designer-layout')).toBeUndefined();
   });
 
   // T3-2: simple mode includes header (i18n) entry — built from simpleRegistry
@@ -400,8 +408,10 @@ describe('PropsPanelService', () => {
     expect(propsGroup!.entries).toHaveLength(4);
   });
 
-  // T3-4: simple mode w/ empty whitelist (tabs) → designer-custom-props NOT created
-  it('T3-4: mode=simple w/ empty whitelist (tabs) → designer-custom-props group not created', () => {
+  // T3-4: simple mode w/ empty whitelist (tabs) → no designer-custom-props.
+  // tabs IS a layout-height target type, so the merged group still exists
+  // and contains only the layout.height entry.
+  it('T3-4: mode=simple w/ empty whitelist (tabs) → merged group has only layout.height', () => {
     const deps = makeDeps();
     const tabsEntries = [
       { key: 'defaultValue', widgetType: 'string', widget: { render: vi.fn(), edit: vi.fn(), validate: vi.fn() }, label: 'Default', meta: { type: 'string' } },
@@ -419,7 +429,36 @@ describe('PropsPanelService', () => {
       deps.modeling,
     );
     const groups = service.getGroups({ type: 'tabs' }, { mode: 'simple' });
+    // No legacy two-group shape in Simple mode.
     expect(groups.find((g: { id: string }) => g.id === 'designer-custom-props')).toBeUndefined();
+    expect(groups.find((g: { id: string }) => g.id === 'designer-layout')).toBeUndefined();
+    // tabs is a layout-height target → merged group present with single entry.
+    expect(groups).toHaveLength(1);
+    const merged = groups[0] as { id: string; entries: Array<{ id: string }> };
+    expect(merged.id).toBe('designer-simple-merged');
+    expect(merged.entries.map((e) => e.id)).toEqual(['layout.height']);
+  });
+
+  // T3-4b: simple mode + non-layout-target with empty whitelist → empty array.
+  // (Belt-and-suspenders: ensure we don't emit a stray empty merged group.)
+  it('T3-4b: mode=simple, non-layout-target + empty whitelist → empty groups[]', () => {
+    const deps = makeDeps();
+    deps.formFieldRegistry.get = vi.fn().mockReturnValue({
+      type: 'unknown-no-layout-target',
+      propsSchema: { properties: {} },
+    });
+    // Mock returns entries but none will match getAllowedEntryIds (unknown type → empty whitelist).
+    mockPropsSchemaToPanel.mockReturnValue([
+      { key: 'foo', widgetType: 'string', widget: { render: vi.fn(), edit: vi.fn(), validate: vi.fn() }, label: 'Foo', meta: { type: 'string' } },
+    ]);
+    const service = new PropsPanelService(
+      deps.eventBus,
+      deps.formFieldRegistry,
+      deps.propertiesPanel,
+      deps.modeling,
+    );
+    const groups = service.getGroups({ type: 'unknown-no-layout-target' }, { mode: 'simple' });
+    expect(groups).toEqual([]);
   });
 
   // T3-5: setMode is a setter — does not throw, accepts 'simple' | 'full'
