@@ -35,7 +35,7 @@ function makePropsPanelService(groups = [] as ReturnType<typeof makeGroups>) {
 function makeGroups() {
   return [
     {
-      id: 'designer-props',
+      id: 'designer-custom-props',
       label: 'Properties',
       entries: [
         {

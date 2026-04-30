@@ -36,6 +36,7 @@ export {
   SIMPLE_MODE_DEFAULT_ALLOWED,
   getAllowedEntryIds,
 } from './panel/simpleModeWhitelist';
+export { I18nSimpleWidget } from './panel/widgets/I18nSimpleWidget';
 
 // Host module — TSK-03-03 (PRD §4 AC #4, #4-1)
 export { ViewerHost, EditorHost, useViewportWidth } from './host';

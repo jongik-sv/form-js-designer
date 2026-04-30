@@ -21,6 +21,20 @@ vi.mock('@form-js-designer/designer-core', () => ({
       this.name = 'UnknownWidgetError';
     }
   },
+  getAllowedEntryIds: vi.fn((type: string) => {
+    const map: Record<string, ReadonlySet<string>> = {
+      card: new Set(['header', 'headerTag', 'padding', 'elevation']),
+      tabs: new Set<string>([]),
+      textfield: new Set(['label', 'defaultValue', 'required']),
+      text: new Set(['text']),
+    };
+    return map[type] ?? new Set(['label']);
+  }),
+  I18nSimpleWidget: {
+    render: vi.fn(),
+    edit: vi.fn(),
+    validate: vi.fn(() => ({ ok: true, errors: [] })),
+  },
 }));
 
 // designer-runtime mock — LAYOUT_HEIGHT_TARGET_TYPES만 필요
@@ -284,6 +298,123 @@ describe('PropsPanelService', () => {
     const groups = service.getGroups(makeField('textfield'));
     const layoutGroup = groups.find((g: { id: string }) => g.id === 'designer-layout');
     expect(layoutGroup).toBeUndefined();
+  });
+
+  // ───────────────────────────────────────────────────────────────────────────
+  // Task 3: Simple-mode whitelist filtering + simpleRegistry
+  // ───────────────────────────────────────────────────────────────────────────
+
+  // Helper for Task 3 tests: build canonical card panel entries
+  function makeCardEntries() {
+    const stubWidget = { render: vi.fn(), edit: vi.fn(), validate: vi.fn() };
+    return [
+      { key: 'padding',   widgetType: 'enum',   widget: stubWidget, label: 'Padding',   meta: { type: 'enum',   enum: ['none','sm','md','lg'] }, defaultValue: 'md' },
+      { key: 'elevation', widgetType: 'number', widget: stubWidget, label: 'Elevation', meta: { type: 'number' }, defaultValue: 0 },
+      { key: 'header',    widgetType: 'i18n',   widget: stubWidget, label: 'Header',    meta: { type: 'i18n' } },
+      { key: 'headerTag', widgetType: 'enum',   widget: stubWidget, label: 'Header tag',meta: { type: 'enum',   enum: ['h1','h2','h3'] }, defaultValue: 'h2' },
+    ];
+  }
+
+  // T3-1: simple mode → card entries filtered to whitelist (4 entries match all)
+  it('T3-1: mode=simple, card → header/headerTag/padding/elevation 4 entries', () => {
+    const deps = makeDeps();
+    deps.formFieldRegistry.get = vi.fn().mockReturnValue({
+      type: 'card',
+      propsSchema: { properties: {} },
+    });
+    mockPropsSchemaToPanel.mockReturnValue(makeCardEntries());
+    const service = new PropsPanelService(
+      deps.eventBus,
+      deps.formFieldRegistry,
+      deps.propertiesPanel,
+      deps.modeling,
+    );
+    const groups = service.getGroups({ type: 'card', id: 'C1' }, { mode: 'simple' });
+    const propsGroup = groups.find((g: { id: string }) => g.id === 'designer-custom-props') as
+      | { id: string; entries: Array<{ id: string }> }
+      | undefined;
+    expect(propsGroup).toBeDefined();
+    expect(propsGroup!.entries.map((e) => e.id).sort())
+      .toEqual(['elevation', 'header', 'headerTag', 'padding']);
+  });
+
+  // T3-2: simple mode includes header (i18n) entry — built from simpleRegistry
+  it('T3-2: mode=simple includes header entry (i18n) — adapter built from simpleRegistry', () => {
+    const deps = makeDeps();
+    deps.formFieldRegistry.get = vi.fn().mockReturnValue({
+      type: 'card',
+      propsSchema: { properties: {} },
+    });
+    mockPropsSchemaToPanel.mockReturnValue(makeCardEntries());
+    const service = new PropsPanelService(
+      deps.eventBus,
+      deps.formFieldRegistry,
+      deps.propertiesPanel,
+      deps.modeling,
+    );
+    const groups = service.getGroups({ type: 'card' }, { mode: 'simple' });
+    const headerEntry = groups
+      .flatMap((g: { entries: Array<{ id: string }> }) => g.entries)
+      .find((e: { id: string }) => e.id === 'header');
+    expect(headerEntry).toBeDefined();
+    // Visual i18n→single-input verification deferred to Task 8 integration test.
+  });
+
+  // T3-3: full mode (default) returns all 4 propsSchema entries unfiltered
+  it('T3-3: mode=full (default) returns all propsSchema entries', () => {
+    const deps = makeDeps();
+    deps.formFieldRegistry.get = vi.fn().mockReturnValue({
+      type: 'card',
+      propsSchema: { properties: {} },
+    });
+    mockPropsSchemaToPanel.mockReturnValue(makeCardEntries());
+    const service = new PropsPanelService(
+      deps.eventBus,
+      deps.formFieldRegistry,
+      deps.propertiesPanel,
+      deps.modeling,
+    );
+    const groups = service.getGroups({ type: 'card' });
+    const propsGroup = groups.find((g: { id: string }) => g.id === 'designer-custom-props') as
+      | { id: string; entries: unknown[] }
+      | undefined;
+    expect(propsGroup).toBeDefined();
+    expect(propsGroup!.entries).toHaveLength(4);
+  });
+
+  // T3-4: simple mode w/ empty whitelist (tabs) → designer-custom-props NOT created
+  it('T3-4: mode=simple w/ empty whitelist (tabs) → designer-custom-props group not created', () => {
+    const deps = makeDeps();
+    const tabsEntries = [
+      { key: 'defaultValue', widgetType: 'string', widget: { render: vi.fn(), edit: vi.fn(), validate: vi.fn() }, label: 'Default', meta: { type: 'string' } },
+      { key: 'orientation',  widgetType: 'enum',   widget: { render: vi.fn(), edit: vi.fn(), validate: vi.fn() }, label: 'Orientation', meta: { type: 'enum', enum: ['horizontal','vertical'] } },
+    ];
+    deps.formFieldRegistry.get = vi.fn().mockReturnValue({
+      type: 'tabs',
+      propsSchema: { properties: {} },
+    });
+    mockPropsSchemaToPanel.mockReturnValue(tabsEntries);
+    const service = new PropsPanelService(
+      deps.eventBus,
+      deps.formFieldRegistry,
+      deps.propertiesPanel,
+      deps.modeling,
+    );
+    const groups = service.getGroups({ type: 'tabs' }, { mode: 'simple' });
+    expect(groups.find((g: { id: string }) => g.id === 'designer-custom-props')).toBeUndefined();
+  });
+
+  // T3-5: setMode is a setter — does not throw, accepts 'simple' | 'full'
+  it('T3-5: setMode(mode) is a no-op setter', () => {
+    const deps = makeDeps();
+    const service = new PropsPanelService(
+      deps.eventBus,
+      deps.formFieldRegistry,
+      deps.propertiesPanel,
+      deps.modeling,
+    );
+    expect(() => service.setMode('simple')).not.toThrow();
+    expect(() => service.setMode('full')).not.toThrow();
   });
 
   // Case 13: html, table, group, card, modal, tabs, tabPanel, iframe, image, text도 Layout 그룹 포함

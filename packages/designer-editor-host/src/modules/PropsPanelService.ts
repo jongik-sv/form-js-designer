@@ -10,7 +10,12 @@
  */
 
 import { h } from 'preact';
-import { propsSchemaToPanel, createDefaultRegistry } from '@form-js-designer/designer-core';
+import {
+  propsSchemaToPanel,
+  createDefaultRegistry,
+  getAllowedEntryIds,
+  I18nSimpleWidget,
+} from '@form-js-designer/designer-core';
 import type { PanelWidgetRegistry } from '@form-js-designer/designer-core';
 import { LAYOUT_HEIGHT_TARGET_TYPES } from '@form-js-designer/designer-runtime';
 import { panelEntryAdapter } from './panelEntryAdapter';
@@ -46,6 +51,17 @@ export interface PropsGroup {
   entries: FormJsPanelEntry[];
 }
 
+/**
+ * Options for `getGroups(field, opts)`.
+ * - `mode: 'simple'` — filter entries via `getAllowedEntryIds(field.type)`.
+ *   When the filtered list is empty, the `designer-custom-props` group is
+ *   omitted entirely. The Layout group (if applicable) is always preserved.
+ * - `mode: 'full'` (default) — current behavior, all propsSchema entries.
+ */
+export interface GetGroupsOptions {
+  mode?: 'simple' | 'full';
+}
+
 const DESIGNER_PROVIDER_PRIORITY = 500;
 
 export class PropsPanelService {
@@ -57,7 +73,14 @@ export class PropsPanelService {
   private readonly formFields: RegistryLike;
   private readonly propertiesPanel: PropertiesPanelLike | null;
   private readonly modeling: ModelingLike;
-  private readonly widgetRegistry: PanelWidgetRegistry;
+  // Two registries: `fullRegistry` keeps the legacy default behavior (used in
+  // both Full mode and as the structural baseline). `simpleRegistry` swaps the
+  // i18n widget for `I18nSimpleWidget` so Simple mode renders a single ko
+  // input. The global BUILTIN_WIDGETS map is untouched — both registries are
+  // freshly created via `createDefaultRegistry()`.
+  private readonly fullRegistry: PanelWidgetRegistry;
+  private readonly simpleRegistry: PanelWidgetRegistry;
+  private currentMode: 'simple' | 'full' = 'simple';
 
   constructor(
     eventBus: EventBusLike,
@@ -69,7 +92,9 @@ export class PropsPanelService {
     this.formFields = formFields;
     this.propertiesPanel = propertiesPanel;
     this.modeling = modeling;
-    this.widgetRegistry = createDefaultRegistry();
+    this.fullRegistry = createDefaultRegistry();
+    this.simpleRegistry = createDefaultRegistry();
+    this.simpleRegistry.register('i18n', I18nSimpleWidget, { overwrite: true });
 
     // propertiesPanel에 자신을 provider로 등록
     // 주: bio-properties-panel provider 계약은 getGroups(element) 가 `(groups) => groups` 형태의
@@ -82,11 +107,34 @@ export class PropsPanelService {
   }
 
   /**
+   * Switch active props panel mode. Currently a no-op setter — Task 4 will
+   * use `currentMode` to drive the form-js native panel registerProvider
+   * filter. The self-rendered PropsPanelContainer passes `mode` explicitly
+   * to `getGroups(field, { mode })`, so this setter is only consulted by the
+   * native-panel pathway introduced later.
+   */
+  setMode(mode: 'simple' | 'full'): void {
+    this.currentMode = mode;
+  }
+
+  /**
    * 선택된 field에 대한 패널 그룹 배열을 반환한다.
    * form-js-editor propertiesPanel provider 계약: getGroups(element) 반환값.
+   *
+   * Simple mode (`opts.mode === 'simple'`):
+   *   - widget registry는 simpleRegistry (i18n → I18nSimpleWidget)
+   *   - entries는 `getAllowedEntryIds(field.type)` whitelist로 필터링
+   *   - 필터 결과가 빈 배열이면 designer-custom-props 그룹은 생성하지 않음
+   *   - designer-layout 그룹은 두 모드 모두 동일하게 유지
    */
-  getGroups(field: { type: string; id?: string } | null): PropsGroup[] {
+  getGroups(
+    field: { type: string; id?: string } | null,
+    opts: GetGroupsOptions = {},
+  ): PropsGroup[] {
     if (!field) return [];
+
+    const mode: 'simple' | 'full' = opts.mode ?? 'full';
+    const registry = mode === 'simple' ? this.simpleRegistry : this.fullRegistry;
 
     const groups: PropsGroup[] = [];
 
@@ -101,12 +149,19 @@ export class PropsPanelService {
       if (propsSchema) {
         let entries: ReturnType<typeof propsSchemaToPanel> = [];
         try {
-          entries = propsSchemaToPanel(propsSchema, this.widgetRegistry);
+          entries = propsSchemaToPanel(propsSchema, registry);
         } catch (err) {
           console.warn('[PropsPanelService] propsSchemaToPanel 실패:', err);
         }
 
-        if (entries.length > 0) {
+        // Simple mode: filter by whitelist (filter on PanelEntry.key, before adapter).
+        let effective = entries;
+        if (mode === 'simple') {
+          const allowed = getAllowedEntryIds(field.type);
+          effective = entries.filter((e) => allowed.has(e.key));
+        }
+
+        if (effective.length > 0) {
           // Fallback 번역 함수 — WP-07 LocaleProvider 통합 전까지 key를 그대로 반환
           const identityT = (key: string) => key;
           const ctx = {
@@ -115,9 +170,9 @@ export class PropsPanelService {
             t: identityT,
           };
 
-          const panelEntries = entries.map((entry) => panelEntryAdapter(entry, ctx));
+          const panelEntries = effective.map((entry) => panelEntryAdapter(entry, ctx));
           groups.push({
-            id: 'designer-props',
+            id: 'designer-custom-props',
             label: 'Properties',
             entries: panelEntries,
           });
@@ -125,7 +180,7 @@ export class PropsPanelService {
       }
     }
 
-    // TSK-12-02: 대상 타입에 Layout 그룹 (layout.height) 추가
+    // TSK-12-02: 대상 타입에 Layout 그룹 (layout.height) 추가 — 두 모드 모두 동일.
     if ((LAYOUT_HEIGHT_TARGET_TYPES as readonly string[]).includes(field.type)) {
       groups.push(this._buildLayoutGroup(field as Record<string, unknown>));
     }
