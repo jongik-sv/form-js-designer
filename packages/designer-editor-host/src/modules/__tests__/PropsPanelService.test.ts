@@ -48,6 +48,28 @@ vi.mock('@form-js-designer/designer-core', () => ({
     'staticOptions', 'group-staticOptions',
     'valuesSource', 'group-valuesSource',
   ]),
+  // panelModeStorage was promoted from `./panelModeStorage` to designer-core.
+  // The service constructor seeds `currentMode` via readStoredPanelMode, so
+  // the mock must export it. We replicate the real helper's behaviour
+  // (read sessionStorage['designer.panelMode'], strict === 'full' check,
+  // SSR/quota guard) rather than hard-coding 'simple', because T4-FU2
+  // explicitly seeds sessionStorage to verify constructor-time pickup.
+  PANEL_MODE_STORAGE_KEY: 'designer.panelMode',
+  readStoredPanelMode: vi.fn(() => {
+    try {
+      if (typeof window === 'undefined') return 'simple';
+      return window.sessionStorage.getItem('designer.panelMode') === 'full' ? 'full' : 'simple';
+    } catch {
+      return 'simple';
+    }
+  }),
+  writeStoredPanelMode: vi.fn((mode: 'simple' | 'full') => {
+    try {
+      if (typeof window !== 'undefined') {
+        window.sessionStorage.setItem('designer.panelMode', mode);
+      }
+    } catch { /* noop */ }
+  }),
 }));
 
 // designer-runtime mock — LAYOUT_HEIGHT_TARGET_TYPES만 필요

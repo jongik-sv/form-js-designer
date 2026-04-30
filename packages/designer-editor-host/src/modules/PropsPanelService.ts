@@ -22,7 +22,7 @@ import type { PanelWidgetRegistry } from '@form-js-designer/designer-core';
 import { LAYOUT_HEIGHT_TARGET_TYPES } from '@form-js-designer/designer-runtime';
 import { panelEntryAdapter } from './panelEntryAdapter';
 import type { FormJsPanelEntry } from './panelEntryAdapter';
-import { readStoredPanelMode } from './panelModeStorage';
+import { readStoredPanelMode } from '@form-js-designer/designer-core';
 
 interface EventBusLike {
   on(event: string, handler: (...args: unknown[]) => void): void;

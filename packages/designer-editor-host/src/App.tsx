@@ -35,7 +35,7 @@ import { ExportService } from './modules/ExportService';
 import { Sidebar } from './components/Sidebar';
 import { PropsPanelContainer } from './components/PropsPanelContainer';
 import { PropsPanelModeToggle, type PanelMode } from './components/PropsPanelModeToggle';
-import { readStoredPanelMode, writeStoredPanelMode } from './modules/panelModeStorage';
+import { readStoredPanelMode, writeStoredPanelMode } from '@form-js-designer/designer-core';
 import { LivePreviewPanel } from './components/LivePreviewPanel';
 import { ToolbarButtons } from './components/ToolbarButtons';
 import { ValidationBadge } from './components/ValidationBadge';

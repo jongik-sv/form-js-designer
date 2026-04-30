@@ -3,10 +3,11 @@
  * values, invalid value, write+read roundtrip, and exception swallow.
  *
  * The module is the single source of truth for the `'designer.panelMode'`
- * sessionStorage key consumed by App.tsx (init + persist effect) and
- * PropsPanelService (constructor seed). Drift between any of those readers
- * would silently break Full-mode default, so the contract is exercised
- * directly here.
+ * sessionStorage key consumed by host App.tsx (init + persist effect),
+ * host PropsPanelService (constructor seed), and the VS Code extension
+ * webview (PropsPanelService + customEditor). Drift between any of those
+ * readers would silently break Full-mode default, so the contract is
+ * exercised directly here.
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';

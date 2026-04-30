@@ -8,7 +8,7 @@
  */
 
 import { h } from 'preact';
-import type { PanelMode } from './panelModeStorage';
+import type { PanelMode } from '@form-js-designer/designer-core';
 
 interface Props {
   mode: PanelMode;

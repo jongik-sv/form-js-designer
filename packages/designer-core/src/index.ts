@@ -37,6 +37,12 @@ export {
   getAllowedEntryIds,
 } from './panel/simpleModeWhitelist';
 export { I18nSimpleWidget } from './panel/widgets/I18nSimpleWidget';
+export {
+  PANEL_MODE_STORAGE_KEY,
+  readStoredPanelMode,
+  writeStoredPanelMode,
+} from './panel/panelModeStorage';
+export type { PanelMode } from './panel/panelModeStorage';
 
 // Host module — TSK-03-03 (PRD §4 AC #4, #4-1)
 export { ViewerHost, EditorHost, useViewportWidth } from './host';

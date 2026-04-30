@@ -29,7 +29,7 @@ import {
   readStoredPanelMode,
   writeStoredPanelMode,
   type PanelMode,
-} from './propsPanel/panelModeStorage';
+} from '@form-js-designer/designer-core';
 import { PropsPanelModeToggle } from './propsPanel/PropsPanelModeToggle';
 // 선택된 대상 컴포넌트 하단에 height resize 핸들을 띄우는 Preact 오버레이.
 import { ComponentResizeOverlay } from './resize/ComponentResizeOverlay';

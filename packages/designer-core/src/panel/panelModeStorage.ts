@@ -1,17 +1,20 @@
 /**
- * panelModeStorage — Simple/Full props-panel mode persistence helpers for the
- * VS Code extension webview.
+ * panelModeStorage — Single source of truth for the persisted Simple/Full
+ * properties-panel mode key, shared across the editor host and the VS Code
+ * extension webview.
  *
- * Mirrors the host's `designer-editor-host/src/modules/panelModeStorage.ts`:
- * three sites read/write the persisted mode (PropsPanelService constructor
- * seed, customEditor `panelMode` boot value, customEditor toggle handler).
- * Inlining the literal `'designer.panelMode'` at each site invites silent
- * drift, so the storage key + accessor functions live here as a single source
- * of truth.
+ * Multiple sites read/write this state (host App.tsx init + persist effect,
+ * host PropsPanelService constructor seed, extension PropsPanelService
+ * constructor seed, extension customEditor `panelMode` boot value + toggle
+ * handler). Inlining the literal `'designer.panelMode'` at each site invites
+ * silent drift: a typo in one reader would fall back to `'simple'` without
+ * throwing, breaking Full-mode default for any user that already toggled the
+ * panel. Centralising the key + accessor functions here makes the contract
+ * explicit and refactor-safe.
  *
  * VS Code webview note: `sessionStorage` is scoped per-webview and survives
  * across reveal/hide of the same panel but resets when the webview is
- * disposed. Per Task 9 plan this is acceptable for the 1차 PR. A future
+ * disposed. A future
  * `vscode.workspace.getConfiguration('formJsDesigner').get('panelMode')`
  * fallback can be layered on top without changing this contract.
  *

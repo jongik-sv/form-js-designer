@@ -30,6 +30,27 @@ vi.mock('@form-js-designer/designer-core', () => ({
   SIMPLE_MODE_PASSTHROUGH_GROUPS: new Set([
     'columns', 'layout', 'staticOptions', 'valuesSource',
   ]),
+  // panelModeStorage promoted to designer-core. Service constructor reads
+  // readStoredPanelMode at boot, so the mock must export it. Replicate the
+  // real helper rather than hard-coding a value, because the
+  // "seeds currentMode from sessionStorage at construction (full)" test
+  // explicitly seeds sessionStorage to verify constructor-time pickup.
+  PANEL_MODE_STORAGE_KEY: 'designer.panelMode',
+  readStoredPanelMode: vi.fn(() => {
+    try {
+      if (typeof window === 'undefined') return 'simple';
+      return window.sessionStorage.getItem('designer.panelMode') === 'full' ? 'full' : 'simple';
+    } catch {
+      return 'simple';
+    }
+  }),
+  writeStoredPanelMode: vi.fn((mode: 'simple' | 'full') => {
+    try {
+      if (typeof window !== 'undefined') {
+        window.sessionStorage.setItem('designer.panelMode', mode);
+      }
+    } catch { /* noop */ }
+  }),
 }));
 
 vi.mock('@form-js-designer/designer-runtime/modules', () => ({
@@ -58,8 +79,22 @@ function makePropertiesPanel(): {
   };
 }
 
-function makeInjector(): { get: (n: string) => unknown } {
-  return { get: vi.fn(() => undefined) };
+/**
+ * Mock injector that mirrors form-js's `InjectorLike` contract:
+ * `get<T = unknown>(name: string, strict?: boolean): T | undefined`.
+ * The generic + `T | undefined` return type is required so the mock is
+ * structurally assignable to the service constructor's parameter — a plain
+ * `() => unknown` shape fails TS2345 (Type 'unknown' is not assignable to
+ * type 'T | undefined').
+ *
+ * `vi.fn(...)` collapses generic signatures into a non-generic Mock type, so
+ * we wrap a plain function here instead of typing `get` directly as
+ * `vi.fn(...)`.
+ */
+function makeInjector(): { get: <T = unknown>(name: string, strict?: boolean) => T | undefined } {
+  return {
+    get: <T = unknown>(_name: string, _strict?: boolean): T | undefined => undefined,
+  };
 }
 
 function makeGroups() {

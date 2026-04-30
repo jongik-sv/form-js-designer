@@ -33,7 +33,7 @@ import {
 } from '@form-js-designer/designer-core';
 import type { PanelEntry, PanelWidget, PanelWidgetRegistry } from '@form-js-designer/designer-core';
 import { LAYOUT_HEIGHT_TARGET_TYPES } from '@form-js-designer/designer-runtime/modules';
-import { readStoredPanelMode, type PanelMode } from './panelModeStorage';
+import { readStoredPanelMode, type PanelMode } from '@form-js-designer/designer-core';
 
 interface PropertiesPanelLike {
   registerProvider(provider: unknown, priority?: number): void;
