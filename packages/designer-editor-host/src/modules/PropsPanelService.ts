@@ -20,9 +20,13 @@ import {
 } from '@form-js-designer/designer-core';
 import type { PanelWidgetRegistry } from '@form-js-designer/designer-core';
 import { LAYOUT_HEIGHT_TARGET_TYPES } from '@form-js-designer/designer-runtime';
+import { createKoT } from '@form-js-designer/designer-i18n';
 import { panelEntryAdapter } from './panelEntryAdapter';
 import type { FormJsPanelEntry } from './panelEntryAdapter';
 import { readStoredPanelMode } from '@form-js-designer/designer-core';
+
+// FU-E follow-up: live i18n wired — ko translator shared across all getGroups calls
+const koT = createKoT();
 
 interface EventBusLike {
   on(event: string, handler: (...args: unknown[]) => void): void;
@@ -293,12 +297,12 @@ export class PropsPanelService {
         }
 
         if (effective.length > 0) {
-          // Fallback 번역 함수 — WP-07 LocaleProvider 통합 전까지 key를 그대로 반환
-          const identityT = (key: string) => key;
+          // FU-E follow-up: live i18n wired — designer-i18n ko translator resolves
+          // propsSchema label keys (designer.components.*) to Korean strings.
           const ctx = {
             field: field as unknown as Record<string, unknown>,
             modeling: this.modeling,
-            t: identityT,
+            t: koT,
           };
 
           customPropsEntries = effective.map((entry) => panelEntryAdapter(entry, ctx));

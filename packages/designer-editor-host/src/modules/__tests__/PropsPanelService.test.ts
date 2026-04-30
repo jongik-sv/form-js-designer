@@ -95,6 +95,21 @@ vi.mock('@form-js-designer/designer-runtime', () => ({
   ],
 }));
 
+// designer-i18n mock — returns real ko translations for keys in the dictionary
+vi.mock('@form-js-designer/designer-i18n', () => {
+  const koDict: Record<string, string> = {
+    'designer.components.image.imageSource': '이미지 소스',
+    'designer.components.image.altText': '대체 텍스트',
+    'designer.components.chartPlaceholder.chartType': '차트 종류',
+    'designer.components.chartPlaceholder.title': '제목',
+    'designer.components.card.padding': '여백',
+    'designer.components.card.elevation': '그림자',
+  };
+  return {
+    createKoT: vi.fn(() => (key: string) => koDict[key] ?? key),
+  };
+});
+
 import { propsSchemaToPanel, UnknownWidgetError } from '@form-js-designer/designer-core';
 import { PropsPanelService } from '../PropsPanelService';
 
@@ -1002,6 +1017,125 @@ describe('PropsPanelService', () => {
       } finally {
         window.sessionStorage.removeItem('designer.panelMode');
       }
+    });
+  });
+
+  // ───────────────────────────────────────────────────────────────────────────
+  // FU-E: identityT → live ko t() wiring
+  // Verifies that panelEntryAdapter receives the real koT function so that
+  // propsSchema label keys (designer.components.*) resolve to Korean strings
+  // in both the Properties group and the form-js native panel.
+  // ───────────────────────────────────────────────────────────────────────────
+  describe('FU-E: live ko i18n via createKoT()', () => {
+    it('FU-E-1: entry label key "designer.components.image.imageSource" resolves to "이미지 소스" via t()', () => {
+      const deps = makeDeps();
+      deps.formFieldRegistry.get = vi.fn().mockReturnValue({
+        type: 'image',
+        propsSchema: { properties: {} },
+      });
+      // Simulate what panelEntryAdapter receives: entry.label is the i18n key
+      const capturedCtxArgs: Array<{ t: (key: string) => string }> = [];
+      const editFn = vi.fn((...args: unknown[]) => {
+        const ctx = args[2] as { t: (key: string) => string };
+        capturedCtxArgs.push(ctx);
+      });
+      const stubWidget = { render: vi.fn(), edit: editFn, validate: vi.fn() };
+      mockPropsSchemaToPanel.mockReturnValue([
+        {
+          key: 'imageSource',
+          widgetType: 'string',
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          widget: stubWidget as any,
+          label: 'designer.components.image.imageSource',
+          meta: { type: 'string' },
+        },
+      ]);
+      const service = new PropsPanelService(
+        deps.eventBus,
+        deps.formFieldRegistry,
+        deps.propertiesPanel,
+        deps.modeling,
+      );
+      const groups = service.getGroups({ type: 'image', id: 'I1' });
+      // Verify the group was created
+      const propsGroup = groups.find((g: { id: string }) => g.id === 'designer-custom-props') as
+        | { entries: Array<{ component: (p: Record<string, unknown>) => unknown; label?: string }> }
+        | undefined;
+      expect(propsGroup).toBeDefined();
+      expect(propsGroup!.entries).toHaveLength(1);
+      // Invoke the component to trigger widget.edit and capture ctx.t
+      propsGroup!.entries[0]!.component({});
+      expect(capturedCtxArgs).toHaveLength(1);
+      // The t function passed must translate the key to Korean
+      expect(capturedCtxArgs[0]!.t('designer.components.image.imageSource')).toBe('이미지 소스');
+    });
+
+    it('FU-E-2: undefined key falls back to raw key string (no crash, no undefined)', () => {
+      const deps = makeDeps();
+      deps.formFieldRegistry.get = vi.fn().mockReturnValue({
+        type: 'image',
+        propsSchema: { properties: {} },
+      });
+      const capturedT: Array<(key: string) => string> = [];
+      const editFn2 = vi.fn((...args: unknown[]) => {
+        const ctx = args[2] as { t: (key: string) => string };
+        capturedT.push(ctx.t);
+      });
+      const stubWidget = { render: vi.fn(), edit: editFn2, validate: vi.fn() };
+      mockPropsSchemaToPanel.mockReturnValue([
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        { key: 'imageSource', widgetType: 'string', widget: stubWidget as any, label: 'unknown.key', meta: { type: 'string' } },
+      ]);
+      const service = new PropsPanelService(
+        deps.eventBus,
+        deps.formFieldRegistry,
+        deps.propertiesPanel,
+        deps.modeling,
+      );
+      const groups = service.getGroups({ type: 'image', id: 'I2' });
+      const propsGroup = groups.find((g: { id: string }) => g.id === 'designer-custom-props') as
+        | { entries: Array<{ component: (p: Record<string, unknown>) => unknown }> }
+        | undefined;
+      propsGroup!.entries[0]!.component({});
+      expect(capturedT).toHaveLength(1);
+      // Missing key falls back to raw key (not undefined, not empty string)
+      const result = capturedT[0]!('designer.components.nonexistent.key');
+      expect(typeof result).toBe('string');
+      expect(result.length).toBeGreaterThan(0);
+    });
+
+    it('FU-E-3: simple mode also receives koT (not identityT)', () => {
+      const deps = makeDeps();
+      deps.formFieldRegistry.get = vi.fn().mockReturnValue({
+        type: 'card',
+        propsSchema: { properties: {} },
+      });
+      const capturedT: Array<(key: string) => string> = [];
+      const editFn3 = vi.fn((...args: unknown[]) => {
+        const ctx = args[2] as { t: (key: string) => string };
+        capturedT.push(ctx.t);
+      });
+      const stubWidget = { render: vi.fn(), edit: editFn3, validate: vi.fn() };
+      mockPropsSchemaToPanel.mockReturnValue([
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        { key: 'padding', widgetType: 'enum', widget: stubWidget as any, label: 'designer.components.card.padding', meta: { type: 'enum', enum: ['none', 'sm', 'md', 'lg'] }, defaultValue: 'md' },
+      ]);
+      const service = new PropsPanelService(
+        deps.eventBus,
+        deps.formFieldRegistry,
+        deps.propertiesPanel,
+        deps.modeling,
+      );
+      // simple mode
+      const groups = service.getGroups({ type: 'card', id: 'C1' }, { mode: 'simple' });
+      const mergedGroup = groups.find((g: { id: string }) => g.id === 'designer-simple-merged') as
+        | { entries: Array<{ component: (p: Record<string, unknown>) => unknown }> }
+        | undefined;
+      expect(mergedGroup).toBeDefined();
+      mergedGroup!.entries[0]!.component({});
+      expect(capturedT).toHaveLength(1);
+      // In simple mode, koT must resolve the key
+      expect(capturedT[0]!('designer.components.card.padding')).toBe('여백');
     });
   });
 });
