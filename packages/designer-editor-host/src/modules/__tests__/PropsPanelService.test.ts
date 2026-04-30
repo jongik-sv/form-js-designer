@@ -95,6 +95,9 @@ function makeDeps(overrides: Record<string, unknown> = {}) {
 describe('PropsPanelService', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // FU-2: ensure no stale sessionStorage state leaks between tests now that
+    // PropsPanelService seeds currentMode from `designer.panelMode`.
+    try { window.sessionStorage.removeItem('designer.panelMode'); } catch { /* SSR */ }
   });
 
   // Case 1 (Task 4): native filter provider 등록 — priority 500, getGroups 함수 형태.
@@ -626,6 +629,57 @@ describe('PropsPanelService', () => {
       const valuesSource = out.find((g) => g.id === 'valuesSource');
       expect(valuesSource).toBeDefined();
       expect(valuesSource!.entries!.map((e) => e.id)).toEqual(['valuesSource-select']);
+    });
+
+    // FU-2: Without this, sessionStorage='full' boots rendered as Simple until
+    // App.tsx's `setMode` useEffect runs after a microtask. The native filter
+    // provider closure reads `currentMode` on every reflow, and the FIRST
+    // reflow happens synchronously during `propertiesPanel.attachTo`, before
+    // any React effect can fire. The constructor must therefore seed
+    // `currentMode` from sessionStorage so that the first reflow already sees
+    // the correct mode.
+    it('T4-FU2: constructor seeds currentMode from sessionStorage[\'designer.panelMode\'] — first reflow sees full mode without setMode call', () => {
+      try {
+        window.sessionStorage.setItem('designer.panelMode', 'full');
+        const deps = makeDeps();
+        const pp = makePropertiesPanel();
+        new PropsPanelService(
+          deps.eventBus,
+          deps.formFieldRegistry,
+          pp as unknown as { registerProvider(p: unknown, prio?: number): void },
+          deps.modeling,
+        );
+        // No setMode() call — simulate the first reflow that happens during
+        // propertiesPanel.attachTo, before the React useEffect fires.
+        const updater = (pp._providers[0]!.provider.getGroups as (f: unknown, e?: unknown) => (g: unknown[]) => unknown[])(
+          { type: 'textfield' },
+        );
+        const input = makeGroups();
+        // mode === 'full' means updater returns groups unchanged (no
+        // simple-merged group, no hidden-group filtering).
+        expect(updater(input)).toEqual(input);
+      } finally {
+        window.sessionStorage.removeItem('designer.panelMode');
+      }
+    });
+
+    it('T4-FU2b: constructor defaults currentMode=\'simple\' when sessionStorage missing', () => {
+      window.sessionStorage.removeItem('designer.panelMode');
+      const deps = makeDeps();
+      const pp = makePropertiesPanel();
+      new PropsPanelService(
+        deps.eventBus,
+        deps.formFieldRegistry,
+        pp as unknown as { registerProvider(p: unknown, prio?: number): void },
+        deps.modeling,
+      );
+      const updater = (pp._providers[0]!.provider.getGroups as (f: unknown, e?: unknown) => (g: unknown[]) => Array<{ id: string }>)(
+        { type: 'textfield' },
+      );
+      const out = updater(makeGroups());
+      // Simple mode → simple-merged group present, condition group dropped.
+      expect(out.find((g) => g.id === 'simple-merged')).toBeDefined();
+      expect(out.find((g) => g.id === 'condition')).toBeUndefined();
     });
   });
 

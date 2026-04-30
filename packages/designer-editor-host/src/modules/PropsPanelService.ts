@@ -77,6 +77,29 @@ export interface GetGroupsOptions {
 // a LOWER priority than 1000.
 const DESIGNER_NATIVE_FILTER_PRIORITY = 500;
 
+/**
+ * Read the persisted panel mode from `sessionStorage['designer.panelMode']`.
+ *
+ * FU-2: prevents a Simple→Full flicker on first paint when the user previously
+ * selected Full mode. The native filter provider closure captures `self` and
+ * reads `currentMode` on every reflow, so the FIRST reflow (which fires
+ * during `propertiesPanel.attachTo` before App.tsx's `setMode` useEffect can
+ * run) must already see the correct mode.
+ *
+ * Runs in `try/catch` because SSR / privacy-mode browsers may throw on
+ * sessionStorage access. Defaults to `'simple'` on any failure to match the
+ * App.tsx fallback.
+ */
+function readInitialPanelMode(): 'simple' | 'full' {
+  try {
+    if (typeof window === 'undefined') return 'simple';
+    const v = window.sessionStorage.getItem('designer.panelMode');
+    return v === 'full' ? 'full' : 'simple';
+  } catch {
+    return 'simple';
+  }
+}
+
 export class PropsPanelService {
   // `formFields` = 타입 레지스트리 (form-js의 register(type, component) 대상).
   // 이전에는 `formFieldRegistry` (인스턴스 레지스트리) 를 주입해 타입 조회가 항상 null 이었음.
@@ -93,7 +116,12 @@ export class PropsPanelService {
   // freshly created via `createDefaultRegistry()`.
   private readonly fullRegistry: PanelWidgetRegistry;
   private readonly simpleRegistry: PanelWidgetRegistry;
-  private currentMode: 'simple' | 'full' = 'simple';
+  // Initialized from sessionStorage in the constructor (FU-2) so the very
+  // first native-panel reflow — which happens synchronously during
+  // `propertiesPanel.attachTo` before App.tsx's `setMode` useEffect runs —
+  // already sees the correct mode. Without this, sessionStorage='full' boots
+  // rendered as 'simple' until the user toggled the mode manually.
+  private currentMode: 'simple' | 'full';
 
   constructor(
     eventBus: EventBusLike,
@@ -105,6 +133,7 @@ export class PropsPanelService {
     this.formFields = formFields;
     this.propertiesPanel = propertiesPanel;
     this.modeling = modeling;
+    this.currentMode = readInitialPanelMode();
     this.fullRegistry = createDefaultRegistry();
     this.simpleRegistry = createDefaultRegistry();
     this.simpleRegistry.register('i18n', I18nSimpleWidget, { overwrite: true });
