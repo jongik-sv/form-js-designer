@@ -489,6 +489,29 @@
     padding: 12px;
   }
 
+  .props-panel-mode-toggle {
+    display: inline-flex;
+    margin: 8px 12px 4px;
+    border: 1px solid #b9bcc6;
+    border-radius: 3px;
+    overflow: hidden;
+    background: #f7f7f8;
+  }
+
+  .props-panel-mode-toggle__btn {
+    padding: 4px 12px;
+    font-size: 12px;
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    color: #22242a;
+  }
+
+  .props-panel-mode-toggle__btn.is-active {
+    background: #3b82f6;
+    color: #fff;
+  }
+
   .props-panel--empty {
     padding: 16px 12px;
     color: #666;
