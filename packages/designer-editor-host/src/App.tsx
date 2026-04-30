@@ -25,7 +25,6 @@ import { OutlineModule } from './modules/OutlineModule';
 import { MarqueeModule } from './modules/MarqueeModule';
 import { ShortcutModule } from './modules/ShortcutModule';
 import { PropsPanelModule } from './modules/PropsPanelModule';
-import { InlineLabelEditModule } from './modules/InlineLabelEditModule';
 import { PropsPanelService } from './modules/PropsPanelService';
 import { LivePreviewModule } from './modules/LivePreviewModule';
 import { LivePreviewService } from './modules/LivePreviewService';
@@ -138,7 +137,6 @@ export function App(): h.JSX.Element {
         MarqueeModule,
         ShortcutModule,
         PropsPanelModule,
-        InlineLabelEditModule,
         LivePreviewModule,
         ValidateModule,
         ExportModule,

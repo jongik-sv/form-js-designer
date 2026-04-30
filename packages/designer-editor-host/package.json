@@ -6,8 +6,7 @@
   "type": "module",
   "exports": {
     "./embedded": "./src/embeddedDesigner.tsx",
-    "./modules/outline": "./src/modules/OutlineModule.ts",
-    "./modules/inline-label-edit": "./src/modules/InlineLabelEditModule.ts"
+    "./modules/outline": "./src/modules/OutlineModule.ts"
   },
   "scripts": {
     "dev": "vite",
