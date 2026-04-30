@@ -63,13 +63,6 @@ vi.mock('@form-js-designer/designer-core', () => ({
       return 'simple';
     }
   }),
-  writeStoredPanelMode: vi.fn((mode: 'simple' | 'full') => {
-    try {
-      if (typeof window !== 'undefined') {
-        window.sessionStorage.setItem('designer.panelMode', mode);
-      }
-    } catch { /* noop */ }
-  }),
 }));
 
 // designer-runtime mock — LAYOUT_HEIGHT_TARGET_TYPES만 필요

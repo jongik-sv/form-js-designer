@@ -66,9 +66,7 @@ export interface GetGroupsOptions {
 }
 
 /**
- * Priority for the native form-js panel filter provider. Above the form-js
- * default of 1000 so this updater runs after baseline groups have been
- * populated, allowing us to filter/hide entries in Simple mode.
+ * Priority for the native form-js panel filter provider.
  */
 // bio-properties-panel applies providers via reduce in descending priority
 // order: a higher-priority provider sees an EARLIER (often empty) groups

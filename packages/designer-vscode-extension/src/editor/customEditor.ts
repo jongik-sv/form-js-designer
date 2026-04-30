@@ -131,6 +131,7 @@ function mountPropsPanelModeToggle(
     // Force the native panel to rebuild against the new mode. _render() is
     // private but stable in bio-properties-panel; fall back to a selection
     // cycle if it's missing.
+    // TODO: replace with public API once bio-properties-panel exposes it (currently private)
     try {
       if (!editorGet) return;
       const pp = editorGet('propertiesPanel', false) as

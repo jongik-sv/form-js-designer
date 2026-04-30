@@ -44,13 +44,6 @@ vi.mock('@form-js-designer/designer-core', () => ({
       return 'simple';
     }
   }),
-  writeStoredPanelMode: vi.fn((mode: 'simple' | 'full') => {
-    try {
-      if (typeof window !== 'undefined') {
-        window.sessionStorage.setItem('designer.panelMode', mode);
-      }
-    } catch { /* noop */ }
-  }),
 }));
 
 vi.mock('@form-js-designer/designer-runtime/modules', () => ({

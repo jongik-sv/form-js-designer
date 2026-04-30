@@ -251,6 +251,7 @@ export function App(): h.JSX.Element {
         // bio-properties-panel does not expose a public `update()`; prefer
         // `_render()` (private but reliable) and fall back to a selection
         // cycle so the native panel rebuilds against the new mode.
+        // TODO: replace with public API once bio-properties-panel exposes it (currently private)
         const pp = editor.get('propertiesPanel', false) as
           { update?: () => void; _render?: () => void }
           | undefined;
