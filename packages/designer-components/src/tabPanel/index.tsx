@@ -27,7 +27,8 @@ function TabPanelRender(props: PureRenderProps<TabPanelSchema>) {
   const field = props.field as TabPanelSchema;
   // render는 outline/독립 편집 등 다른 경로를 위한 안전장치.
   // Tabs.tsx 내부에서는 ChildrenSlot을 직접 호출하므로 이중 렌더 없음.
-  return <ChildrenSlot field={field} />;
+  // Forward parent FormField props so children receive onChange.
+  return <ChildrenSlot {...props} field={field} />;
 }
 
 export const TabPanelComponent = defineComponent<TabPanelSchema>({

@@ -1,4 +1,4 @@
-import type { PropsSchema } from '@form-js-designer/designer-core';
+import type { PropsSchema, ResolvableI18nValue } from '@form-js-designer/designer-core';
 
 export type CardPadding = 'none' | 'sm' | 'md' | 'lg';
 export type CardElevation = 0 | 1 | 2 | 3;
@@ -9,7 +9,7 @@ export interface CardSchema {
   type: 'card';
   padding?: CardPadding;
   elevation?: CardElevation;
-  header?: string;
+  header?: ResolvableI18nValue;
   headerTag?: CardHeaderTag;
   components?: Array<{ id: string } & Record<string, unknown>>;
   verticalAlignment?: string;
@@ -32,8 +32,8 @@ export const cardPropsSchema: PropsSchema = {
       max: 3,
     },
     header: {
-      type: 'i18n',
-      label: 'designer.components.card.header',
+      type: 'string',
+      label: '제목',
       default: '',
     },
     headerTag: {

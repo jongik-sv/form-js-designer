@@ -8,17 +8,30 @@
  */
 
 export const LAYOUT_HEIGHT_TARGET_TYPES = [
+  // Input
   'textarea',
+  'filepicker',
+  // Selection
+  'checklist',
+  'radio',
+  // Presentation
+  'text',
   'html',
-  'table',
+  'image',
+  'spacer',
+  'separator',
+  'expression',
+  // Containers
   'group',
   'card',
   'modal',
   'tabs',
   'tabPanel',
+  // Extra (user confirmed)
+  'chartPlaceholder',
+  'tree',
+  'table',
   'iframe',
-  'image',
-  'text',
 ] as const;
 
 export type LayoutHeightTargetType = (typeof LAYOUT_HEIGHT_TARGET_TYPES)[number];

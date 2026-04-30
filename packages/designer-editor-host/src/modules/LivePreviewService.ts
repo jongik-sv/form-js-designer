@@ -112,7 +112,6 @@ export class LivePreviewService {
 
   private _renderViewer(): void {
     if (!this.target) return;
-
     render(
       h(ViewerHost as Parameters<typeof h>[0], {
         schema: this.currentSchema,

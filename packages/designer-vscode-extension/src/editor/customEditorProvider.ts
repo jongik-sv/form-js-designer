@@ -51,6 +51,24 @@ export class FormJsBlockEditorProvider {
   ): Promise<void> {
     const uri = document.uri.toString();
 
+    // dispose 핸들러를 가장 먼저 등록한다.
+    // resolveCustomTextEditor가 webview HTML 설정/메시지 처리 등 비동기 작업을 진행하는 도중
+    // 사용자가 패널을 닫으면 onDidDispose가 fire되는데, 이 핸들러가 늦게 등록되면
+    // 이벤트를 놓쳐서 sessions/openingURIs에 stale 엔트리가 남아 후속 클릭이 모두 무시된다.
+    // 핸들러 자체는 endSession이 idempotent하므로 beginSession 전에 등록해도 안전하다.
+    webviewPanel.onDidDispose(() => {
+      const ended = editSessionRegistry.endSession(uri);
+      clearPendingOpen(uri);
+      if (ended) {
+        const editClosedMsg: EditClosedMessage = {
+          type: 'edit-closed',
+          mdStart: ended.mdStart,
+          mdEnd: ended.mdEnd,
+        };
+        this.broadcastFn(editClosedMsg);
+      }
+    });
+
     // .form-js 네이티브 파일: 전체 본문을 스키마로 로드 (markdown fence 경로 우회)
     // mdStart/mdEnd = -1 sentinel로 "whole-file" 모드를 표현한다.
     const isFormJsFile = uri.toLowerCase().endsWith('.form-js');
@@ -72,7 +90,11 @@ export class FormJsBlockEditorProvider {
       const pending = pendingEditSchemas.get(uri);
       pendingEditSchemas.delete(uri);
 
-      schema = pending?.schema ?? '{"type":"default","components":[]}';
+      // 빈 펜스 본문은 빈 문자열로 들어오므로 nullish 체크가 아닌 trim 체크로 폴백한다.
+      const pendingSchema = pending?.schema;
+      schema = (typeof pendingSchema === 'string' && pendingSchema.trim().length > 0)
+        ? pendingSchema
+        : '{"type":"default","components":[]}';
       mdStart = pending?.mdStart ?? 0;
       mdEnd = pending?.mdEnd ?? 0;
     }
@@ -175,21 +197,7 @@ export class FormJsBlockEditorProvider {
       }
     });
 
-    // dispose 훅: lock 해제 + preview broadcast
-    webviewPanel.onDidDispose(() => {
-      const ended = editSessionRegistry.endSession(uri);
-      // opening 상태 해제 (두 번째 openBlockEditorCommand가 이미 opening 상태로 보고 무시했다면 효과 없음)
-      // 대신 세션이 끝나면 다시 opening할 수 있도록 정리
-      clearPendingOpen(uri);
-      if (ended) {
-        const editClosedMsg: EditClosedMessage = {
-          type: 'edit-closed',
-          mdStart: ended.mdStart,
-          mdEnd: ended.mdEnd,
-        };
-        this.broadcastFn(editClosedMsg);
-      }
-    });
+    // (dispose 훅은 함수 진입부에서 이미 등록됨 — race 방지)
 
     // webview → extension 메시지 처리 (axe-result + save-schema)
     webviewPanel.webview.onDidReceiveMessage((message: unknown) => {

@@ -24,10 +24,18 @@ import { DesignerContainerModule } from '@form-js-designer/designer-core';
 // layout.height inline style을 자동 주입하는 form-js 모듈 (TSK-12-02 포팅).
 import { LayoutHeightModule } from '@form-js-designer/designer-runtime/modules';
 // form-js 기본 properties panel에 "Custom properties" 그룹을 추가하는 provider
-import { PropsPanelModule } from './propsPanel/PropsPanelService';
+import { PropsPanelModule, PropsPanelService } from './propsPanel/PropsPanelService';
+import {
+  readStoredPanelMode,
+  writeStoredPanelMode,
+  type PanelMode,
+} from '@form-js-designer/designer-core';
+import { PropsPanelModeToggle } from './propsPanel/PropsPanelModeToggle';
 // 선택된 대상 컴포넌트 하단에 height resize 핸들을 띄우는 Preact 오버레이.
 import { ComponentResizeOverlay } from './resize/ComponentResizeOverlay';
 import { OutlineModule } from '@form-js-designer/designer-editor-host/modules/outline';
+import { InlineLabelEditModule } from '@form-js-designer/designer-editor-host/modules/inline-label-edit';
+import { ShortcutModule } from '@form-js-designer/designer-editor-host/modules/shortcut';
 import { LeftRailTabs, type LeftRailTab } from './leftRail/LeftRailTabs';
 import { relocatePalette } from './leftRail/relocatePalette';
 import { mountPanelResize, reattachRightHandle } from './leftRail/PanelResizeModule';
@@ -64,9 +72,12 @@ const EDITOR_MODULES = [
   PropsPanelModule,
   LayoutHeightModule,
   OutlineModule,
+  InlineLabelEditModule,
+  ShortcutModule,
 ];
 
 const RESIZE_OVERLAY_ROOT_ID = 'component-resize-overlay-root';
+const PROPS_PANEL_MODE_TOGGLE_SLOT_ID = 'props-panel-mode-toggle-slot';
 
 function ensureResizeOverlayRoot(): HTMLElement {
   let root = document.getElementById(RESIZE_OVERLAY_ROOT_ID);
@@ -76,6 +87,100 @@ function ensureResizeOverlayRoot(): HTMLElement {
     document.body.appendChild(root);
   }
   return root;
+}
+
+/**
+ * Current Simple/Full mode for the webview. Module-level so re-mounts share
+ * the value (sessionStorage backs the persisted reload value, this just keeps
+ * the in-memory render in sync between toggle clicks).
+ *
+ * FU-C: vscode always starts in Simple mode — sessionStorage is intentionally
+ * ignored on boot. The toggle UI remains so users can switch to Full within
+ * the session. Any Full preference stored in sessionStorage from a prior
+ * session is silently discarded on next open.
+ */
+let currentPanelMode: PanelMode = 'simple';
+
+/**
+ * Mount the Simple/Full toggle inside `.fjs-properties-container`. form-js
+ * recreates the container element on each editor re-mount, so this function
+ * runs after every `mountEditor()` call. It also seeds the panel's
+ * `data-mode` attribute (used by Simple-mode CSS rules in
+ * `media/form-js-editor-host.css`) and pushes the initial mode into
+ * `propsPanel.setMode()` — required because form-js may have already done a
+ * synchronous reflow before the constructor's sessionStorage seed lands in
+ * a re-mount scenario.
+ */
+function mountPropsPanelModeToggle(
+  editor: FormEditorInstance | null,
+): void {
+  if (!editor || typeof editor.get !== 'function') return;
+  const propsContainer = document.querySelector('.fjs-properties-container');
+  if (!propsContainer) return;
+
+  // Slot div placed as the first child of .fjs-properties-container so the
+  // toggle sits above the bio-properties-panel header.
+  let slot = document.getElementById(PROPS_PANEL_MODE_TOGGLE_SLOT_ID);
+  if (!slot || !propsContainer.contains(slot)) {
+    slot = document.createElement('div');
+    slot.id = PROPS_PANEL_MODE_TOGGLE_SLOT_ID;
+    propsContainer.insertBefore(slot, propsContainer.firstChild);
+  }
+
+  const editorGet = editor.get as ((name: string, strict?: boolean) => unknown) | undefined;
+  const propsPanelService = editorGet
+    ? (editorGet('propsPanel', false) as PropsPanelService | undefined)
+    : undefined;
+
+  const applyMode = (mode: PanelMode): void => {
+    currentPanelMode = mode;
+    writeStoredPanelMode(mode);
+    propsContainer.setAttribute('data-mode', mode);
+    propsPanelService?.setMode(mode);
+    // Force the native panel to rebuild against the new mode. _render() is
+    // private but stable in bio-properties-panel; fall back to a selection
+    // cycle if it's missing.
+    // TODO: replace with public API once bio-properties-panel exposes it (currently private)
+    try {
+      if (!editorGet) return;
+      const pp = editorGet('propertiesPanel', false) as
+        | { update?: () => void; _render?: () => void }
+        | undefined;
+      if (typeof pp?.update === 'function') {
+        pp.update();
+      } else if (typeof pp?._render === 'function') {
+        pp._render();
+      } else {
+        const selection = editorGet('selection', false) as
+          | { get?: () => unknown[]; set?: (s: unknown) => void }
+          | undefined;
+        const cur = selection?.get?.() ?? [];
+        selection?.set?.(null);
+        selection?.set?.(cur);
+      }
+    } catch {
+      /* panel may not be initialized yet — next selection will pick up mode */
+    }
+    // Re-render the toggle so the active button reflects the new mode.
+    renderToggle();
+  };
+
+  const renderToggle = (): void => {
+    render(
+      h(PropsPanelModeToggle, {
+        mode: currentPanelMode,
+        onChange: applyMode,
+      }),
+      slot!,
+    );
+  };
+
+  // Seed: ensure the panel reflects the persisted mode on every mount, even
+  // if the constructor's sessionStorage seed already ran (re-mount keeps the
+  // toggle UI in sync with the service state).
+  propsContainer.setAttribute('data-mode', currentPanelMode);
+  propsPanelService?.setMode(currentPanelMode);
+  renderToggle();
 }
 
 /**
@@ -147,6 +252,12 @@ export async function mountEditor(schema: unknown): Promise<void> {
     const existing = document.getElementById(RESIZE_OVERLAY_ROOT_ID);
     if (existing) {
       try { render(null, existing); } catch { /* unmount 실패 무시 */ }
+    }
+    // Props-panel toggle slot is destroyed alongside .fjs-properties-container
+    // by form-js, but unmount the Preact tree first to avoid orphaned hooks.
+    const toggleSlot = document.getElementById(PROPS_PANEL_MODE_TOGGLE_SLOT_ID);
+    if (toggleSlot) {
+      try { render(null, toggleSlot); } catch { /* unmount 실패 무시 */ }
     }
   }
   if (unsubscribeChange) {
@@ -220,6 +331,11 @@ export async function mountEditor(schema: unknown): Promise<void> {
   // 좌표는 viewport 기준이며 #app 레이아웃과 무관.
   const overlayRoot = ensureResizeOverlayRoot();
   render(h(ComponentResizeOverlay, { editor: editorInstance as unknown as { get: (svc: string, required?: boolean) => unknown } }), overlayRoot);
+
+  // Mount Simple/Full props-panel toggle inside .fjs-properties-container
+  // (form-js's native right-side panel). Re-runs on every mountEditor since
+  // form-js recreates the container element each time.
+  mountPropsPanelModeToggle(editorInstance);
 
   // 좌측 rail / 우측 properties 패널 가장자리에 split-handle 삽입 (drag로 폭 조절).
   // editor 재마운트 시 properties 컨테이너가 새로 생성되므로 reattach.

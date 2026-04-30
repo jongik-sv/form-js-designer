@@ -1,4 +1,4 @@
-import type { PropsSchema } from '@form-js-designer/designer-core';
+import type { PropsSchema, ResolvableI18nValue } from '@form-js-designer/designer-core';
 import type { ChartType } from './chartCatalog';
 
 export type { ChartType };
@@ -7,8 +7,8 @@ export interface ChartPlaceholderSchema {
   id: string;
   type: 'chartPlaceholder';
   chartType?: ChartType;
-  title?: string;
-  description?: string;
+  title?: ResolvableI18nValue;
+  description?: ResolvableI18nValue;
   [key: string]: unknown;
 }
 

@@ -1,7 +1,7 @@
 import { Editor } from '@tiptap/core';
 import StarterKit from '@tiptap/starter-kit';
 import { FormJsBlock as RawFormJsBlock } from '@form-js-designer/designer-tiptap';
-import { withDesigner } from '@form-js-designer/designer-tiptap/editor';
+import { withDesigner, FormJsToolbar } from '@form-js-designer/designer-tiptap/editor';
 import '@form-js-designer/designer-tiptap/styles';
 
 const FormJsBlock = withDesigner(RawFormJsBlock);
@@ -17,7 +17,7 @@ const dumpEl = document.querySelector<HTMLElement>('#dump')!;
 let txCount = 0;
 const editor = new Editor({
   element: editorEl,
-  extensions: [StarterKit, FormJsBlock],
+  extensions: [StarterKit, FormJsBlock, FormJsToolbar],
   content: `
     <h2>Tiptap × form-js-designer 통합 데모</h2>
     <p>여기는 일반 <strong>Tiptap rich-text</strong> 영역입니다. <em>이탤릭</em>, <code>인라인 코드</code>도 가능.</p>

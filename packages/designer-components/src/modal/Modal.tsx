@@ -1,7 +1,7 @@
 import { h } from 'preact';
 import { useState } from 'preact/hooks';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
-import { defineComponent, ChildrenSlot } from '@form-js-designer/designer-core';
+import { defineComponent, ChildrenSlot, resolveI18n } from '@form-js-designer/designer-core';
 import type { PureRenderProps, ContainerField } from '@form-js-designer/designer-core';
 import type { ModalSchema } from './propsSchema';
 import { modalPropsSchema } from './propsSchema';
@@ -34,7 +34,7 @@ function resolvePortalContainer(ref?: string): Element | null {
  * Validate Modal field props and warn/throw on violations (ADR-0002 D1 조건 2).
  */
 function validateModalField(field: ModalSchema): void {
-  if (!field.title) {
+  if (!resolveI18n(field.title)) {
     // In dev mode: throw; in prod: warn (aria-label fallback)
     const msg = '[Modal] title is required (ADR-0002 D1 condition 2). Provide a non-empty title or aria-label.';
     if (typeof process !== 'undefined' && process.env['NODE_ENV'] === 'production') {
@@ -60,9 +60,9 @@ function ModalRender(props: PureRenderProps<ModalSchema>) {
   validateModalField(field);
 
   const size = sanitizeSize(field.size);
-  const triggerLabel = field.triggerLabel ?? 'Open';
-  const title = field.title;
-  const description = field.description;
+  const triggerLabel = resolveI18n(field.triggerLabel) || 'Open';
+  const title = resolveI18n(field.title);
+  const description = resolveI18n(field.description);
 
   // Support controlled open state for testing (_open field)
   const controlledOpen = (field as Record<string, unknown>)['_open'] as boolean | undefined;
@@ -128,7 +128,8 @@ function ModalRender(props: PureRenderProps<ModalSchema>) {
             )}
 
             <div class="dc-modal__body dc-container-body">
-              <ChildrenSlot field={field as unknown as ContainerField} />
+              {/* Forward parent FormField props so children receive onChange. */}
+              <ChildrenSlot {...props} field={field as unknown as ContainerField} />
             </div>
           </DialogPrimitive.Content>
         </DialogPrimitive.Portal>

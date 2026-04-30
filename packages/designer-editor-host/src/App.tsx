@@ -23,6 +23,7 @@ import { LayoutHeightModule } from '@form-js-designer/designer-runtime';
 import { PaletteModule } from './modules/PaletteModule';
 import { OutlineModule } from './modules/OutlineModule';
 import { MarqueeModule } from './modules/MarqueeModule';
+import { InlineLabelEditModule } from './modules/InlineLabelEditModule';
 import { ShortcutModule } from './modules/ShortcutModule';
 import { PropsPanelModule } from './modules/PropsPanelModule';
 import { PropsPanelService } from './modules/PropsPanelService';
@@ -34,6 +35,8 @@ import { ExportModule } from './modules/ExportModule';
 import { ExportService } from './modules/ExportService';
 import { Sidebar } from './components/Sidebar';
 import { PropsPanelContainer } from './components/PropsPanelContainer';
+import { PropsPanelModeToggle, type PanelMode } from './components/PropsPanelModeToggle';
+import { readStoredPanelMode, writeStoredPanelMode } from '@form-js-designer/designer-core';
 import { LivePreviewPanel } from './components/LivePreviewPanel';
 import { ToolbarButtons } from './components/ToolbarButtons';
 import { ValidationBadge } from './components/ValidationBadge';
@@ -88,6 +91,9 @@ export function App(): h.JSX.Element {
   const [tab, setTab] = useSidePanelTab();
   const [leftTab, setLeftTab] = useState<LeftRailTab>('components');
 
+  // TSK-07: Simple/Full panel mode — sessionStorage-persisted, default 'simple'
+  const [panelMode, setPanelMode] = useState<PanelMode>(readStoredPanelMode);
+
   // 패널 max 너비는 viewport 기반(최소 900, 최대 1600, 좌측 영역 400px 확보)
   const computeMaxPanelWidth = (): number => {
     const vw = typeof window !== 'undefined' ? window.innerWidth : 1600;
@@ -130,6 +136,7 @@ export function App(): h.JSX.Element {
         PaletteModule,
         OutlineModule,
         MarqueeModule,
+        InlineLabelEditModule,
         ShortcutModule,
         PropsPanelModule,
         LivePreviewModule,
@@ -236,6 +243,38 @@ export function App(): h.JSX.Element {
     };
   }, [tab, panelCollapsed, services.propsPanel]);
 
+  // TSK-07: panelMode 변경 시 — sessionStorage persist + propsPanel.setMode + native panel reflow
+  useEffect(() => {
+    writeStoredPanelMode(panelMode);
+    services.propsPanel?.setMode(panelMode);
+    const editor = editorInstanceRef.current;
+    if (editor) {
+      try {
+        // bio-properties-panel does not expose a public `update()`; prefer
+        // `_render()` (private but reliable) and fall back to a selection
+        // cycle so the native panel rebuilds against the new mode.
+        // TODO: replace with public API once bio-properties-panel exposes it (currently private)
+        const pp = editor.get('propertiesPanel', false) as
+          { update?: () => void; _render?: () => void }
+          | undefined;
+        if (typeof pp?.update === 'function') {
+          pp.update();
+        } else if (typeof pp?._render === 'function') {
+          pp._render();
+        } else {
+          const selection = editor.get('selection', false) as
+            { get?: () => unknown[]; set?: (s: unknown) => void }
+            | undefined;
+          const cur = selection?.get?.() ?? [];
+          selection?.set?.(null);
+          selection?.set?.(cur);
+        }
+      } catch {
+        // ignore — panel may not be initialized yet
+      }
+    }
+  }, [panelMode, services.propsPanel]);
+
   return (
     <div class="app-layout">
       {/* 아웃라인 + 에디터 */}
@@ -317,12 +356,19 @@ export function App(): h.JSX.Element {
         )}
         {!panelCollapsed && tab === 'props' && (
           <div class="props-panel-stack" data-testid="props-stack">
+            <PropsPanelModeToggle mode={panelMode} onChange={setPanelMode} />
             {/* 기본 form-js 속성 (General/Condition/Layout/Validation/Custom) */}
-            <div ref={nativePropsPanelRef} class="props-panel-native" data-testid="props-native" />
+            <div
+              ref={nativePropsPanelRef}
+              class="props-panel-native"
+              data-testid="props-native"
+              data-mode={panelMode}
+            />
             {/* designer-components 전용 속성 (padding, orientation, ...) */}
             <PropsPanelContainer
               propsPanelService={services.propsPanel}
               eventBus={services.eventBus}
+              mode={panelMode}
             />
           </div>
         )}

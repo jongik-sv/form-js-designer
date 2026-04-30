@@ -29,6 +29,20 @@ export type {
   WidgetValidationResult,
 } from './panel/types';
 export { UnknownWidgetError, DuplicateWidgetError } from './panel/types';
+export {
+  SIMPLE_MODE_WHITELIST,
+  SIMPLE_MODE_HIDDEN_GROUPS,
+  SIMPLE_MODE_PASSTHROUGH_GROUPS,
+  SIMPLE_MODE_DEFAULT_ALLOWED,
+  getAllowedEntryIds,
+} from './panel/simpleModeWhitelist';
+export { I18nSimpleWidget } from './panel/widgets/I18nSimpleWidget';
+export {
+  PANEL_MODE_STORAGE_KEY,
+  readStoredPanelMode,
+  writeStoredPanelMode,
+} from './panel/panelModeStorage';
+export type { PanelMode } from './panel/panelModeStorage';
 
 // Host module — TSK-03-03 (PRD §4 AC #4, #4-1)
 export { ViewerHost, EditorHost, useViewportWidth } from './host';
@@ -44,6 +58,9 @@ export type {
 // i18n module — TSK-03-03 (PRD §4 AC #5)
 export { LocaleProvider, useT, useLocale, createFallbackT } from './i18n/LocaleProvider';
 export type { LocaleT, LocaleContextValue, LocaleKey } from './i18n/localeTypes';
+// FU-5 — i18n object → display text resolver for canvas renderers
+export { resolveI18n } from './i18n/resolveI18n';
+export type { ResolvableI18nValue } from './i18n/resolveI18n';
 
 // Validate module — TSK-06-02 (PRD §4 AC #3, #4)
 export { validateFormSchema } from './validate/validateSchema';

@@ -2,8 +2,14 @@
  * ChildrenSlot — custom container 필드용 자식 렌더 슬롯.
  *
  * 커스텀 container 컴포넌트(Card/Stack/Modal 등)의 render 함수에서
- * `<ChildrenSlot field={field} />` 형태로 호출하면 form-js가 해당 위치에
- * `.fjs-drop-container-vertical` (dragula drop zone)를 그려준다.
+ * `<ChildrenSlot field={field} {...renderProps} />` 형태로 호출한다.
+ *
+ * **부모 props 전파 (CRITICAL):**
+ * form-js 의 native RowsRenderer 는 부모 FormField 의 props (onChange/onBlur/
+ * onFocus/disabled/readonly/...) 를 자식 FormField 에 spread 한다. 우리 ChildrenSlot
+ * 도 동일하게 동작해야 컨테이너 안의 입력 필드(select/datetime/textfield 등)가
+ * form._update 와 연결된다. 이를 누락하면 자식 FormField 가 onChange undefined 인
+ * 상태로 렌더되어 사용자 인터랙션 시 `_onChange is not a function` 에러가 던져진다.
  */
 import { h, Fragment } from 'preact';
 import { useContext } from 'preact/hooks';
@@ -12,8 +18,13 @@ import type { ContainerField } from '../types';
 
 void h;
 
+/**
+ * ChildrenSlot 은 `field` 외에 부모 FormField 가 받은 임의 props 를 받아
+ * 자식 FormField 에 그대로 spread 한다. form-js native RowsRenderer 동작과 동등.
+ */
 interface ChildrenSlotProps {
   field: ContainerField;
+  [key: string]: unknown;
 }
 
 interface FormLayouter {
@@ -25,7 +36,7 @@ interface FormFieldRegistry {
 }
 
 export function ChildrenSlot(props: ChildrenSlotProps): h.JSX.Element {
-  const { field } = props;
+  const { field, ...rest } = props;
   const { Children, Empty } = useContext(FormRenderContext) as {
     Children: (p: { class?: string; field: ContainerField; children?: unknown }) => h.JSX.Element;
     Empty: (p: { field: ContainerField }) => h.JSX.Element | null;
@@ -35,14 +46,17 @@ export function ChildrenSlot(props: ChildrenSlotProps): h.JSX.Element {
 
   return (
     <Children class="fjs-vertical-layout fjs-children cds--grid cds--grid--condensed" field={field}>
-      <Rows field={field} />
+      <Rows field={field} parentProps={rest} />
       {isEmpty ? <Empty field={field} /> : null}
     </Children>
   );
 }
 
-function Rows(props: { field: ContainerField }): h.JSX.Element {
-  const { field } = props;
+function Rows(props: {
+  field: ContainerField;
+  parentProps: Record<string, unknown>;
+}): h.JSX.Element {
+  const { field, parentProps } = props;
   const { getService } = useContext(FormContext) as {
     getService: <T>(type: string, strict?: boolean) => T;
   };
@@ -81,8 +95,14 @@ function Rows(props: { field: ContainerField }): h.JSX.Element {
             {rowComponents.map((childId) => {
               const childField = formFieldRegistry.get(childId);
               if (!childField) return null;
-              // FormField는 form-js-viewer가 export — field 필수, 나머지는 내부에서 service 조회
-              return <FormField key={childId} field={childField as never} />;
+              // form-js RowsRenderer 와 동일: 부모 props (onChange/onBlur/...) 를 자식에 spread.
+              return (
+                <FormField
+                  key={childId}
+                  {...(parentProps as Record<string, unknown>)}
+                  field={childField as never}
+                />
+              );
             })}
           </Row>
         );

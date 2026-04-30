@@ -8,6 +8,7 @@
 import { h } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
 import type { PropsGroup } from '../modules/PropsPanelService';
+import type { PanelMode } from './PropsPanelModeToggle';
 
 /**
  * i18n 키("designer.components.tabs.orientation") 또는 camelCase 식별자를
@@ -22,15 +23,16 @@ function humanizeLabel(label: string | undefined, fallbackKey: string): string {
 
 interface PropsPanelContainerProps {
   propsPanelService: {
-    getGroups(field: { type: string; id?: string } | null): PropsGroup[];
+    getGroups(field: { type: string; id?: string } | null, opts?: { mode?: PanelMode }): PropsGroup[];
   } | null;
   eventBus: {
     on(event: string, handler: (...args: unknown[]) => void): void;
     off(event: string, handler: (...args: unknown[]) => void): void;
   } | null;
+  mode?: PanelMode;
 }
 
-export function PropsPanelContainer({ propsPanelService, eventBus }: PropsPanelContainerProps): h.JSX.Element {
+export function PropsPanelContainer({ propsPanelService, eventBus, mode = 'full' }: PropsPanelContainerProps): h.JSX.Element {
   const [selectedField, setSelectedField] = useState<{ type: string; id?: string } | null>(null);
   const [groups, setGroups] = useState<PropsGroup[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -54,7 +56,7 @@ export function PropsPanelContainer({ propsPanelService, eventBus }: PropsPanelC
 
       if (field && propsPanelService) {
         try {
-          const newGroups = propsPanelService.getGroups(field);
+          const newGroups = propsPanelService.getGroups(field, { mode });
           setGroups(newGroups);
         } catch (err) {
           console.warn('[PropsPanelContainer] getGroups 실패:', err);
@@ -70,7 +72,23 @@ export function PropsPanelContainer({ propsPanelService, eventBus }: PropsPanelC
     return () => {
       eventBus.off('selection.changed', onSelectionChanged);
     };
-  }, [eventBus, propsPanelService]);
+  }, [eventBus, propsPanelService, mode]);
+
+  // mode 변경 시 현재 selectedField에 대해 그룹을 재계산.
+  // selection.changed 핸들러가 setSelectedField+setGroups를 함께 처리하므로
+  // 새로운 selection 시점에는 redundant idempotent 호출이 한 번 더 발생할 수 있다 (수용).
+  useEffect(() => {
+    if (!selectedField || !propsPanelService) return;
+    try {
+      const newGroups = propsPanelService.getGroups(selectedField, { mode });
+      setGroups(newGroups);
+      setError(null);
+    } catch (err) {
+      console.warn('[PropsPanelContainer] getGroups 실패 (mode 재계산):', err);
+      setError(String(err));
+      setGroups([]);
+    }
+  }, [mode, selectedField, propsPanelService]);
 
   if (!selectedField) {
     return (

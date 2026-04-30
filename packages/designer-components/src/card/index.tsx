@@ -1,7 +1,7 @@
 import { h } from 'preact';
 import { cva } from 'class-variance-authority';
 import { twMerge } from 'tailwind-merge';
-import { defineComponent, ChildrenSlot } from '@form-js-designer/designer-core';
+import { defineComponent, ChildrenSlot, resolveI18n } from '@form-js-designer/designer-core';
 import type { PureRenderProps, ContainerField } from '@form-js-designer/designer-core';
 import type { CardSchema, CardElevation, CardHeaderTag } from './propsSchema';
 import { cardPropsSchema } from './propsSchema';
@@ -37,7 +37,7 @@ function CardRender(props: PureRenderProps<CardSchema>) {
 
   const padding = field.padding ?? 'md';
   const elevation: CardElevation = field.elevation ?? 1;
-  const header = field.header;
+  const headerText = resolveI18n(field.header);
   const headerTag: CardHeaderTag = field.headerTag ?? 'h3';
 
   const className = twMerge(cardVariants({ padding, elevation }));
@@ -46,11 +46,15 @@ function CardRender(props: PureRenderProps<CardSchema>) {
 
   return (
     <div class={className} data-component="card" id={props.domId}>
-      {header ? (
-        <HeaderTag class="dc-card__header">{header}</HeaderTag>
+      {headerText ? (
+        <HeaderTag class="dc-card__header">{headerText}</HeaderTag>
       ) : null}
       <div class="dc-card__body dc-container-body">
-        <ChildrenSlot field={field as unknown as ContainerField} />
+        {/* Forward parent FormField props (onChange/onBlur/onFocus/disabled/readonly)
+            so child fields inside the card receive a working onChange handler.
+            Without this, dropdown/datetime/textfield interactions throw
+            `_onChange is not a function`. */}
+        <ChildrenSlot {...props} field={field as unknown as ContainerField} />
       </div>
       {errors.length > 0 ? (
         <ul class="dc-card__errors" aria-label="errors">

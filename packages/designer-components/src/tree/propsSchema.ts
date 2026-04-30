@@ -1,4 +1,4 @@
-import type { PropsSchema } from '@form-js-designer/designer-core';
+import type { PropsSchema, ResolvableI18nValue } from '@form-js-designer/designer-core';
 
 export interface TreeNode {
   // Generic tree shape — user-defined keys via labelKey/childrenKey
@@ -8,7 +8,7 @@ export interface TreeNode {
 export interface TreeSchema {
   id: string;
   type: 'tree';
-  label?: string;
+  label?: ResolvableI18nValue;
   /** FEEL expression evaluated at render time. Default '=${id}' (auto-bound to own data slot). */
   dataSource?: string;
   /** Property name on each node holding its display label. Default 'label'. */

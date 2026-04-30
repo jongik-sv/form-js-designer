@@ -27,8 +27,47 @@ function makeContainer(id: string, type: string, extraInner = ''): HTMLElement {
 }
 
 describe('LAYOUT_HEIGHT_TARGET_TYPES', () => {
-  it('타겟 타입 목록이 올바르다', () => {
-    const expected = [
+  // FU-A: 최종 19종 (design.md 목록 기준)
+  const EXPECTED_TYPES = [
+    // Input
+    'textarea',
+    'filepicker',
+    // Selection
+    'checklist',
+    'radio',
+    // Presentation
+    'text',
+    'html',
+    'image',
+    'spacer',
+    'separator',
+    'expression',
+    // Containers
+    'group',
+    'card',
+    'modal',
+    'tabs',
+    'tabPanel',
+    // Extra (user confirmed)
+    'chartPlaceholder',
+    'tree',
+    'table',
+    'iframe',
+  ] as const;
+
+  it('FU-A: 총 19종 포함', () => {
+    expect(LAYOUT_HEIGHT_TARGET_TYPES.length).toBe(EXPECTED_TYPES.length);
+  });
+
+  it('FU-A: 각 타입이 모두 포함되어 있다', () => {
+    for (const t of EXPECTED_TYPES) {
+      expect(LAYOUT_HEIGHT_TARGET_TYPES).toContain(t);
+    }
+  });
+
+  // 하위 호환 — 기존 테스트 유지
+  it('타겟 타입 목록이 올바르다 (기존 11종 포함)', () => {
+    const previousTypes = [
       'textarea',
       'html',
       'table',
@@ -41,7 +80,7 @@ describe('LAYOUT_HEIGHT_TARGET_TYPES', () => {
       'image',
       'text',
     ];
-    for (const t of expected) {
+    for (const t of previousTypes) {
       expect(LAYOUT_HEIGHT_TARGET_TYPES).toContain(t);
     }
   });

@@ -35,7 +35,7 @@ function makePropsPanelService(groups = [] as ReturnType<typeof makeGroups>) {
 function makeGroups() {
   return [
     {
-      id: 'designer-props',
+      id: 'designer-custom-props',
       label: 'Properties',
       entries: [
         {
@@ -132,7 +132,7 @@ describe('PropsPanelContainer', () => {
       eventBus.fire('selection.changed', { selection: [{ id: 'f1', type: 'text' }] });
     });
 
-    expect(service.getGroups).toHaveBeenCalledWith({ id: 'f1', type: 'text' });
+    expect(service.getGroups).toHaveBeenCalledWith({ id: 'f1', type: 'text' }, { mode: 'full' });
   });
 
   // Case 5: 서비스가 null이면 empty placeholder 표시
@@ -145,5 +145,107 @@ describe('PropsPanelContainer', () => {
       );
     });
     expect(container.querySelector('[data-testid="props-empty"]')).toBeTruthy();
+  });
+});
+
+describe('PropsPanelContainer mode prop', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  // Case 6: mode=simple 시 selection.changed 핸들러가 getGroups(field, { mode: 'simple' }) 호출
+  it('6: mode=simple, getGroups receives { mode: "simple" } on selection.changed', () => {
+    const eventBus = makeEventBus();
+    const service = makePropsPanelService(makeGroups());
+    act(() => {
+      render(
+        h(PropsPanelContainer, { propsPanelService: service, eventBus, mode: 'simple' }),
+        container,
+      );
+    });
+
+    act(() => {
+      eventBus.fire('selection.changed', { selection: [{ id: 'C1', type: 'card' }] });
+    });
+
+    expect(service.getGroups).toHaveBeenLastCalledWith(
+      { id: 'C1', type: 'card' },
+      { mode: 'simple' },
+    );
+  });
+
+  // Case 7: mode 변경 시 현재 selection으로 재계산
+  it('7: mode 변경 시 현재 selection으로 재계산', () => {
+    const eventBus = makeEventBus();
+    const service = makePropsPanelService(makeGroups());
+
+    act(() => {
+      render(
+        h(PropsPanelContainer, { propsPanelService: service, eventBus, mode: 'simple' }),
+        container,
+      );
+    });
+
+    act(() => {
+      eventBus.fire('selection.changed', { selection: [{ id: 'f1', type: 'text' }] });
+    });
+
+    service.getGroups.mockClear();
+
+    act(() => {
+      render(
+        h(PropsPanelContainer, { propsPanelService: service, eventBus, mode: 'full' }),
+        container,
+      );
+    });
+
+    expect(service.getGroups).toHaveBeenLastCalledWith(
+      { id: 'f1', type: 'text' },
+      { mode: 'full' },
+    );
+  });
+});
+
+// FU-D: PropsPanelContainer에는 collapse toggle이 없음을 보장하는 negative test
+describe('PropsPanelContainer FU-D: no collapse UI', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  // Case 8: 필드 선택 후 aria-expanded 속성 없음 (collapse toggle 부재)
+  it('8: 필드 선택 후 aria-expanded 속성 없음 (항상 펼침)', () => {
+    const eventBus = makeEventBus();
+    const service = makePropsPanelService(makeGroups());
+    act(() => {
+      render(
+        h(PropsPanelContainer, { propsPanelService: service, eventBus }),
+        container,
+      );
+    });
+
+    act(() => {
+      eventBus.fire('selection.changed', { selection: [{ id: 'f1', type: 'text' }] });
+    });
+
+    // collapse 토글이 없으므로 aria-expanded 속성은 DOM에 존재하지 않아야 한다
+    expect(container.querySelector('[aria-expanded]')).toBeNull();
+  });
+
+  // Case 9: mode=simple 일 때도 aria-expanded 없음
+  it('9: mode=simple 일 때도 aria-expanded 없음', () => {
+    const eventBus = makeEventBus();
+    const service = makePropsPanelService(makeGroups());
+    act(() => {
+      render(
+        h(PropsPanelContainer, { propsPanelService: service, eventBus, mode: 'simple' }),
+        container,
+      );
+    });
+
+    act(() => {
+      eventBus.fire('selection.changed', { selection: [{ id: 'C1', type: 'card' }] });
+    });
+
+    expect(container.querySelector('[aria-expanded]')).toBeNull();
   });
 });

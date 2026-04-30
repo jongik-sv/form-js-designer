@@ -142,6 +142,33 @@ describe('formJsMarkdownPlugin: token.map null 방어', () => {
 // ──────────────────────────────────────────────────────
 // 5. 잘못된 JSON 블록 → 오류 배너만 출력
 // ──────────────────────────────────────────────────────
+// 4b. 빈 form-js 펜스 → 에러 대신 편집 가능 블록
+// ──────────────────────────────────────────────────────
+describe('formJsMarkdownPlugin: 빈 form-js 펜스', () => {
+  it('빈 펜스는 .form-js-block--error 대신 .form-js-block을 생성한다', () => {
+    const md = createMd();
+    const html = md.render(fence('form-js', ''));
+    expect(html).not.toContain('form-js-block--error');
+    expect(html).toContain('class="form-js-block"');
+  });
+
+  it('빈 펜스 블록의 hidden pre에 빈 스키마 JSON이 담긴다', () => {
+    const md = createMd();
+    const html = md.render(fence('form-js', ''));
+    expect(html).toContain('class="form-js-source"');
+    // escapeHtml이 " → &quot; 변환하므로 이스케이프된 형태로 확인
+    expect(html).toContain('&quot;type&quot;');
+  });
+
+  it('공백만 있는 펜스도 빈 스키마로 처리된다', () => {
+    const md = createMd();
+    const html = md.render(fence('form-js', '   '));
+    expect(html).not.toContain('form-js-block--error');
+    expect(html).toContain('class="form-js-block"');
+  });
+});
+
+// ──────────────────────────────────────────────────────
 describe('formJsMarkdownPlugin: 잘못된 JSON 블록', () => {
   it('잘못된 JSON 펜스는 .form-js-block--error 배너를 출력한다', () => {
     const md = createMd();

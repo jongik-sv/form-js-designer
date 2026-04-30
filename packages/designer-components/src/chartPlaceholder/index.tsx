@@ -1,5 +1,5 @@
 import { h } from 'preact';
-import { defineComponent } from '@form-js-designer/designer-core';
+import { defineComponent, resolveI18n } from '@form-js-designer/designer-core';
 import type { PureRenderProps } from '@form-js-designer/designer-core';
 import { getChart } from './chartCatalog';
 import { chartPlaceholderPropsSchema, type ChartPlaceholderSchema } from './propsSchema';
@@ -11,8 +11,8 @@ void h;
 function ChartPlaceholderRender(props: PureRenderProps<ChartPlaceholderSchema>) {
   const field = props.field as ChartPlaceholderSchema;
   const entry = getChart(field.chartType);
-  const title = field.title?.trim();
-  const description = field.description?.trim();
+  const title = resolveI18n(field.title).trim();
+  const description = resolveI18n(field.description).trim();
 
   return (
     <div

@@ -23,9 +23,17 @@
 
 import { h } from 'preact';
 import type { ComponentType, JSX } from 'preact';
-import { propsSchemaToPanel, createDefaultRegistry } from '@form-js-designer/designer-core';
+import {
+  propsSchemaToPanel,
+  createDefaultRegistry,
+  getAllowedEntryIds,
+  I18nSimpleWidget,
+  SIMPLE_MODE_HIDDEN_GROUPS,
+  SIMPLE_MODE_PASSTHROUGH_GROUPS,
+} from '@form-js-designer/designer-core';
 import type { PanelEntry, PanelWidget, PanelWidgetRegistry } from '@form-js-designer/designer-core';
 import { LAYOUT_HEIGHT_TARGET_TYPES } from '@form-js-designer/designer-runtime/modules';
+import { readStoredPanelMode, type PanelMode } from '@form-js-designer/designer-core';
 
 interface PropertiesPanelLike {
   registerProvider(provider: unknown, priority?: number): void;
@@ -63,6 +71,17 @@ interface BioEntry {
 }
 
 const DESIGNER_PROVIDER_PRIORITY = 500;
+
+/**
+ * Priority for the native form-js panel filter provider. bio-properties-panel
+ * applies providers via reduce in descending priority order: a higher-priority
+ * provider sees an EARLIER (often empty) groups array, while lower-priority
+ * providers see the accumulated groups built by earlier ones. Filtering must
+ * happen AFTER form-js's default provider (priority 1000) AND after this
+ * service's own custom-properties provider (priority 500) have populated the
+ * group list, so this filter must run at the LOWEST priority.
+ */
+const DESIGNER_NATIVE_FILTER_PRIORITY = 400;
 
 const identityT = (k: string): string => k;
 
@@ -136,15 +155,115 @@ export class PropsPanelService {
   static $inject = ['propertiesPanel', 'injector'];
 
   private readonly injector: InjectorLike;
-  private readonly widgetRegistry: PanelWidgetRegistry;
+  // Two registries: `fullRegistry` keeps the legacy default behavior. The
+  // `simpleRegistry` swaps the i18n widget for `I18nSimpleWidget` so Simple
+  // mode renders a single ko input instead of the full multi-locale picker.
+  // The global BUILTIN_WIDGETS map is untouched — both registries are
+  // freshly created via `createDefaultRegistry()`.
+  private readonly fullRegistry: PanelWidgetRegistry;
+  private readonly simpleRegistry: PanelWidgetRegistry;
+  // Seeded from sessionStorage in the constructor so the very first native
+  // panel reflow already sees the correct mode without waiting for the
+  // webview's initial setMode() call.
+  private currentMode: PanelMode;
 
   constructor(propertiesPanel: PropertiesPanelLike | null, injector: InjectorLike) {
     this.injector = injector;
-    this.widgetRegistry = createDefaultRegistry();
+    this.fullRegistry = createDefaultRegistry();
+    this.simpleRegistry = createDefaultRegistry();
+    this.simpleRegistry.register('i18n', I18nSimpleWidget, { overwrite: true });
+    this.currentMode = readStoredPanelMode();
 
     if (propertiesPanel && typeof propertiesPanel.registerProvider === 'function') {
+      // `this` provides the existing custom-properties group at priority 500.
       propertiesPanel.registerProvider(this, DESIGNER_PROVIDER_PRIORITY);
+
+      // Native filter provider — runs after default (1000) and the
+      // custom-properties provider (500) so it sees the fully accumulated
+      // groups and can filter/hide entries in Simple mode.
+      propertiesPanel.registerProvider(
+        this._buildNativeFilterProvider(),
+        DESIGNER_NATIVE_FILTER_PRIORITY,
+      );
     }
+  }
+
+  /**
+   * Switch active props panel mode. The native filter provider closure reads
+   * `currentMode` live on each call, so the next panel reflow picks up the
+   * new mode without re-registering. The same field is also consulted by
+   * `getGroups()` for the custom-properties group.
+   */
+  setMode(mode: PanelMode): void {
+    this.currentMode = mode;
+  }
+
+  /**
+   * Build the bio-properties-panel provider that filters native panel groups
+   * in Simple mode. The returned provider's `getGroups(field, _editField)`
+   * MUST return an updater function `(groups) => updatedGroups`.
+   *
+   * `self` is captured so the closure reads `currentMode` live on each call.
+   */
+  private _buildNativeFilterProvider(): {
+    getGroups(
+      field: { type?: string } | null,
+      editField?: unknown,
+    ): (
+      groups: Array<{ id: string; entries?: Array<{ id: string }>; items?: unknown[]; component?: unknown }>,
+    ) => Array<{ id: string; entries?: Array<{ id: string }>; items?: unknown[]; component?: unknown }>;
+  } {
+    const self = this;
+    return {
+      getGroups(field, _editField) {
+        return (groups) => {
+          if (self.currentMode === 'full' || !field || !field.type) return groups;
+          const allowed = getAllowedEntryIds(field.type);
+
+          // Simple mode strategy (mirrors host PropsPanelService):
+          //  1) Hidden groups (Condition / CustomProperties / Appearance / ...)
+          //     drop entirely.
+          //  2) Self-rendered designer groups (designer-custom-props,
+          //     designer-layout) passthrough untouched — they are filtered
+          //     upstream in `getGroups()` already.
+          //  3) Passthrough groups (valuesSource / staticOptions / columns /
+          //     layout): preserve the WHOLE group object so ListGroup
+          //     definitions keep rendering their per-row sub-entries and Add
+          //     button. Headers are hidden via CSS.
+          //  4) Everything else has its `entries` filtered by the whitelist
+          //     and the SURVIVORS are flattened into a single `simple-merged`
+          //     group so the user sees one flat list.
+          const merged: Array<{ id: string }> = [];
+          const passthroughGroups: typeof groups = [];
+          const passthroughSelfGroups: typeof groups = [];
+          for (const g of groups) {
+            if (SIMPLE_MODE_HIDDEN_GROUPS.has(g.id)) continue;
+            if (g.id === 'designer-custom-props' || g.id === 'designer-layout') {
+              passthroughSelfGroups.push(g);
+              continue;
+            }
+            if (SIMPLE_MODE_PASSTHROUGH_GROUPS.has(g.id)) {
+              const hasEntries = (g.entries?.length ?? 0) > 0;
+              const hasItems = (g.items?.length ?? 0) > 0;
+              const hasAdd = typeof (g as { add?: unknown }).add === 'function';
+              if (hasEntries || hasItems || hasAdd) {
+                passthroughGroups.push(g);
+              }
+              continue;
+            }
+            const filtered = (g.entries ?? []).filter((e) => allowed.has(e.id));
+            merged.push(...filtered);
+          }
+          const out: typeof groups = [];
+          if (merged.length > 0) {
+            out.push({ id: 'simple-merged', entries: merged });
+          }
+          out.push(...passthroughGroups);
+          out.push(...passthroughSelfGroups);
+          return out;
+        };
+      },
+    };
   }
 
   /**
@@ -167,12 +286,22 @@ export class PropsPanelService {
         | undefined;
 
       if (propsSchema) {
+        // Simple mode swaps in `simpleRegistry` (i18n → I18nSimpleWidget).
+        const registry =
+          this.currentMode === 'simple' ? this.simpleRegistry : this.fullRegistry;
         let entries: PanelEntry[] = [];
         try {
-          entries = propsSchemaToPanel(propsSchema, this.widgetRegistry);
+          entries = propsSchemaToPanel(propsSchema, registry);
         } catch (err) {
           console.warn('[PropsPanelService] propsSchemaToPanel 실패:', err);
           entries = [];
+        }
+        // Simple mode filters entries by whitelist on PanelEntry.key (before
+        // bio-entry adapter wrapping). Empty result → drop the group entirely
+        // so no stray "Custom properties" header appears.
+        if (this.currentMode === 'simple') {
+          const allowed = getAllowedEntryIds(field.type);
+          entries = entries.filter((e) => allowed.has(e.key));
         }
         if (entries.length > 0) {
           const bioEntries = entries.map((entry) =>
@@ -256,8 +385,11 @@ function splitPath(path: string): { rootKey: string; nestedKey: string } | null 
 void h;
 
 export const PropsPanelModule = {
-  __init__: ['designerPropsProvider'],
-  designerPropsProvider: [
+  // Expose under `propsPanel` so the webview can `editor.get('propsPanel')`
+  // and call `setMode(mode)` from the toggle handler. Matches the host's
+  // designer-editor-host module name for parity.
+  __init__: ['propsPanel'],
+  propsPanel: [
     'type',
     PropsPanelService as unknown as new (...args: unknown[]) => unknown,
   ] as ['type', typeof PropsPanelService],
