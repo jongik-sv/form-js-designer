@@ -23,9 +23,6 @@
       "type": "tabs",
       "components": [
         {
-          "id": "tabPanel_e188cd4b-5d23-42c1-9f61-fcb0f3dc1f2b",
-          "type": "tabPanel",
-          "label": "Tab 1",
           "components": [
             {
               "type": "table",
@@ -34,7 +31,9 @@
                 "columns": null
               },
               "label": "Table",
+              "dataSource": "=Field_1hp1psp",
               "rowCount": 10,
+              "id": "Field_1hp1psp",
               "columns": [
                 {
                   "label": "ID",
@@ -48,9 +47,7 @@
                   "label": "Date",
                   "key": "date"
                 }
-              ],
-              "id": "Field_1hp1psp",
-              "dataSource": "=Field_1hp1psp"
+              ]
             },
             {
               "type": "table",
@@ -59,7 +56,9 @@
                 "columns": null
               },
               "label": "Table",
+              "dataSource": "=Field_1ifkrf6",
               "rowCount": 10,
+              "id": "Field_1ifkrf6",
               "columns": [
                 {
                   "label": "ID",
@@ -73,20 +72,21 @@
                   "label": "Date",
                   "key": "date"
                 }
-              ],
-              "id": "Field_1ifkrf6",
-              "dataSource": "=Field_1ifkrf6"
+              ]
             }
           ],
+          "id": "tabPanel_e188cd4b-5d23-42c1-9f61-fcb0f3dc1f2b",
+          "type": "tabPanel",
+          "label": "Tab 1",
           "layout": {
             "row": "Row_1eer8vw"
           }
         },
         {
+          "components": [],
           "id": "tabPanel_b4b4d268-4363-444b-bd28-3e356d8f1282",
           "type": "tabPanel",
           "label": "Tab 2",
-          "components": [],
           "layout": {
             "row": "Row_0n0lgzk"
           }
@@ -99,6 +99,39 @@
         "columns": null
       },
       "id": "Field_183c5o4"
+    },
+    {
+      "label": "File picker",
+      "type": "filepicker",
+      "layout": {
+        "row": "Row_18uzgkc",
+        "columns": null
+      },
+      "id": "Field_0pfs9kb",
+      "key": "filepicker_sgcxzo",
+      "multiple": true
+    },
+    {
+      "label": "Text field",
+      "type": "textfield",
+      "layout": {
+        "row": "Row_0xcb0ab",
+        "columns": null
+      },
+      "id": "Field_0l67p61",
+      "key": "textfield_e8s86r",
+      "defaultValue": "홍길동"
+    },
+    {
+      "type": "card",
+      "padding": "md",
+      "elevation": 1,
+      "components": [],
+      "layout": {
+        "row": "Row_1sttd4e",
+        "columns": null
+      },
+      "id": "Field_0xxhqay"
     }
   ],
   "type": "default",
