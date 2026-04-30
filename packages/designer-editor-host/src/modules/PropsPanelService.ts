@@ -15,6 +15,8 @@ import {
   createDefaultRegistry,
   getAllowedEntryIds,
   I18nSimpleWidget,
+  SIMPLE_MODE_HIDDEN_GROUPS,
+  SIMPLE_MODE_PASSTHROUGH_GROUPS,
 } from '@form-js-designer/designer-core';
 import type { PanelWidgetRegistry } from '@form-js-designer/designer-core';
 import { LAYOUT_HEIGHT_TARGET_TYPES } from '@form-js-designer/designer-runtime';
@@ -62,7 +64,12 @@ export interface GetGroupsOptions {
   mode?: 'simple' | 'full';
 }
 
-const DESIGNER_PROVIDER_PRIORITY = 500;
+/**
+ * Priority for the native form-js panel filter provider. Above the form-js
+ * default of 1000 so this updater runs after baseline groups have been
+ * populated, allowing us to filter/hide entries in Simple mode.
+ */
+const DESIGNER_NATIVE_FILTER_PRIORITY = 2000;
 
 export class PropsPanelService {
   // `formFields` = 타입 레지스트리 (form-js의 register(type, component) 대상).
@@ -96,14 +103,66 @@ export class PropsPanelService {
     this.simpleRegistry = createDefaultRegistry();
     this.simpleRegistry.register('i18n', I18nSimpleWidget, { overwrite: true });
 
-    // propertiesPanel에 자신을 provider로 등록
-    // 주: bio-properties-panel provider 계약은 getGroups(element) 가 `(groups) => groups` 형태의
-    // updater 함수를 반환해야 한다. 현재 panelEntryAdapter 는 bio 네이티브 entry 타입을 내지 않으므로
-    // 직접 registerProvider 하면 내부에서 "updater is not a function" 으로 패널 전체가 깨진다.
-    // 대신 App.tsx 에서 우리 PropsPanelContainer 가 PropsPanelService.getGroups 를 직접 호출해
-    // 화면 하단에 렌더하는 구조로 분리한다. bio 패널은 form-js 기본 속성만 보여준다.
-    void this.propertiesPanel;
-    void DESIGNER_PROVIDER_PRIORITY;
+    // Task 4: register a native form-js properties panel filter provider.
+    // bio-properties-panel provider contract: getGroups(field, editField) must
+    // return an updater FUNCTION `(groups) => updatedGroups`. Returning a raw
+    // array breaks the entire panel ("updater is not a function").
+    //
+    // The updater reads `this.currentMode` fresh on every call, so `setMode()`
+    // takes effect on the next panel reflow without re-registering. In Simple
+    // mode it hides Condition/CustomProperties groups, passes Layout/columns
+    // through untouched, and filters every other group's entries by
+    // `getAllowedEntryIds(field.type)`. In Full mode it returns groups as-is.
+    //
+    // Self-rendered designer groups (designer-custom-props, designer-layout)
+    // are already filtered upstream in `getGroups()`, so they passthrough here.
+    //
+    // The separate self-rendered PropsPanelContainer (App.tsx) keeps consuming
+    // `getGroups(field, { mode })` directly — that path is unaffected.
+    if (
+      this.propertiesPanel &&
+      typeof (this.propertiesPanel as { registerProvider?: unknown }).registerProvider === 'function'
+    ) {
+      this.propertiesPanel.registerProvider(
+        this._buildNativeFilterProvider(),
+        DESIGNER_NATIVE_FILTER_PRIORITY,
+      );
+    }
+  }
+
+  /**
+   * Build the bio-properties-panel provider that filters native panel groups
+   * in Simple mode. The returned provider's `getGroups(field, _editField)`
+   * MUST return an updater function `(groups) => updatedGroups`.
+   *
+   * `self` is captured so the closure reads `currentMode` live on each call.
+   */
+  private _buildNativeFilterProvider(): {
+    getGroups(
+      field: { type?: string } | null,
+      editField?: unknown,
+    ): (groups: Array<{ id: string; entries?: Array<{ id: string }> }>) => Array<{ id: string; entries?: Array<{ id: string }> }>;
+  } {
+    const self = this;
+    return {
+      getGroups(field, _editField) {
+        return (groups) => {
+          if (self.currentMode === 'full' || !field || !field.type) return groups;
+          const allowed = getAllowedEntryIds(field.type);
+          return groups
+            .filter((g) => !SIMPLE_MODE_HIDDEN_GROUPS.has(g.id))
+            .map((g) => {
+              if (SIMPLE_MODE_PASSTHROUGH_GROUPS.has(g.id)) return g;
+              // Self-rendered designer groups already filtered in getGroups()
+              if (g.id === 'designer-custom-props' || g.id === 'designer-layout') return g;
+              return {
+                ...g,
+                entries: (g.entries ?? []).filter((e) => allowed.has(e.id)),
+              };
+            });
+        };
+      },
+    };
   }
 
   /**

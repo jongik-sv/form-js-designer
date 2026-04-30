@@ -35,6 +35,8 @@ vi.mock('@form-js-designer/designer-core', () => ({
     edit: vi.fn(),
     validate: vi.fn(() => ({ ok: true, errors: [] })),
   },
+  SIMPLE_MODE_HIDDEN_GROUPS: new Set(['condition', 'customProperties']),
+  SIMPLE_MODE_PASSTHROUGH_GROUPS: new Set(['columns']),
 }));
 
 // designer-runtime mock — LAYOUT_HEIGHT_TARGET_TYPES만 필요
@@ -85,9 +87,9 @@ describe('PropsPanelService', () => {
     vi.clearAllMocks();
   });
 
-  // Case 1: bio-properties-panel 과 직접 통합하지 않는다 (updater 계약 불일치로 패널 깨짐).
-  // 호스트의 PropsPanelContainer 가 getGroups 를 직접 호출하는 분리 구조.
-  it('1: propertiesPanel.registerProvider 는 호출되지 않는다', () => {
+  // Case 1 (Task 4): native filter provider 등록 — priority 2000, getGroups 함수 형태.
+  // bio-properties-panel updater 계약: getGroups(field) → (groups) => groups.
+  it('1: propertiesPanel.registerProvider(provider, 2000) 호출 — Task 4 native filter', () => {
     const deps = makeDeps();
     new PropsPanelService(
       deps.eventBus,
@@ -95,7 +97,10 @@ describe('PropsPanelService', () => {
       deps.propertiesPanel,
       deps.modeling,
     );
-    expect(deps.propertiesPanel.registerProvider).not.toHaveBeenCalled();
+    expect(deps.propertiesPanel.registerProvider).toHaveBeenCalledTimes(1);
+    const [provider, priority] = deps.propertiesPanel.registerProvider.mock.calls[0]!;
+    expect(priority).toBe(2000);
+    expect(typeof (provider as { getGroups?: unknown }).getGroups).toBe('function');
   });
 
   // Case 2: propertiesPanel 이 null 이어도 서비스는 정상 구성되어야 한다.
@@ -415,6 +420,141 @@ describe('PropsPanelService', () => {
     );
     expect(() => service.setMode('simple')).not.toThrow();
     expect(() => service.setMode('full')).not.toThrow();
+  });
+
+  // ───────────────────────────────────────────────────────────────────────────
+  // Task 4: native form-js properties panel filter provider
+  // ───────────────────────────────────────────────────────────────────────────
+  describe('PropsPanelService native filter provider', () => {
+    function makePropertiesPanel() {
+      const providers: Array<{ provider: { getGroups: (...a: unknown[]) => unknown }; priority: number }> = [];
+      return {
+        registerProvider: (provider: { getGroups: (...a: unknown[]) => unknown }, priority: number) =>
+          providers.push({ provider, priority }),
+        _providers: providers,
+      };
+    }
+    function makeGroups() {
+      return [
+        { id: 'general',          entries: [{ id: 'label' }, { id: 'description' }, { id: 'key' }] },
+        { id: 'condition',        entries: [{ id: 'conditional-hide' }] },
+        { id: 'customProperties', entries: [{ id: 'properties' }] },
+        { id: 'columns',          entries: [{ id: 'columns' }] },
+        { id: 'validation',       entries: [{ id: 'required' }, { id: 'validationType' }] },
+      ];
+    }
+
+    it('T4-1: registerProvider(provider, 2000) called exactly once at construction', () => {
+      const deps = makeDeps();
+      const pp = makePropertiesPanel();
+      new PropsPanelService(
+        deps.eventBus,
+        deps.formFieldRegistry,
+        pp as unknown as { registerProvider(p: unknown, prio?: number): void },
+        deps.modeling,
+      );
+      expect(pp._providers).toHaveLength(1);
+      expect(pp._providers[0]!.priority).toBe(2000);
+      expect(typeof pp._providers[0]!.provider.getGroups).toBe('function');
+    });
+
+    it('T4-2: mode=full → updater returns groups unchanged', () => {
+      const deps = makeDeps();
+      const pp = makePropertiesPanel();
+      const svc = new PropsPanelService(
+        deps.eventBus,
+        deps.formFieldRegistry,
+        pp as unknown as { registerProvider(p: unknown, prio?: number): void },
+        deps.modeling,
+      );
+      svc.setMode('full');
+      const updater = (pp._providers[0]!.provider.getGroups as (f: unknown, e?: unknown) => (g: unknown[]) => unknown[])(
+        { type: 'textfield' },
+      );
+      expect(typeof updater).toBe('function');
+      const input = makeGroups();
+      expect(updater(input)).toEqual(input);
+    });
+
+    it('T4-3: mode=simple, textfield → general entries filtered to whitelist; condition/customProperties hidden; columns passthrough', () => {
+      const deps = makeDeps();
+      const pp = makePropertiesPanel();
+      const svc = new PropsPanelService(
+        deps.eventBus,
+        deps.formFieldRegistry,
+        pp as unknown as { registerProvider(p: unknown, prio?: number): void },
+        deps.modeling,
+      );
+      svc.setMode('simple');
+      const updater = (pp._providers[0]!.provider.getGroups as (f: unknown, e?: unknown) => (g: unknown[]) => Array<{ id: string; entries: Array<{ id: string }> }>)(
+        { type: 'textfield' },
+      );
+      const groupsIn = makeGroups().map((g) =>
+        g.id === 'general'
+          ? { ...g, entries: [{ id: 'label' }, { id: 'description' }, { id: 'key' }, { id: 'defaultValue' }] }
+          : g,
+      );
+      const out = updater(groupsIn);
+      expect(out.find((g) => g.id === 'condition')).toBeUndefined();
+      expect(out.find((g) => g.id === 'customProperties')).toBeUndefined();
+      expect(out.find((g) => g.id === 'columns')).toBeDefined();
+      const general = out.find((g) => g.id === 'general')!;
+      expect(general.entries.map((e) => e.id)).toEqual(['label', 'defaultValue']);
+    });
+
+    it('T4-4: mode=simple, validation entries filtered: required kept, validationType dropped', () => {
+      const deps = makeDeps();
+      const pp = makePropertiesPanel();
+      const svc = new PropsPanelService(
+        deps.eventBus,
+        deps.formFieldRegistry,
+        pp as unknown as { registerProvider(p: unknown, prio?: number): void },
+        deps.modeling,
+      );
+      svc.setMode('simple');
+      const updater = (pp._providers[0]!.provider.getGroups as (f: unknown, e?: unknown) => (g: unknown[]) => Array<{ id: string; entries: Array<{ id: string }> }>)(
+        { type: 'textfield' },
+      );
+      const out = updater(makeGroups());
+      const validation = out.find((g) => g.id === 'validation')!;
+      expect(validation.entries.map((e) => e.id)).toEqual(['required']);
+    });
+
+    it('T4-5: mode=simple, columns group entries pass through unfiltered', () => {
+      const deps = makeDeps();
+      const pp = makePropertiesPanel();
+      const svc = new PropsPanelService(
+        deps.eventBus,
+        deps.formFieldRegistry,
+        pp as unknown as { registerProvider(p: unknown, prio?: number): void },
+        deps.modeling,
+      );
+      svc.setMode('simple');
+      const updater = (pp._providers[0]!.provider.getGroups as (f: unknown, e?: unknown) => (g: unknown[]) => Array<{ id: string; entries: Array<{ id: string }> }>)(
+        { type: 'group' },
+      );
+      const out = updater(makeGroups());
+      const cols = out.find((g) => g.id === 'columns')!;
+      expect(cols.entries.map((e) => e.id)).toEqual(['columns']);
+    });
+
+    it('T4-6: mode=simple, unregistered field type → general entries filtered to label only (DEFAULT_ALLOWED fallback)', () => {
+      const deps = makeDeps();
+      const pp = makePropertiesPanel();
+      const svc = new PropsPanelService(
+        deps.eventBus,
+        deps.formFieldRegistry,
+        pp as unknown as { registerProvider(p: unknown, prio?: number): void },
+        deps.modeling,
+      );
+      svc.setMode('simple');
+      const updater = (pp._providers[0]!.provider.getGroups as (f: unknown, e?: unknown) => (g: unknown[]) => Array<{ id: string; entries: Array<{ id: string }> }>)(
+        { type: 'unknownX' },
+      );
+      const out = updater(makeGroups());
+      const general = out.find((g) => g.id === 'general')!;
+      expect(general.entries.map((e) => e.id)).toEqual(['label']);
+    });
   });
 
   // Case 13: html, table, group, card, modal, tabs, tabPanel, iframe, image, text도 Layout 그룹 포함
