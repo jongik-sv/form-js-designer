@@ -124,6 +124,61 @@ tiptap embedded modal은 `initialPanelMode: 'simple'` 을 withDesigner가 mountE
 
 ---
 
+---
+
+## feat/inline-label-edit 머지 검증 (2026-04-30)
+
+> 이전 FU-B `279591e` (simplified replica) revert → `feat/inline-label-edit` (32 commits, 풍부한 구현) merge.
+> 복원: tab page 이름, text view feelers popup, card header, datetime dateLabel/timeLabel, button label inline edit.
+>
+> revert commit: `2c0bfcb`  
+> merge commit: `c4992a6`  
+> TS fix commit: `73dd2bb` (Tabs.tsx + InlineLabelEditModule.test.ts 2건 신규 에러 해소)
+
+### 단위테스트 (merge 후)
+
+| 패키지 | 결과 |
+|---|---|
+| `designer-editor-host` | 426/426 passed (33 InlineLabelEdit 포함) |
+| `designer-components` | 185/185 passed |
+| `designer-core` | 257/257 passed |
+| `designer-runtime` | 89/89 passed |
+| `designer-vscode-extension` | 430/430 passed |
+| typecheck (editor-host) | 42 errors (모두 pre-existing, 신규 0) |
+
+### 빌드
+
+| 패키지 | 결과 |
+|---|---|
+| `designer-editor-host` | PASS (1396 KB JS, 154 KB CSS) |
+| `designer-vscode-extension` | PASS (3.0 MB webview/customEditor.js) |
+| `designer-tiptap` | PASS (ESM + DTS) |
+
+### visible Playwright 5×3 시나리오 (2026-04-30)
+
+| 시나리오 | web (5174) | tiptap (5179) | vscode (정적) |
+|---|---|---|---|
+| S1: textfield 라벨 dblclick → "테스트" 입력 + Enter → 라벨 변경 | ✅ | ✅ | ✅ (번들 grep) |
+| S2: tabs 컴포넌트 drop → tab trigger dblclick → 이름 변경 | ✅ | ✅ | ✅ (번들 grep) |
+| S3: text view drop → dblclick → feelers popup 오픈 | ✅ | ✅ | ✅ (번들 grep) |
+| S4: card drop → dblclick → header inline input + 커밋 | ✅ | ✅ | ✅ (번들 grep) |
+| S5: spacer drop → ComponentResizeOverlay 핸들 노출 (FU-A 회귀 없음) | ✅ | ✅ | ✅ (번들 grep) |
+
+**15/15 PASS**
+
+### conflict 처리 내역
+
+| 파일 | 처리 방식 |
+|---|---|
+| `packages/designer-vscode-extension/package.json` | HEAD version `0.1.38` 유지 (feat/inline-label-edit의 `0.1.37` 무시) |
+| `docs/designer/수정대기.md` | 양쪽 추가 항목 모두 보존 (union) |
+
+### 발견 side-effect
+
+1. `packages/designer-components/src/tabs/Tabs.tsx`: `PureRenderProps<TabsSchema>` → `Record<string, unknown>` 직접 캐스트 불가 (TS2352). `as unknown as` 이중 캐스트로 수정 (`73dd2bb`).
+2. `packages/designer-editor-host/src/__tests__/InlineLabelEditModule.test.ts`: `as const` 튜플 캐스트 동일 이슈. `as unknown as` 수정 (`73dd2bb`).
+3. 이전 FU-B `279591e`의 simplified InlineLabelEditModule(단일 파일) 대비 feat/inline-label-edit의 구현은 월등히 풍부함: tab trigger dblclick, text feelers popup, card header, datetime dateLabel/timeLabel, button label, IME guard, portal root 분기, feelers reparenting in embedded modal, Tabs activeId cache, ShortcutModule 추가.
+
 ## 후속 backlog (수정대기.md로 이관)
 
 - form-js native bio-properties-panel 라벨 한국어화 — translate provider 등록 별도 작업
