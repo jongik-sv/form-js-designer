@@ -180,6 +180,43 @@ describe('schemaToOutline', () => {
     expect(result[0]?.label).toBe('Text Only');
   });
 
+  // ----- 6b. i18n object label resolution (FU-5 followup) -----
+  // Defensive resolution for fields whose label is the props-panel `{key, ko}`
+  // shape; without this, OutlinePanel would render the object as a JSX child
+  // and crash Preact ("Objects are not valid as a child").
+  it('resolves i18n object label to ko when present', () => {
+    const schema: FormSchema = {
+      type: 'default',
+      components: [
+        { id: 'f1', type: 'card', label: { key: 'foo', ko: '한글 라벨' } },
+      ],
+    };
+    const result = schemaToOutline(schema);
+    expect(result[0]?.label).toBe('한글 라벨');
+  });
+
+  it('resolves i18n object label to key when ko is empty', () => {
+    const schema: FormSchema = {
+      type: 'default',
+      components: [
+        { id: 'f1', type: 'card', label: { key: 'foo', ko: '' } },
+      ],
+    };
+    const result = schemaToOutline(schema);
+    expect(result[0]?.label).toBe('foo');
+  });
+
+  it('passes through plain string label unchanged', () => {
+    const schema: FormSchema = {
+      type: 'default',
+      components: [
+        { id: 'f1', type: 'card', label: 'plain' },
+      ],
+    };
+    const result = schemaToOutline(schema);
+    expect(result[0]?.label).toBe('plain');
+  });
+
   // ----- 7. 반환값 구조 -----
   it('every node has id, type, children properties', () => {
     const schema: FormSchema = {

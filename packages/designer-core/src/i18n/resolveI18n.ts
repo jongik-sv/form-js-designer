@@ -14,9 +14,9 @@
  *
  * Future: locale parameter for non-Korean (en/ja/...). Currently ko-only.
  */
-export type I18nValue = string | { key?: string; ko?: string } | null | undefined;
+export type ResolvableI18nValue = string | { key?: string; ko?: string } | null | undefined;
 
-export function resolveI18n(value: I18nValue): string {
+export function resolveI18n(value: ResolvableI18nValue): string {
   if (value == null) return '';
   if (typeof value === 'string') return value;
   if (typeof value === 'object') {
