@@ -22,9 +22,14 @@ describe('SIMPLE_MODE_WHITELIST', () => {
     );
     expect(SIMPLE_MODE_WHITELIST.card.size).toBe(4);
   });
-  it('tabs/separator는 빈 set', () => {
-    expect(SIMPLE_MODE_WHITELIST.tabs.size).toBe(0);
+  it('separator는 빈 set', () => {
     expect(SIMPLE_MODE_WHITELIST.separator.size).toBe(0);
+  });
+  it('tabs는 defaultValue 포함', () => {
+    expect(SIMPLE_MODE_WHITELIST.tabs.has('defaultValue')).toBe(true);
+  });
+  it('getAllowedEntryIds(tabs).has(defaultValue) === true', () => {
+    expect(getAllowedEntryIds('tabs').has('defaultValue')).toBe(true);
   });
   it('HIDDEN_GROUPS = condition + customProperties', () => {
     expect(SIMPLE_MODE_HIDDEN_GROUPS.has('condition')).toBe(true);

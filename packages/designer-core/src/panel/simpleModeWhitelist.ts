@@ -26,7 +26,7 @@ const WHITELIST = {
   chartPlaceholder: new Set(['chartType','title','description']),
   modal:            new Set(['title','triggerLabel','size']),
   tabPanel:         new Set(['label']),
-  tabs:             new Set<string>([]),
+  tabs:             new Set(['defaultValue']),
   tree:             new Set(['dataSource','expandedByDefault','showGuides']),
 } satisfies Record<string, ReadonlySet<string>>;
 
