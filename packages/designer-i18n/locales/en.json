@@ -52,5 +52,31 @@
   "designer.components.chartPlaceholder.types.horizontalBar": "Horizontal bar",
   "designer.components.chartPlaceholder.types.gauge":         "Gauge",
   "designer.components.chartPlaceholder.types.heatmap":       "Heatmap",
-  "designer.components.chartPlaceholder.types.treemap":       "Treemap"
+  "designer.components.chartPlaceholder.types.treemap":       "Treemap",
+
+  "designer.components.card.padding":    "Padding",
+  "designer.components.card.elevation":  "Elevation",
+  "designer.components.card.header":     "Header",
+  "designer.components.card.headerTag":  "Header tag",
+
+  "designer.components.modal.title":              "Title",
+  "designer.components.modal.description":        "Description",
+  "designer.components.modal.triggerLabel":        "Button label",
+  "designer.components.modal.size":               "Size",
+  "designer.components.modal.portalContainerRef": "Portal container ref",
+
+  "designer.components.tabs.defaultValue": "Default tab",
+  "designer.components.tabs.orientation":  "Orientation",
+
+  "designer.components.tree.label":            "Label",
+  "designer.components.tree.dataSource":       "Data source",
+  "designer.components.tree.labelKey":         "Label key",
+  "designer.components.tree.childrenKey":      "Children key",
+  "designer.components.tree.expandedByDefault": "Expanded by default",
+  "designer.components.tree.showGuides":       "Show guide lines",
+
+  "designer.components.image.imageSource": "Image source",
+  "designer.components.image.altText":     "Alt text",
+
+  "designer.components.table.staticColumns": "Static columns"
 }

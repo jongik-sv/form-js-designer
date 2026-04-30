@@ -52,5 +52,31 @@
   "designer.components.chartPlaceholder.types.horizontalBar": "가로막대",
   "designer.components.chartPlaceholder.types.gauge":         "게이지",
   "designer.components.chartPlaceholder.types.heatmap":       "히트맵",
-  "designer.components.chartPlaceholder.types.treemap":       "트리맵"
+  "designer.components.chartPlaceholder.types.treemap":       "트리맵",
+
+  "designer.components.card.padding":    "여백",
+  "designer.components.card.elevation":  "그림자",
+  "designer.components.card.header":     "제목",
+  "designer.components.card.headerTag":  "제목 태그",
+
+  "designer.components.modal.title":              "제목",
+  "designer.components.modal.description":        "설명",
+  "designer.components.modal.triggerLabel":        "버튼 라벨",
+  "designer.components.modal.size":               "크기",
+  "designer.components.modal.portalContainerRef": "포털 컨테이너 참조",
+
+  "designer.components.tabs.defaultValue": "기본 탭",
+  "designer.components.tabs.orientation":  "방향",
+
+  "designer.components.tree.label":            "라벨",
+  "designer.components.tree.dataSource":       "데이터 소스",
+  "designer.components.tree.labelKey":         "라벨 키",
+  "designer.components.tree.childrenKey":      "자식 키",
+  "designer.components.tree.expandedByDefault": "기본 펼침",
+  "designer.components.tree.showGuides":       "가이드 선 표시",
+
+  "designer.components.image.imageSource": "이미지 소스",
+  "designer.components.image.altText":     "대체 텍스트",
+
+  "designer.components.table.staticColumns": "정적 컬럼"
 }

@@ -152,11 +152,11 @@ dev-test 단계에서 검증할 항목. 각 항목은 pass/fail로 판정 가능
 - [ ] (시각) form-js native 그룹과 designer 그룹의 padding/border/font/hover 시각 일치 — 스크린샷 비교
 
 **FU-E i18n 라벨:**
-- [ ] (정상) Image View 선택 → Properties에 `이미지 소스`, `대체 텍스트` 한국어 라벨
-- [ ] (정상) Chart Placeholder 선택 → `차트 종류`, `제목`, `설명` 한국어 라벨
-- [ ] (정상) Table 선택 → `라벨`, `데이터 소스`, `정적 컬럼` 한국어 라벨
-- [ ] (자동) `npm --prefix packages/designer-i18n run i18n:check` exit 0
-- [ ] (회귀) 기존 라벨(card.header, modal.title 등) 변경 없음
+- [x] (정상) Image View 선택 → Properties에 `이미지 소스`, `대체 텍스트` 한국어 라벨
+- [x] (정상) Chart Placeholder 선택 → `차트 종류`, `제목`, `설명` 한국어 라벨
+- [x] (정상) Table 선택 → `라벨`, `데이터 소스`, `정적 컬럼` 한국어 라벨
+- [x] (자동) `npm --prefix packages/designer-i18n run i18n:check` exit 0
+- [x] (회귀) 기존 라벨(card.header, modal.title 등) 변경 없음
 
 **FU-G 3타겟 회귀:**
 - [ ] (베이스라인) 변경 전 web/tiptap/vscode 12개 시나리오 visible Playwright 스크린샷 캡처 → `regression-baseline.md` 기록
