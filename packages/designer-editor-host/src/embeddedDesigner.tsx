@@ -16,6 +16,7 @@ import { PropsPanelService } from './modules/PropsPanelService';
 import { LivePreviewModule } from './modules/LivePreviewModule';
 import { ValidateModule } from './modules/ValidateModule';
 import { ExportModule } from './modules/ExportModule';
+import { ComponentResizeOverlay } from './components/ComponentResizeOverlay';
 import { PropsPanelContainer } from './components/PropsPanelContainer';
 import { LeftRailTabs, type LeftRailTab } from './components/LeftRailTabs';
 import { installPropsPanelFocusGuard } from './hooks/usePropsPanelFocusGuard';
@@ -151,6 +152,11 @@ export async function mountEmbeddedEditorModal(
     const outlineRef = useRef<HTMLDivElement>(null);
     const paletteSlotRef = useRef<HTMLDivElement>(null);
     const propsRef = useRef<HTMLDivElement>(null);
+    // TSK-12-02: ref to expose editorInstance into JSX for ComponentResizeOverlay.
+    // editorInstance (outer closure let) is assigned before setServices() triggers
+    // re-render, so copying it into a ref here keeps the value stable across renders
+    // without creating a second source of truth.
+    const editorInstanceRef = useRef<FormEditorInstance | null>(null);
     // designer-components 전용 props 서비스 — importSchema 완료 후 setState로
     // 채워서 PropsPanelContainer 가 selection.changed 를 수신하도록 한다.
     const [services, setServices] = useState<{
@@ -196,6 +202,7 @@ export async function mountEmbeddedEditorModal(
           propertiesPanel: { parent: offscreenPropsParent },
         } as ConstructorParameters<typeof FormEditor>[0]) as unknown as FormEditorInstance;
         editorInstance = editor;
+        editorInstanceRef.current = editor;
         editor
           .importSchema(migrateLegacyTabsSchema(initialSchema))
           .then(() => {
@@ -260,6 +267,7 @@ export async function mountEmbeddedEditorModal(
         attachedPropsPanel = null;
         try { editorInstance?.destroy(); } catch { /* ignore */ }
         editorInstance = null;
+        editorInstanceRef.current = null;
       };
     }, []);
 
@@ -299,6 +307,12 @@ export async function mountEmbeddedEditorModal(
             ),
           ),
           h('div', { class: `${CANVAS_CLASS} editor-container`, ref: editorRef }),
+          // TSK-12-02: ComponentResizeOverlay — mirrors App.tsx line 322-324.
+          // services.eventBus 를 조건으로 사용: setServices() 트리거 시점에
+          // editorInstanceRef.current 도 반드시 채워져 있음이 보장된다.
+          services.eventBus && editorInstanceRef.current
+            ? h(ComponentResizeOverlay, { editor: editorInstanceRef.current as { get(svc: string, required?: boolean): unknown } })
+            : null,
         ),
       ),
       h(

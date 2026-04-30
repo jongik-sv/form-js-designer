@@ -3,6 +3,9 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 // Capture the mock PropsPanelService instance so tests can inspect setMode calls
 let mockPropsPanelSvcInstance: { setMode: ReturnType<typeof vi.fn> } | null = null;
 
+// Shared mock eventBus — used to trigger re-renders that surface ComponentResizeOverlay
+const mockEventBus = { on: vi.fn(), off: vi.fn() };
+
 vi.mock('@bpmn-io/form-js-editor', () => ({
   FormEditor: class {
     importSchema = vi.fn().mockResolvedValue(undefined);
@@ -15,6 +18,7 @@ vi.mock('@bpmn-io/form-js-editor', () => ({
         }
         return mockPropsPanelSvcInstance;
       }
+      if (key === 'eventBus') return mockEventBus;
       return undefined;
     });
   },
@@ -181,5 +185,24 @@ describe('mountEmbeddedEditorModal', () => {
       expect(mockPropsPanelSvcInstance.setMode).toHaveBeenCalledWith('simple');
     }
     handle.destroy();
+  });
+
+  // ─── TSK-12-02: ComponentResizeOverlay mount regression guard ─────────────
+
+  it('TSK-12-02: ComponentResizeOverlay is mounted inside embedded modal after importSchema', async () => {
+    // The overlay renders a hidden sentinel div when no field is selected.
+    // It is only rendered after setServices() triggers a re-render (eventBus + editorInstance).
+    await mountEmbeddedEditorModal({
+      container,
+      initialSchema: { type: 'default', components: [] },
+      onSave: () => {},
+    });
+    // Wait for importSchema microtask + setServices state update
+    await Promise.resolve();
+    await Promise.resolve();
+    // ComponentResizeOverlay renders a sentinel div with data-testid when no field is selected
+    expect(
+      container.querySelector('[data-testid="component-resize-overlay-mounted"]'),
+    ).toBeTruthy();
   });
 });
