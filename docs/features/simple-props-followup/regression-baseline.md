@@ -43,6 +43,55 @@
 
 2. **회귀 #2 후보**: console 1건 `Hook can only be invoked from render methods` (preact strict 경고). 화면 동작 영향 없음, dev 모드 노이즈로 분류.
 
+## VSCode Extension 정적 검증 (branch feat/simple-props-panel, 2026-04-30)
+
+### 빌드 결과
+
+| 파일 | 크기 | 상태 |
+|---|---|---|
+| `dist/extension.cjs` | 37.5 KB | PASS |
+| `dist/webview/customEditor.js` | 3.0 MB | PASS |
+| `dist/webview/customEditor.css` | 12.9 KB | PASS |
+| 빌드 exit code | 0 | PASS |
+| stderr 신규 에러 | 없음 (import.meta iife 경고 2건은 pre-existing) | PASS |
+
+### 번들 정적 grep 결과
+
+| 항목 | 검증 내용 | 결과 |
+|---|---|---|
+| FU-A | `LAYOUT_HEIGHT_TARGET_TYPES` + 19종 타입(`chartPlaceholder`, `tree`, `spacer`, `textarea`, `html`, `table`, `group`, `card`, `modal`, `tabs`, `tabPanel`, `iframe`, `image`, `text`) 모두 번들에 존재 | PASS |
+| FU-B | `InlineLabelEditModule`, `InlineLabelEditService`, `inline-label-edit`, `fjs-form-field-label`, `fjs-inline-label-edit-input` 번들에 존재 | PASS |
+| FU-C | `currentPanelMode: PanelMode = 'simple'` — 소스 정적 확인, sessionStorage 무시하고 항상 Simple 기동 | PASS |
+| FU-D (JS) | `fjs-inline-label-edit-input` JS에서 programmatic class 할당 확인 | PASS |
+| FU-D (CSS) | `bio-properties-panel-group-entries` / `bio-properties-panel-group-header` 규칙이 `media/form-js-editor-host.css`에 4건 포함 (webview HTML 로드 순서 9번째) | PASS |
+| FU-E | `ko.json` / `en.json` 에 `image`, `table`, `chartPlaceholder`, `card`, `modal`, `tabs`, `tree` 컴포넌트 키 포함 (en.json 35건, ko.json 30건+) | PASS |
+| Node-only API 혼입 | `require("fs")` / `require("path")` / `node:fs` / `node:path` — webview 번들에서 0건 | PASS |
+| hotfix(5bd6474) | `designer-i18n/src/index.ts` 에서 `scripts/*` export 제거 확인 — `createT`, `createKoT`, `formatNumber/Date/DateTime` 만 export | PASS |
+
+### CSP / NODE_ENV 정적 검증
+
+| 항목 | 결과 |
+|---|---|
+| CSP `unsafe-eval` 없음 | `script-src 'nonce-...' ${cspSource}` — `unsafe-eval` 미포함 (PASS) |
+| `process.env.NODE_ENV` define `"production"` | esbuild.config.mjs `define: { 'process.env.NODE_ENV': '"production"' }` 확인 (PASS) |
+| `globalThis.process` 폴리필 banner | IIFE 상단 banner 확인 (PASS) |
+| react → preact/compat alias | esbuild `alias` 설정 확인 (PASS) |
+
+### VSIX 패키징 결과
+
+| 항목 | 값 |
+|---|---|
+| 파일명 | `designer-vscode-extension-0.1.39.vsix` |
+| 파일 크기 | 1.2 MB (22 files) |
+| unscoped rename 패턴 | `@form-js-designer/designer-vscode-extension` → `designer-vscode-extension` → 복원 (PASS) |
+| 포함 파일 | `dist/extension.cjs`, `dist/webview/customEditor.{js,css}`, `dist/webview/preview.{js,css}`, `media/*.css` (11개) |
+
+### 발견 회귀 / 미적용 항목
+
+없음. 모든 FU 항목(A~E) 번들 적용 확인. designer-i18n hotfix(5bd6474)도 vscode 번들에 정상 반영됨(`scripts/*` export 없음, `require("fs")` 0건).
+
+---
+
 ## 후속 backlog (수정대기.md로 이관)
 
 - form-js native bio-properties-panel 라벨 한국어화 — translate provider 등록 별도 작업
