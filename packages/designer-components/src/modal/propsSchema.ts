@@ -1,11 +1,11 @@
-import type { PropsSchema } from '@form-js-designer/designer-core';
+import type { PropsSchema, ResolvableI18nValue } from '@form-js-designer/designer-core';
 
 export interface ModalSchema {
   id: string;
   type: 'modal';
-  title: string;
-  description?: string;
-  triggerLabel?: string;
+  title: ResolvableI18nValue;
+  description?: ResolvableI18nValue;
+  triggerLabel?: ResolvableI18nValue;
   size?: 'sm' | 'md' | 'lg';
   portalContainerRef?: string;
   components?: Array<{ id: string } & Record<string, unknown>>;
