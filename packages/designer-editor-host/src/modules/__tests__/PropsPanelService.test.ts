@@ -35,8 +35,16 @@ vi.mock('@form-js-designer/designer-core', () => ({
     edit: vi.fn(),
     validate: vi.fn(() => ({ ok: true, errors: [] })),
   },
-  SIMPLE_MODE_HIDDEN_GROUPS: new Set(['condition', 'customProperties']),
-  SIMPLE_MODE_PASSTHROUGH_GROUPS: new Set(['columns']),
+  SIMPLE_MODE_HIDDEN_GROUPS: new Set([
+    'condition', 'customProperties', 'custom-values',
+    'appearance', 'serialization', 'constraints', 'security',
+    'group-condition', 'group-customProperties', 'group-custom-values',
+    'group-appearance', 'group-serialization', 'group-constraints', 'group-security',
+  ]),
+  SIMPLE_MODE_PASSTHROUGH_GROUPS: new Set([
+    'columns', 'layout',
+    'group-columns', 'group-layout',
+  ]),
 }));
 
 // designer-runtime mock — LAYOUT_HEIGHT_TARGET_TYPES만 필요
@@ -87,9 +95,9 @@ describe('PropsPanelService', () => {
     vi.clearAllMocks();
   });
 
-  // Case 1 (Task 4): native filter provider 등록 — priority 2000, getGroups 함수 형태.
+  // Case 1 (Task 4): native filter provider 등록 — priority 500, getGroups 함수 형태.
   // bio-properties-panel updater 계약: getGroups(field) → (groups) => groups.
-  it('1: propertiesPanel.registerProvider(provider, 2000) 호출 — Task 4 native filter', () => {
+  it('1: propertiesPanel.registerProvider(provider, 500) 호출 — Task 4 native filter', () => {
     const deps = makeDeps();
     new PropsPanelService(
       deps.eventBus,
@@ -99,7 +107,7 @@ describe('PropsPanelService', () => {
     );
     expect(deps.propertiesPanel.registerProvider).toHaveBeenCalledTimes(1);
     const [provider, priority] = deps.propertiesPanel.registerProvider.mock.calls[0]!;
-    expect(priority).toBe(2000);
+    expect(priority).toBe(500);
     expect(typeof (provider as { getGroups?: unknown }).getGroups).toBe('function');
   });
 
@@ -444,7 +452,7 @@ describe('PropsPanelService', () => {
       ];
     }
 
-    it('T4-1: registerProvider(provider, 2000) called exactly once at construction', () => {
+    it('T4-1: registerProvider(provider, 500) called exactly once at construction', () => {
       const deps = makeDeps();
       const pp = makePropertiesPanel();
       new PropsPanelService(
@@ -454,7 +462,7 @@ describe('PropsPanelService', () => {
         deps.modeling,
       );
       expect(pp._providers).toHaveLength(1);
-      expect(pp._providers[0]!.priority).toBe(2000);
+      expect(pp._providers[0]!.priority).toBe(500);
       expect(typeof pp._providers[0]!.provider.getGroups).toBe('function');
     });
 
@@ -476,7 +484,7 @@ describe('PropsPanelService', () => {
       expect(updater(input)).toEqual(input);
     });
 
-    it('T4-3: mode=simple, textfield → general entries filtered to whitelist; condition/customProperties hidden; columns passthrough', () => {
+    it('T4-3: mode=simple, textfield → all entries merged into single simple-merged group; condition/customProperties hidden', () => {
       const deps = makeDeps();
       const pp = makePropertiesPanel();
       const svc = new PropsPanelService(
@@ -497,12 +505,13 @@ describe('PropsPanelService', () => {
       const out = updater(groupsIn);
       expect(out.find((g) => g.id === 'condition')).toBeUndefined();
       expect(out.find((g) => g.id === 'customProperties')).toBeUndefined();
-      expect(out.find((g) => g.id === 'columns')).toBeDefined();
-      const general = out.find((g) => g.id === 'general')!;
-      expect(general.entries.map((e) => e.id)).toEqual(['label', 'defaultValue']);
+      expect(out.find((g) => g.id === 'general')).toBeUndefined();
+      expect(out.find((g) => g.id === 'columns')).toBeUndefined();
+      const merged = out.find((g) => g.id === 'simple-merged')!;
+      expect(merged.entries.map((e) => e.id)).toEqual(['label', 'defaultValue', 'columns', 'required']);
     });
 
-    it('T4-4: mode=simple, validation entries filtered: required kept, validationType dropped', () => {
+    it('T4-4: mode=simple, validation entries filtered into merged group — required kept, validationType dropped', () => {
       const deps = makeDeps();
       const pp = makePropertiesPanel();
       const svc = new PropsPanelService(
@@ -516,11 +525,13 @@ describe('PropsPanelService', () => {
         { type: 'textfield' },
       );
       const out = updater(makeGroups());
-      const validation = out.find((g) => g.id === 'validation')!;
-      expect(validation.entries.map((e) => e.id)).toEqual(['required']);
+      const merged = out.find((g) => g.id === 'simple-merged')!;
+      const ids = merged.entries.map((e) => e.id);
+      expect(ids).toContain('required');
+      expect(ids).not.toContain('validationType');
     });
 
-    it('T4-5: mode=simple, columns group entries pass through unfiltered', () => {
+    it('T4-5: mode=simple, columns group entries merged into simple-merged unfiltered', () => {
       const deps = makeDeps();
       const pp = makePropertiesPanel();
       const svc = new PropsPanelService(
@@ -534,11 +545,11 @@ describe('PropsPanelService', () => {
         { type: 'group' },
       );
       const out = updater(makeGroups());
-      const cols = out.find((g) => g.id === 'columns')!;
-      expect(cols.entries.map((e) => e.id)).toEqual(['columns']);
+      const merged = out.find((g) => g.id === 'simple-merged')!;
+      expect(merged.entries.map((e) => e.id)).toContain('columns');
     });
 
-    it('T4-6: mode=simple, unregistered field type → general entries filtered to label only (DEFAULT_ALLOWED fallback)', () => {
+    it('T4-6: mode=simple, unregistered field type → simple-merged with label only (DEFAULT_ALLOWED fallback) plus passthrough columns', () => {
       const deps = makeDeps();
       const pp = makePropertiesPanel();
       const svc = new PropsPanelService(
@@ -552,8 +563,8 @@ describe('PropsPanelService', () => {
         { type: 'unknownX' },
       );
       const out = updater(makeGroups());
-      const general = out.find((g) => g.id === 'general')!;
-      expect(general.entries.map((e) => e.id)).toEqual(['label']);
+      const merged = out.find((g) => g.id === 'simple-merged')!;
+      expect(merged.entries.map((e) => e.id)).toEqual(['label', 'columns']);
     });
   });
 

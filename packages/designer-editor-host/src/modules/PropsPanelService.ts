@@ -69,7 +69,13 @@ export interface GetGroupsOptions {
  * default of 1000 so this updater runs after baseline groups have been
  * populated, allowing us to filter/hide entries in Simple mode.
  */
-const DESIGNER_NATIVE_FILTER_PRIORITY = 2000;
+// bio-properties-panel applies providers via reduce in descending priority
+// order: a higher-priority provider sees an EARLIER (often empty) groups
+// array, while lower-priority providers see the accumulated groups built by
+// earlier ones. Filtering must happen AFTER form-js's default provider
+// (priority 1000) has populated the group list, so this filter must run at
+// a LOWER priority than 1000.
+const DESIGNER_NATIVE_FILTER_PRIORITY = 500;
 
 export class PropsPanelService {
   // `formFields` = 타입 레지스트리 (form-js의 register(type, component) 대상).
@@ -149,17 +155,33 @@ export class PropsPanelService {
         return (groups) => {
           if (self.currentMode === 'full' || !field || !field.type) return groups;
           const allowed = getAllowedEntryIds(field.type);
-          return groups
-            .filter((g) => !SIMPLE_MODE_HIDDEN_GROUPS.has(g.id))
-            .map((g) => {
-              if (SIMPLE_MODE_PASSTHROUGH_GROUPS.has(g.id)) return g;
-              // Self-rendered designer groups already filtered in getGroups()
-              if (g.id === 'designer-custom-props' || g.id === 'designer-layout') return g;
-              return {
-                ...g,
-                entries: (g.entries ?? []).filter((e) => allowed.has(e.id)),
-              };
-            });
+
+          // Simple mode collapses every native form-js group (General, Layout,
+          // Validation, ...) into one merged 'Properties' group so the panel
+          // shows a single flat list without group headers. Hidden groups
+          // (Condition / CustomProperties / Appearance / ...) drop entirely.
+          // Layout's `columns` is included via passthrough. Self-rendered
+          // designer groups (designer-custom-props / designer-layout) come
+          // from a different path and stay as-is.
+          const merged: Array<{ id: string }> = [];
+          const passthroughSelfGroups: typeof groups = [];
+          for (const g of groups) {
+            if (SIMPLE_MODE_HIDDEN_GROUPS.has(g.id)) continue;
+            if (g.id === 'designer-custom-props' || g.id === 'designer-layout') {
+              passthroughSelfGroups.push(g);
+              continue;
+            }
+            const entries = SIMPLE_MODE_PASSTHROUGH_GROUPS.has(g.id)
+              ? (g.entries ?? [])
+              : (g.entries ?? []).filter((e) => allowed.has(e.id));
+            merged.push(...entries);
+          }
+          const out: typeof groups = [];
+          if (merged.length > 0) {
+            out.push({ id: 'simple-merged', entries: merged });
+          }
+          out.push(...passthroughSelfGroups);
+          return out;
         };
       },
     };

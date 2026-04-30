@@ -36,11 +36,24 @@ type SimpleModeWhitelist = Readonly<{ [K in keyof typeof WHITELIST]: ReadonlySet
 
 export const SIMPLE_MODE_WHITELIST: SimpleModeWhitelist = WHITELIST as SimpleModeWhitelist;
 
-export const SIMPLE_MODE_HIDDEN_GROUPS: ReadonlySet<string> =
-  new Set(['condition','customProperties']);
+// form-js native group ids vary by version: some use plain ids ('condition',
+// 'custom-values', 'layout'), others use the `group-` prefix
+// ('group-condition', 'group-custom-values', 'group-layout'). Both forms are
+// listed here so the filter works across versions without per-release patches.
+// Per properties-panel-cleanup.md §7: Condition / Appearance(adorner) /
+// Serialization / Constraints / Security / Custom properties are hidden in
+// Simple mode regardless of their entry contents.
+export const SIMPLE_MODE_HIDDEN_GROUPS: ReadonlySet<string> = new Set([
+  'condition', 'customProperties', 'custom-values',
+  'appearance', 'serialization', 'constraints', 'security',
+  'group-condition', 'group-customProperties', 'group-custom-values',
+  'group-appearance', 'group-serialization', 'group-constraints', 'group-security',
+]);
 
-export const SIMPLE_MODE_PASSTHROUGH_GROUPS: ReadonlySet<string> =
-  new Set(['columns']);
+export const SIMPLE_MODE_PASSTHROUGH_GROUPS: ReadonlySet<string> = new Set([
+  'columns', 'layout',
+  'group-columns', 'group-layout',
+]);
 
 export const SIMPLE_MODE_DEFAULT_ALLOWED: ReadonlySet<string> = new Set(['label']);
 
