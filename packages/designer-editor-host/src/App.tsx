@@ -360,7 +360,12 @@ export function App(): h.JSX.Element {
           <div class="props-panel-stack" data-testid="props-stack">
             <PropsPanelModeToggle mode={panelMode} onChange={setPanelMode} />
             {/* 기본 form-js 속성 (General/Condition/Layout/Validation/Custom) */}
-            <div ref={nativePropsPanelRef} class="props-panel-native" data-testid="props-native" />
+            <div
+              ref={nativePropsPanelRef}
+              class="props-panel-native"
+              data-testid="props-native"
+              data-mode={panelMode}
+            />
             {/* designer-components 전용 속성 (padding, orientation, ...) */}
             <PropsPanelContainer
               propsPanelService={services.propsPanel}

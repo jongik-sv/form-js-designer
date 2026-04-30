@@ -526,6 +526,69 @@
     display: block !important;
   }
 
+  /* Simple mode passthrough groups (valuesSource / staticOptions / columns
+     / layout) — preserve the bio-properties-panel-rendered group component
+     (Group / ListGroup) so list-style entries with per-row sub-fields and
+     the Add button keep working, but hide the group header label so users
+     see one flat list. ListGroup keeps its own Add button which is rendered
+     in the header — to retain it we hide only the title row, not the entire
+     header. We also force the entries/items container open so users don't
+     need to click an invisible header to expand. */
+  .props-panel-native[data-mode="simple"]
+    [data-group-id="group-valuesSource"]
+    > .bio-properties-panel-group-header,
+  .props-panel-native[data-mode="simple"]
+    [data-group-id="group-columns"]
+    > .bio-properties-panel-group-header,
+  .props-panel-native[data-mode="simple"]
+    [data-group-id="group-layout"]
+    > .bio-properties-panel-group-header {
+    display: none !important;
+  }
+  .props-panel-native[data-mode="simple"]
+    [data-group-id="group-valuesSource"]
+    > .bio-properties-panel-group-entries,
+  .props-panel-native[data-mode="simple"]
+    [data-group-id="group-columns"]
+    > .bio-properties-panel-group-entries,
+  .props-panel-native[data-mode="simple"]
+    [data-group-id="group-layout"]
+    > .bio-properties-panel-group-entries {
+    display: block !important;
+  }
+  /* staticOptions is a ListGroup — hide the group title text but keep the
+     Add ("+") button visible since users need it to add rows. We hide the
+     `*-group-header-title` and the toggle arrow. The `bio-properties-panel-list`
+     container is `display:none` by default and only becomes `display:block`
+     when the .open class is added (toggled by the hidden header click). We
+     force-show it in Simple mode so rows are always visible. */
+  .props-panel-native[data-mode="simple"]
+    [data-group-id="group-staticOptions"]
+    > .bio-properties-panel-group-header
+    > .bio-properties-panel-group-header-title {
+    display: none !important;
+  }
+  .props-panel-native[data-mode="simple"]
+    [data-group-id="group-staticOptions"]
+    > .bio-properties-panel-group-header
+    .bio-properties-panel-arrow {
+    display: none !important;
+  }
+  .props-panel-native[data-mode="simple"]
+    [data-group-id="group-staticOptions"]
+    > .bio-properties-panel-group-header {
+    /* keep the header row so the "+" Add button remains; just trim the
+       chrome and let the buttons sit flush right. */
+    cursor: default !important;
+    padding-block: 4px !important;
+    border-bottom: none !important;
+  }
+  .props-panel-native[data-mode="simple"]
+    [data-group-id="group-staticOptions"]
+    > .bio-properties-panel-list {
+    display: block !important;
+  }
+
   .props-panel--empty {
     padding: 16px 12px;
     color: #666;

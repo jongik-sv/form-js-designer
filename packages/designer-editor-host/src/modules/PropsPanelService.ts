@@ -147,7 +147,9 @@ export class PropsPanelService {
     getGroups(
       field: { type?: string } | null,
       editField?: unknown,
-    ): (groups: Array<{ id: string; entries?: Array<{ id: string }> }>) => Array<{ id: string; entries?: Array<{ id: string }> }>;
+    ): (
+      groups: Array<{ id: string; entries?: Array<{ id: string }>; items?: unknown[]; component?: unknown }>,
+    ) => Array<{ id: string; entries?: Array<{ id: string }>; items?: unknown[]; component?: unknown }>;
   } {
     const self = this;
     return {
@@ -156,14 +158,25 @@ export class PropsPanelService {
           if (self.currentMode === 'full' || !field || !field.type) return groups;
           const allowed = getAllowedEntryIds(field.type);
 
-          // Simple mode collapses every native form-js group (General, Layout,
-          // Validation, ...) into one merged 'Properties' group so the panel
-          // shows a single flat list without group headers. Hidden groups
-          // (Condition / CustomProperties / Appearance / ...) drop entirely.
-          // Layout's `columns` is included via passthrough. Self-rendered
-          // designer groups (designer-custom-props / designer-layout) come
-          // from a different path and stay as-is.
+          // Simple mode strategy:
+          //  1) Hidden groups (Condition / CustomProperties / Appearance / ...)
+          //     drop entirely.
+          //  2) Self-rendered designer groups (designer-custom-props,
+          //     designer-layout) passthrough untouched.
+          //  3) Passthrough groups (valuesSource / staticOptions / columns / layout):
+          //     preserve the WHOLE group object — `component` (Group/ListGroup),
+          //     `items`, `add`, `entries`, `label`, `tooltip`, … — so that
+          //     ListGroup definitions like `staticOptions` keep rendering
+          //     their per-row sub-entries and Add button. Headers for these
+          //     groups are hidden via CSS (see app.css). Empty passthrough
+          //     groups are dropped to avoid stray empty headers.
+          //  4) Everything else has its `entries` filtered by the whitelist
+          //     and the SURVIVORS are flattened into a single `simple-merged`
+          //     group so the user sees one flat list (label, defaultValue,
+          //     required, ...). Group `component` is intentionally omitted
+          //     so bio-properties-panel renders the default Group component.
           const merged: Array<{ id: string }> = [];
+          const passthroughGroups: typeof groups = [];
           const passthroughSelfGroups: typeof groups = [];
           for (const g of groups) {
             if (SIMPLE_MODE_HIDDEN_GROUPS.has(g.id)) continue;
@@ -171,15 +184,26 @@ export class PropsPanelService {
               passthroughSelfGroups.push(g);
               continue;
             }
-            const entries = SIMPLE_MODE_PASSTHROUGH_GROUPS.has(g.id)
-              ? (g.entries ?? [])
-              : (g.entries ?? []).filter((e) => allowed.has(e.id));
-            merged.push(...entries);
+            if (SIMPLE_MODE_PASSTHROUGH_GROUPS.has(g.id)) {
+              const hasEntries = (g.entries?.length ?? 0) > 0;
+              const hasItems = (g.items?.length ?? 0) > 0;
+              const hasAdd = typeof (g as { add?: unknown }).add === 'function';
+              // Keep ListGroup-style groups even when items is empty as long
+              // as they expose an `add` button (so users can create rows);
+              // drop plain Group passthroughs that have no entries at all.
+              if (hasEntries || hasItems || hasAdd) {
+                passthroughGroups.push(g);
+              }
+              continue;
+            }
+            const filtered = (g.entries ?? []).filter((e) => allowed.has(e.id));
+            merged.push(...filtered);
           }
           const out: typeof groups = [];
           if (merged.length > 0) {
             out.push({ id: 'simple-merged', entries: merged });
           }
+          out.push(...passthroughGroups);
           out.push(...passthroughSelfGroups);
           return out;
         };

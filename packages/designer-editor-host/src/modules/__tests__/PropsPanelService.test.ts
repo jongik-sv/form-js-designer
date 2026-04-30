@@ -486,7 +486,7 @@ describe('PropsPanelService', () => {
       expect(updater(input)).toEqual(input);
     });
 
-    it('T4-3: mode=simple, textfield → all entries merged into single simple-merged group; condition/customProperties hidden', () => {
+    it('T4-3: mode=simple, textfield → whitelist entries merged into simple-merged group; condition/customProperties hidden; passthrough groups (columns) kept as separate groups', () => {
       const deps = makeDeps();
       const pp = makePropertiesPanel();
       const svc = new PropsPanelService(
@@ -505,12 +505,21 @@ describe('PropsPanelService', () => {
           : g,
       );
       const out = updater(groupsIn);
+      // Hidden groups still drop entirely.
       expect(out.find((g) => g.id === 'condition')).toBeUndefined();
       expect(out.find((g) => g.id === 'customProperties')).toBeUndefined();
+      // Original general/validation groups are absorbed into simple-merged.
       expect(out.find((g) => g.id === 'general')).toBeUndefined();
-      expect(out.find((g) => g.id === 'columns')).toBeUndefined();
+      expect(out.find((g) => g.id === 'validation')).toBeUndefined();
+      // simple-merged contains the whitelisted survivors (label, defaultValue,
+      // required) — columns moved out into its own passthrough group.
       const merged = out.find((g) => g.id === 'simple-merged')!;
-      expect(merged.entries.map((e) => e.id)).toEqual(['label', 'defaultValue', 'columns', 'required']);
+      expect(merged.entries.map((e) => e.id)).toEqual(['label', 'defaultValue', 'required']);
+      // Passthrough `columns` is preserved as a separate group so its
+      // bio-properties-panel `component` (Group / ListGroup) renders intact.
+      const columns = out.find((g) => g.id === 'columns');
+      expect(columns).toBeDefined();
+      expect(columns!.entries!.map((e) => e.id)).toEqual(['columns']);
     });
 
     it('T4-4: mode=simple, validation entries filtered into merged group — required kept, validationType dropped', () => {
@@ -533,7 +542,7 @@ describe('PropsPanelService', () => {
       expect(ids).not.toContain('validationType');
     });
 
-    it('T4-5: mode=simple, columns group entries merged into simple-merged unfiltered', () => {
+    it('T4-5: mode=simple, passthrough `columns` group preserved separately with its component intact (not merged)', () => {
       const deps = makeDeps();
       const pp = makePropertiesPanel();
       const svc = new PropsPanelService(
@@ -547,11 +556,16 @@ describe('PropsPanelService', () => {
         { type: 'group' },
       );
       const out = updater(makeGroups());
+      // simple-merged should NOT contain columns — it is a passthrough.
       const merged = out.find((g) => g.id === 'simple-merged')!;
-      expect(merged.entries.map((e) => e.id)).toContain('columns');
+      expect(merged.entries.map((e) => e.id)).not.toContain('columns');
+      // columns kept as its own group with its entries unfiltered.
+      const columns = out.find((g) => g.id === 'columns');
+      expect(columns).toBeDefined();
+      expect(columns!.entries!.map((e) => e.id)).toEqual(['columns']);
     });
 
-    it('T4-6: mode=simple, unregistered field type → simple-merged with label only (DEFAULT_ALLOWED fallback) plus passthrough columns', () => {
+    it('T4-6: mode=simple, unregistered field type → simple-merged with label only (DEFAULT_ALLOWED fallback) plus passthrough columns group preserved separately', () => {
       const deps = makeDeps();
       const pp = makePropertiesPanel();
       const svc = new PropsPanelService(
@@ -566,7 +580,52 @@ describe('PropsPanelService', () => {
       );
       const out = updater(makeGroups());
       const merged = out.find((g) => g.id === 'simple-merged')!;
-      expect(merged.entries.map((e) => e.id)).toEqual(['label', 'columns']);
+      // DEFAULT_ALLOWED is just `label`; columns no longer flows into merged.
+      expect(merged.entries.map((e) => e.id)).toEqual(['label']);
+      // Passthrough columns kept as its own group.
+      const columns = out.find((g) => g.id === 'columns');
+      expect(columns).toBeDefined();
+      expect(columns!.entries!.map((e) => e.id)).toEqual(['columns']);
+    });
+
+    it('T4-7: mode=simple, ListGroup-style passthrough (e.g. staticOptions) preserved with component/items/add — fixes FU-1 bug', () => {
+      // Regression: `staticOptions` arrives from form-js as a ListGroup with
+      // `entries: undefined` and `items: [...]` plus `add: fn` and
+      // `component: ListGroup`. The previous merging strategy did
+      // `merged.push(...g.entries ?? [])`, which silently dropped the entire
+      // group because entries was undefined. Verify the whole group object
+      // (component + items + add) survives the updater.
+      const deps = makeDeps();
+      const pp = makePropertiesPanel();
+      const svc = new PropsPanelService(
+        deps.eventBus,
+        deps.formFieldRegistry,
+        pp as unknown as { registerProvider(p: unknown, prio?: number): void },
+        deps.modeling,
+      );
+      svc.setMode('simple');
+      const updater = (pp._providers[0]!.provider.getGroups as (f: unknown, e?: unknown) => (g: unknown[]) => Array<{ id: string; entries?: Array<{ id: string }>; items?: unknown[]; add?: unknown; component?: unknown }>)(
+        { type: 'select' },
+      );
+      const ListGroupSentinel = function ListGroup() { /* component */ };
+      const addFn = () => { /* add */ };
+      const groupsIn = [
+        { id: 'general', entries: [{ id: 'label' }, { id: 'description' }, { id: 'key' }] },
+        // Native form-js ListGroup shape — note no `entries`, items present, component set.
+        { id: 'staticOptions', items: [{ id: 'staticOptions-0' }, { id: 'staticOptions-1' }], add: addFn, component: ListGroupSentinel, label: 'Static options' },
+        { id: 'valuesSource', entries: [{ id: 'valuesSource-select' }] },
+      ];
+      const out = updater(groupsIn);
+      const staticOptions = out.find((g) => g.id === 'staticOptions');
+      expect(staticOptions).toBeDefined();
+      // Whole group object preserved — items, add, component all intact.
+      expect(staticOptions!.items).toHaveLength(2);
+      expect(staticOptions!.add).toBe(addFn);
+      expect(staticOptions!.component).toBe(ListGroupSentinel);
+      // valuesSource group also preserved as a passthrough Group.
+      const valuesSource = out.find((g) => g.id === 'valuesSource');
+      expect(valuesSource).toBeDefined();
+      expect(valuesSource!.entries!.map((e) => e.id)).toEqual(['valuesSource-select']);
     });
   });
 
