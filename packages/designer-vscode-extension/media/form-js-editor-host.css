@@ -383,3 +383,104 @@ body[data-panel-resizing='true'] .panel-resize-handle {
  * `media/canvas-spacing.css` (designer-components 에서 copy-media.mjs 로 복사)
  * 가 cascade 직전 순서로 별도 link 된다. 본 파일은 #app/left-rail 등 webview
  * 전용 layout 만 책임진다. */
+
+/* ── Props panel mode toggle (Task 9) ─────────────────────────────────────
+ * Mirrors `designer-editor-host/src/app.css` Simple/Full mode block.
+ *
+ * The toggle slot is `<div id="props-panel-mode-toggle-slot">` inserted as
+ * the first child of `.fjs-properties-container`. Simple-mode rules use
+ * `.fjs-properties-container[data-mode="simple"]` (extension uses form-js's
+ * native panel container directly; host uses its own `.props-panel-native`
+ * wrapper, hence the selector difference).
+ */
+
+.props-panel-mode-toggle {
+  display: inline-flex;
+  margin: 8px 12px 4px;
+  border: 1px solid #b9bcc6;
+  border-radius: 3px;
+  overflow: hidden;
+  background: #f7f7f8;
+}
+
+.props-panel-mode-toggle__btn {
+  padding: 4px 12px;
+  font-size: 12px;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  color: #22242a;
+}
+
+.props-panel-mode-toggle__btn.is-active {
+  background: #3b82f6;
+  color: #fff;
+}
+
+/* Simple mode: render the merged native group as a flat, always-open entry
+   list. The (label-less) header is hidden and the entries container is
+   force-expanded — no click-to-open accordion. !important is required
+   because bio-properties-panel ships unlayered styles that otherwise win. */
+.fjs-properties-container [data-group-id="group-simple-merged"]
+  > .bio-properties-panel-group-header {
+  display: none !important;
+}
+.fjs-properties-container [data-group-id="group-simple-merged"]
+  > .bio-properties-panel-group-entries {
+  display: block !important;
+}
+
+/* Simple mode passthrough groups (valuesSource / staticOptions / columns
+   / layout) — preserve the bio-properties-panel-rendered group component
+   (Group / ListGroup) so list-style entries with per-row sub-fields and
+   the Add button keep working, but hide the group header label so users
+   see one flat list. ListGroup keeps its own Add button rendered in the
+   header — to retain it we hide only the title row, not the entire header. */
+.fjs-properties-container[data-mode="simple"]
+  [data-group-id="group-valuesSource"]
+  > .bio-properties-panel-group-header,
+.fjs-properties-container[data-mode="simple"]
+  [data-group-id="group-columns"]
+  > .bio-properties-panel-group-header,
+.fjs-properties-container[data-mode="simple"]
+  [data-group-id="group-layout"]
+  > .bio-properties-panel-group-header {
+  display: none !important;
+}
+.fjs-properties-container[data-mode="simple"]
+  [data-group-id="group-valuesSource"]
+  > .bio-properties-panel-group-entries,
+.fjs-properties-container[data-mode="simple"]
+  [data-group-id="group-columns"]
+  > .bio-properties-panel-group-entries,
+.fjs-properties-container[data-mode="simple"]
+  [data-group-id="group-layout"]
+  > .bio-properties-panel-group-entries {
+  display: block !important;
+}
+/* staticOptions is a ListGroup — hide the group title text but keep the
+   Add ("+") button visible since users need it to add rows. */
+.fjs-properties-container[data-mode="simple"]
+  [data-group-id="group-staticOptions"]
+  > .bio-properties-panel-group-header
+  > .bio-properties-panel-group-header-title {
+  display: none !important;
+}
+.fjs-properties-container[data-mode="simple"]
+  [data-group-id="group-staticOptions"]
+  > .bio-properties-panel-group-header
+  .bio-properties-panel-arrow {
+  display: none !important;
+}
+.fjs-properties-container[data-mode="simple"]
+  [data-group-id="group-staticOptions"]
+  > .bio-properties-panel-group-header {
+  cursor: default !important;
+  padding-block: 4px !important;
+  border-bottom: none !important;
+}
+.fjs-properties-container[data-mode="simple"]
+  [data-group-id="group-staticOptions"]
+  > .bio-properties-panel-list {
+  display: block !important;
+}
