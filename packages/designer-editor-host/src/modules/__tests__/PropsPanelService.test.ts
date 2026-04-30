@@ -663,23 +663,31 @@ describe('PropsPanelService', () => {
       }
     });
 
-    it('T4-FU2b: constructor defaults currentMode=\'simple\' when sessionStorage missing', () => {
-      window.sessionStorage.removeItem('designer.panelMode');
-      const deps = makeDeps();
-      const pp = makePropertiesPanel();
-      new PropsPanelService(
-        deps.eventBus,
-        deps.formFieldRegistry,
-        pp as unknown as { registerProvider(p: unknown, prio?: number): void },
-        deps.modeling,
-      );
-      const updater = (pp._providers[0]!.provider.getGroups as (f: unknown, e?: unknown) => (g: unknown[]) => Array<{ id: string }>)(
-        { type: 'textfield' },
-      );
-      const out = updater(makeGroups());
-      // Simple mode → simple-merged group present, condition group dropped.
-      expect(out.find((g) => g.id === 'simple-merged')).toBeDefined();
-      expect(out.find((g) => g.id === 'condition')).toBeUndefined();
+    it('T4-FU2b: constructor defaults currentMode=\'simple\' when sessionStorage missing or invalid', () => {
+      // M-2: Use an explicit garbage value rather than just `removeItem`. This
+      // catches future loosening of the strict `=== 'full'` check (e.g. if
+      // someone changed it to `!== 'simple'`, an invalid value would suddenly
+      // resolve to Full mode and this assertion would fail).
+      try {
+        window.sessionStorage.setItem('designer.panelMode', 'compact');
+        const deps = makeDeps();
+        const pp = makePropertiesPanel();
+        new PropsPanelService(
+          deps.eventBus,
+          deps.formFieldRegistry,
+          pp as unknown as { registerProvider(p: unknown, prio?: number): void },
+          deps.modeling,
+        );
+        const updater = (pp._providers[0]!.provider.getGroups as (f: unknown, e?: unknown) => (g: unknown[]) => Array<{ id: string }>)(
+          { type: 'textfield' },
+        );
+        const out = updater(makeGroups());
+        // Simple mode → simple-merged group present, condition group dropped.
+        expect(out.find((g) => g.id === 'simple-merged')).toBeDefined();
+        expect(out.find((g) => g.id === 'condition')).toBeUndefined();
+      } finally {
+        window.sessionStorage.removeItem('designer.panelMode');
+      }
     });
   });
 

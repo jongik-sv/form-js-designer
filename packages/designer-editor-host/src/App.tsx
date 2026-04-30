@@ -35,6 +35,7 @@ import { ExportService } from './modules/ExportService';
 import { Sidebar } from './components/Sidebar';
 import { PropsPanelContainer } from './components/PropsPanelContainer';
 import { PropsPanelModeToggle, type PanelMode } from './components/PropsPanelModeToggle';
+import { readStoredPanelMode, writeStoredPanelMode } from './modules/panelModeStorage';
 import { LivePreviewPanel } from './components/LivePreviewPanel';
 import { ToolbarButtons } from './components/ToolbarButtons';
 import { ValidationBadge } from './components/ValidationBadge';
@@ -90,11 +91,7 @@ export function App(): h.JSX.Element {
   const [leftTab, setLeftTab] = useState<LeftRailTab>('components');
 
   // TSK-07: Simple/Full panel mode — sessionStorage-persisted, default 'simple'
-  const [panelMode, setPanelMode] = useState<PanelMode>(() => {
-    if (typeof window === 'undefined') return 'simple';
-    const v = window.sessionStorage.getItem('designer.panelMode');
-    return v === 'full' ? 'full' : 'simple';
-  });
+  const [panelMode, setPanelMode] = useState<PanelMode>(readStoredPanelMode);
 
   // 패널 max 너비는 viewport 기반(최소 900, 최대 1600, 좌측 영역 400px 확보)
   const computeMaxPanelWidth = (): number => {
@@ -246,9 +243,7 @@ export function App(): h.JSX.Element {
 
   // TSK-07: panelMode 변경 시 — sessionStorage persist + propsPanel.setMode + native panel reflow
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      window.sessionStorage.setItem('designer.panelMode', panelMode);
-    }
+    writeStoredPanelMode(panelMode);
     services.propsPanel?.setMode(panelMode);
     const editor = editorInstanceRef.current;
     if (editor) {
