@@ -199,7 +199,7 @@ function TabsRender(props: PureRenderProps<TabsSchema>) {
                * tabPanel's children receive a working onChange chain — without this,
                * input fields inside tabs throw `_onChange is not a function`.
                */}
-              <FormField {...(props as Record<string, unknown>)} field={tp as never} />
+              <FormField {...(props as unknown as Record<string, unknown>)} field={tp as never} />
             </TabsPrimitive.Content>
           ))}
         </div>

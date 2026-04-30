@@ -50,7 +50,7 @@ function createMockModeling() {
 }
 
 function getServiceClass() {
-  const [, ServiceClass] = InlineLabelEditModule.inlineLabelEdit as [
+  const [, ServiceClass] = (InlineLabelEditModule.inlineLabelEdit as unknown) as [
     string,
     new (...args: unknown[]) => { destroy(): void },
   ];
