@@ -65,20 +65,33 @@ vi.mock('@form-js-designer/designer-core', () => ({
   }),
 }));
 
-// designer-runtime mock — LAYOUT_HEIGHT_TARGET_TYPES만 필요
+// designer-runtime mock — FU-A: 19종으로 확장된 LAYOUT_HEIGHT_TARGET_TYPES
 vi.mock('@form-js-designer/designer-runtime', () => ({
   LAYOUT_HEIGHT_TARGET_TYPES: [
+    // Input
     'textarea',
+    'filepicker',
+    // Selection
+    'checklist',
+    'radio',
+    // Presentation
+    'text',
     'html',
-    'table',
+    'image',
+    'spacer',
+    'separator',
+    'expression',
+    // Containers
     'group',
     'card',
     'modal',
     'tabs',
     'tabPanel',
+    // Extra
+    'chartPlaceholder',
+    'tree',
+    'table',
     'iframe',
-    'image',
-    'text',
   ],
 }));
 
@@ -216,8 +229,8 @@ describe('PropsPanelService', () => {
     expect(groups).toHaveLength(0);
   });
 
-  // Case 7: propsSchema가 비어있는 컴포넌트 + 대상 타입(card) → designer-layout 그룹만 반환
-  it('7: propsSchema 빈 card 컴포넌트 → designer-props 없고 designer-layout만 반환', () => {
+  // Case 7: propsSchema가 비어있는 컴포넌트 + 대상 타입(card) → FU-A: card는 non-spacer이므로 layout 그룹 없음
+  it('7: propsSchema 빈 card 컴포넌트 → designer-props도 없고 designer-layout도 없음 (FU-A)', () => {
     const deps = makeDeps();
     deps.formFieldRegistry.get = vi.fn().mockReturnValue({
       type: 'card',
@@ -231,9 +244,8 @@ describe('PropsPanelService', () => {
       deps.modeling,
     );
     const groups = service.getGroups(makeField('card'));
-    // card는 대상 타입이므로 designer-layout 그룹 1개
-    expect(groups.length).toBeGreaterThanOrEqual(1);
-    expect(groups.some((g: { id: string }) => g.id === 'designer-layout')).toBe(true);
+    // FU-A: card는 non-spacer 타입 → layout entry 없음 (ResizeHandle로만 조절)
+    expect(groups.some((g: { id: string }) => g.id === 'designer-layout')).toBe(false);
   });
 
   // Case 8: propertiesPanel이 없어도 graceful 초기화 (fallback)
@@ -293,8 +305,10 @@ describe('PropsPanelService', () => {
     expect(groups).toHaveLength(0);
   });
 
-  // Case 11: target type(textarea)일 때 Layout 그룹에 layout.height 엔트리 포함
-  it('11: textarea 필드 getGroups → designer-layout 그룹에 layout.height 엔트리 포함', () => {
+  // Case 11: FU-A: textarea는 LAYOUT_HEIGHT_TARGET_TYPES에 포함되지만
+  //          Properties 패널 layout entry는 spacer 전용이므로 designer-layout 그룹 없음.
+  //          ResizeHandle을 통해서만 높이 조절 가능.
+  it('11: textarea 필드 getGroups → FU-A: designer-layout 그룹 없음 (ResizeHandle 전용)', () => {
     const deps = makeDeps();
     deps.formFieldRegistry.get = vi.fn().mockReturnValue({
       type: 'textarea',
@@ -308,11 +322,9 @@ describe('PropsPanelService', () => {
       deps.modeling,
     );
     const groups = service.getGroups(makeField('textarea'));
-    const layoutGroup = groups.find((g: { id: string }) => g.id === 'designer-layout') as
-      | { id: string; entries: Array<{ key?: string }> }
-      | undefined;
-    expect(layoutGroup).toBeDefined();
-    expect(layoutGroup!.entries.some((e) => e.key === 'layout.height')).toBe(true);
+    // FU-A: non-spacer는 layout entry 없음
+    const layoutGroup = groups.find((g: { id: string }) => g.id === 'designer-layout');
+    expect(layoutGroup).toBeUndefined();
   });
 
   // Case 12: 비대상 타입(textfield)은 Layout 그룹 없음
@@ -350,11 +362,9 @@ describe('PropsPanelService', () => {
   }
 
   // T3-1: simple mode → card entries flattened into designer-simple-merged
-  // (FU-3: Simple mode merges custom-props + layout into a single header-less
-  // group so the self-rendered panel matches native panel UX). For `card` the
-  // type also has a layout.height entry, so it should appear in the merged
-  // group alongside the 4 whitelisted custom-prop entries.
-  it('T3-1: mode=simple, card → designer-simple-merged with custom-props + layout entries', () => {
+  // FU-A: card is a non-spacer type, so layout.height entry is NOT included.
+  // Only the 4 whitelisted custom-prop entries appear in the merged group.
+  it('T3-1: mode=simple, card → designer-simple-merged with custom-props only (FU-A: no layout.height)', () => {
     const deps = makeDeps();
     deps.formFieldRegistry.get = vi.fn().mockReturnValue({
       type: 'card',
@@ -373,8 +383,9 @@ describe('PropsPanelService', () => {
     expect(merged.id).toBe('designer-simple-merged');
     // No header label — PropsPanelContainer skips <h4> when label is missing.
     expect(merged.label).toBeUndefined();
+    // FU-A: card is non-spacer → no layout.height in merged
     expect(merged.entries.map((e) => e.id).sort())
-      .toEqual(['elevation', 'header', 'headerTag', 'layout.height', 'padding']);
+      .toEqual(['elevation', 'header', 'headerTag', 'padding']);
     // Legacy two-group shape must NOT be returned in Simple mode.
     expect(groups.find((g: { id: string }) => g.id === 'designer-custom-props')).toBeUndefined();
     expect(groups.find((g: { id: string }) => g.id === 'designer-layout')).toBeUndefined();
@@ -424,10 +435,11 @@ describe('PropsPanelService', () => {
     expect(propsGroup!.entries).toHaveLength(4);
   });
 
-  // T3-4: simple mode w/ empty whitelist (tabs) → no designer-custom-props.
-  // tabs IS a layout-height target type, so the merged group still exists
-  // and contains only the layout.height entry.
-  it('T3-4: mode=simple w/ empty whitelist (tabs) → merged group has only layout.height', () => {
+  // T3-4: simple mode w/ empty whitelist (tabs) → no custom-props, no layout.
+  // FU-A: tabs is a layout-height target type for ResizeHandle, but layout.height
+  // entry is NOT shown in Properties panel (spacer-only policy). With empty
+  // whitelist and no layout entry, the result is an empty groups array.
+  it('T3-4: mode=simple w/ empty whitelist (tabs) → empty groups[] (FU-A: no layout.height for non-spacer)', () => {
     const deps = makeDeps();
     const tabsEntries = [
       { key: 'defaultValue', widgetType: 'string', widget: { render: vi.fn(), edit: vi.fn(), validate: vi.fn() }, label: 'Default', meta: { type: 'string' } },
@@ -448,11 +460,8 @@ describe('PropsPanelService', () => {
     // No legacy two-group shape in Simple mode.
     expect(groups.find((g: { id: string }) => g.id === 'designer-custom-props')).toBeUndefined();
     expect(groups.find((g: { id: string }) => g.id === 'designer-layout')).toBeUndefined();
-    // tabs is a layout-height target → merged group present with single entry.
-    expect(groups).toHaveLength(1);
-    const merged = groups[0] as { id: string; entries: Array<{ id: string }> };
-    expect(merged.id).toBe('designer-simple-merged');
-    expect(merged.entries.map((e) => e.id)).toEqual(['layout.height']);
+    // FU-A: tabs is non-spacer → no layout.height → empty whitelist → no merged group.
+    expect(groups).toHaveLength(0);
   });
 
   // T3-4b: simple mode + non-layout-target with literally-empty whitelist → empty array.
@@ -750,9 +759,13 @@ describe('PropsPanelService', () => {
     });
   });
 
-  // Case 13: html, table, group, card, modal, tabs, tabPanel, iframe, image, text도 Layout 그룹 포함
-  it('13: 모든 대상 타입은 designer-layout 그룹 포함', () => {
-    const targetTypes = [
+  // Case 13: 기존 대상 타입들은 designer-layout 그룹 포함 (하위 호환)
+  it('13: 기존 대상 타입(html, table, group 등)은 designer-layout 그룹 포함', () => {
+    // Note: FU-A 이후 layout entry는 spacer 전용이므로, 이 케이스는
+    // 기존 동작(타겟 타입 목록 진입) 자체가 변경되어 designer-layout이 없어짐.
+    // 단, 이 테스트는 역사적 문서화 목적으로 유지하고 FU-A 동작은 별도 케이스로.
+    // → non-spacer 타입은 이제 designer-layout 그룹이 없어야 함.
+    const nonSpacerTargetTypes = [
       'html',
       'table',
       'group',
@@ -763,8 +776,16 @@ describe('PropsPanelService', () => {
       'iframe',
       'image',
       'text',
+      'textarea',
+      'filepicker',
+      'checklist',
+      'radio',
+      'separator',
+      'expression',
+      'chartPlaceholder',
+      'tree',
     ];
-    for (const type of targetTypes) {
+    for (const type of nonSpacerTargetTypes) {
       const deps = makeDeps();
       deps.formFieldRegistry.get = vi.fn().mockReturnValue({
         type,
@@ -778,8 +799,113 @@ describe('PropsPanelService', () => {
         deps.modeling,
       );
       const groups = service.getGroups(makeField(type));
+      // FU-A: non-spacer 타입은 layout entry 없음 (ResizeHandle로만 조절)
       const layoutGroup = groups.find((g: { id: string }) => g.id === 'designer-layout');
-      expect(layoutGroup).toBeDefined();
+      expect(layoutGroup).toBeUndefined();
     }
+  });
+
+  // ───────────────────────────────────────────────────────────────────────────
+  // FU-A: spacer-only layout entry policy
+  // ───────────────────────────────────────────────────────────────────────────
+  describe('FU-A: spacer-only layout entry in Properties panel', () => {
+    it('FU-A-1: spacer 타입은 designer-layout 그룹에 layout.height 엔트리 노출', () => {
+      const deps = makeDeps();
+      deps.formFieldRegistry.get = vi.fn().mockReturnValue({
+        type: 'spacer',
+        propsSchema: { properties: {} },
+      });
+      mockPropsSchemaToPanel.mockReturnValue([]);
+      const service = new PropsPanelService(
+        deps.eventBus,
+        deps.formFieldRegistry,
+        deps.propertiesPanel,
+        deps.modeling,
+      );
+      const groups = service.getGroups(makeField('spacer'));
+      const layoutGroup = groups.find((g: { id: string }) => g.id === 'designer-layout') as
+        | { id: string; entries: Array<{ key?: string }> }
+        | undefined;
+      expect(layoutGroup).toBeDefined();
+      expect(layoutGroup!.entries.some((e) => e.key === 'layout.height')).toBe(true);
+    });
+
+    it('FU-A-2: textarea 타입은 designer-layout 그룹 없음 (ResizeHandle로만 조절)', () => {
+      const deps = makeDeps();
+      deps.formFieldRegistry.get = vi.fn().mockReturnValue({
+        type: 'textarea',
+        propsSchema: { properties: {} },
+      });
+      mockPropsSchemaToPanel.mockReturnValue([]);
+      const service = new PropsPanelService(
+        deps.eventBus,
+        deps.formFieldRegistry,
+        deps.propertiesPanel,
+        deps.modeling,
+      );
+      const groups = service.getGroups(makeField('textarea'));
+      const layoutGroup = groups.find((g: { id: string }) => g.id === 'designer-layout');
+      expect(layoutGroup).toBeUndefined();
+    });
+
+    it('FU-A-3: group(container) 타입은 designer-layout 그룹 없음', () => {
+      const deps = makeDeps();
+      deps.formFieldRegistry.get = vi.fn().mockReturnValue({
+        type: 'group',
+        propsSchema: { properties: {} },
+      });
+      mockPropsSchemaToPanel.mockReturnValue([]);
+      const service = new PropsPanelService(
+        deps.eventBus,
+        deps.formFieldRegistry,
+        deps.propertiesPanel,
+        deps.modeling,
+      );
+      const groups = service.getGroups(makeField('group'));
+      const layoutGroup = groups.find((g: { id: string }) => g.id === 'designer-layout');
+      expect(layoutGroup).toBeUndefined();
+    });
+
+    it('FU-A-4: spacer simple mode → designer-simple-merged에 layout.height 엔트리 포함', () => {
+      const deps = makeDeps();
+      deps.formFieldRegistry.get = vi.fn().mockReturnValue({
+        type: 'spacer',
+        propsSchema: { properties: {} },
+      });
+      mockPropsSchemaToPanel.mockReturnValue([]);
+      const service = new PropsPanelService(
+        deps.eventBus,
+        deps.formFieldRegistry,
+        deps.propertiesPanel,
+        deps.modeling,
+      );
+      const groups = service.getGroups({ type: 'spacer', id: 'S1' }, { mode: 'simple' });
+      expect(groups).toHaveLength(1);
+      const merged = groups[0] as { id: string; entries: Array<{ id: string }> };
+      expect(merged.id).toBe('designer-simple-merged');
+      expect(merged.entries.map((e) => e.id)).toContain('layout.height');
+    });
+
+    it('FU-A-5: filepicker(non-spacer target type)는 simple mode에서도 layout entry 없음', () => {
+      const deps = makeDeps();
+      deps.formFieldRegistry.get = vi.fn().mockReturnValue({
+        type: 'filepicker',
+        propsSchema: { properties: {} },
+      });
+      mockPropsSchemaToPanel.mockReturnValue([]);
+      const service = new PropsPanelService(
+        deps.eventBus,
+        deps.formFieldRegistry,
+        deps.propertiesPanel,
+        deps.modeling,
+      );
+      // full mode
+      const fullGroups = service.getGroups(makeField('filepicker'));
+      expect(fullGroups.find((g: { id: string }) => g.id === 'designer-layout')).toBeUndefined();
+      // simple mode
+      const simpleGroups = service.getGroups({ type: 'filepicker', id: 'F1' }, { mode: 'simple' });
+      const allEntries = simpleGroups.flatMap((g: { entries?: Array<{ id: string }> }) => g.entries ?? []);
+      expect(allEntries.find((e: { id: string }) => e.id === 'layout.height')).toBeUndefined();
+    });
   });
 });

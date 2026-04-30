@@ -306,8 +306,10 @@ export class PropsPanelService {
       }
     }
 
-    // TSK-12-02: 대상 타입에 Layout 그룹 (layout.height) 추가 — 두 모드 모두 동일.
-    if ((LAYOUT_HEIGHT_TARGET_TYPES as readonly string[]).includes(field.type)) {
+    // FU-A: Layout 그룹(layout.height 입력)은 Spacer 타입만 Properties 패널에 노출.
+    // 나머지 LAYOUT_HEIGHT_TARGET_TYPES는 캔버스 ResizeHandle로만 높이를 조절하고
+    // Properties 패널에는 entry를 생성하지 않는다 (Simple/Full 공통).
+    if (field.type === 'spacer') {
       layoutEntries = this._buildLayoutGroup(field as Record<string, unknown>).entries;
     }
 
