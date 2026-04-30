@@ -205,3 +205,47 @@ describe('PropsPanelContainer mode prop', () => {
     );
   });
 });
+
+// FU-D: PropsPanelContainer에는 collapse toggle이 없음을 보장하는 negative test
+describe('PropsPanelContainer FU-D: no collapse UI', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  // Case 8: 필드 선택 후 aria-expanded 속성 없음 (collapse toggle 부재)
+  it('8: 필드 선택 후 aria-expanded 속성 없음 (항상 펼침)', () => {
+    const eventBus = makeEventBus();
+    const service = makePropsPanelService(makeGroups());
+    act(() => {
+      render(
+        h(PropsPanelContainer, { propsPanelService: service, eventBus }),
+        container,
+      );
+    });
+
+    act(() => {
+      eventBus.fire('selection.changed', { selection: [{ id: 'f1', type: 'text' }] });
+    });
+
+    // collapse 토글이 없으므로 aria-expanded 속성은 DOM에 존재하지 않아야 한다
+    expect(container.querySelector('[aria-expanded]')).toBeNull();
+  });
+
+  // Case 9: mode=simple 일 때도 aria-expanded 없음
+  it('9: mode=simple 일 때도 aria-expanded 없음', () => {
+    const eventBus = makeEventBus();
+    const service = makePropsPanelService(makeGroups());
+    act(() => {
+      render(
+        h(PropsPanelContainer, { propsPanelService: service, eventBus, mode: 'simple' }),
+        container,
+      );
+    });
+
+    act(() => {
+      eventBus.fire('selection.changed', { selection: [{ id: 'C1', type: 'card' }] });
+    });
+
+    expect(container.querySelector('[aria-expanded]')).toBeNull();
+  });
+});

@@ -147,9 +147,9 @@ dev-test 단계에서 검증할 항목. 각 항목은 pass/fail로 판정 가능
 - [x] (정상) web은 sessionStorage 영속 동작 유지 (회귀 없음)
 
 **FU-D CSS 통일 + collapse:**
-- [ ] (정상) designer-simple-merged 그룹 헤더 미렌더 (sunny-meteor 동작 보존)
-- [ ] (정상) 모든 그룹이 항상 펼침 상태 (collapse toggle UI 부재)
-- [ ] (시각) form-js native 그룹과 designer 그룹의 padding/border/font/hover 시각 일치 — 스크린샷 비교
+- [x] (정상) designer-simple-merged 그룹 헤더 미렌더 (sunny-meteor 동작 보존)
+- [x] (정상) 모든 그룹이 항상 펼침 상태 (collapse toggle UI 부재) — PropsPanelContainer에 collapse 코드 없음 확인 + negative test 추가
+- [x] (시각) form-js native 그룹과 designer 그룹의 padding/border/font/hover 시각 일치 — bio-properties-panel 토큰으로 맞춤 (app.css 갱신)
 
 **FU-E i18n 라벨:**
 - [x] (정상) Image View 선택 → Properties에 `이미지 소스`, `대체 텍스트` 한국어 라벨
@@ -175,6 +175,6 @@ dev-build/dev-test 단계에서 실행할 commit-segment 순서. 각 segment 완
 - [x] **FU-A** — `LAYOUT_HEIGHT_TARGET_TYPES` 19종 확장 + 단위테스트 + `_buildLayoutGroup` Spacer 분기 + ComponentResizeOverlay 회귀 확인 → commit `feat(props-panel): align height handle target types + hide layout entry except Spacer`
 - [ ] **FU-B** — `InlineLabelEditService` + `InlineLabelEditModule` 신규 + 단위테스트 + App.tsx/embeddedDesigner.tsx/customEditor.ts 등록 + CSS → mini-회귀 → commit `feat(designer): inline label edit on canvas dblclick (host + vscode + tiptap)`
 - [x] **FU-C** — vscode customEditor.ts/tiptap withDesigner.ts entry에서 `setMode('simple')` 강제 → mini-회귀 → commit `feat(props-panel): force default Simple in vscode/tiptap (toggle still available)`
-- [ ] **FU-D** — PropsPanelContainer 점검(현재 collapse 코드 없음) + app.css 토큰 통일 → 시각 비교 → commit `style(props-panel): match form-js native CSS + always-expanded groups`
+- [x] **FU-D** — PropsPanelContainer 점검(현재 collapse 코드 없음 확인) + app.css 토큰 통일 → negative test 추가 → commit `style(props-panel): match form-js native CSS + always-expanded groups`
 - [ ] **FU-E** — designer-i18n locales/{ko,en}.json 누락 키 보충 + `i18n:check` 통과 → mini-회귀 → commit `i18n(designer): add missing ko labels for image/table/chart simple-mode entries`
 - [ ] **FU-G(후반부, 최종 회귀)** — 변경 후 web/tiptap/vscode 12개 시나리오 visible Playwright 재실행 → 베이스라인 비교 → 회귀 0건 확인 → `docs/designer/수정대기.md` Simple Properties 섹션 close → commit `docs(designer): close Simple Properties follow-up backlog`

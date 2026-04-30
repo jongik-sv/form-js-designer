@@ -484,9 +484,21 @@
     color: #666;
   }
 
-  /* PropsPanel */
+  /* PropsPanel stack wrapper — hosts the mode toggle + native form-js panel +
+     custom designer props panel in one column. No extra padding so children
+     can abut flush to the container edge exactly like bio-properties-panel. */
+  .props-panel-stack {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  /* PropsPanel — custom designer groups rendered below the native panel.
+     Mirrors .bio-properties-panel-group: white bg, 1px bottom separator,
+     no side padding (entries carry their own margin like bio-properties-panel-entry). */
   .props-panel {
-    padding: 12px;
+    /* no extra padding — entries use margin like bio-properties-panel-entry */
+    background-color: #ffffff; /* --group-background-color */
   }
 
   .props-panel-mode-toggle {
@@ -602,40 +614,67 @@
     background: #f8d7da;
   }
 
+  /* Custom group wrapper — matches .bio-properties-panel-group:
+     white background + 1px bottom border separator between groups. */
+  .props-group {
+    background-color: #ffffff; /* var(--group-background-color) */
+    border-bottom: 1px solid hsl(225, 10%, 75%); /* var(--group-bottom-border-color) */
+    position: relative;
+  }
+
+  /* Custom group label — matches .bio-properties-panel-group-header styling:
+     32px height, 14px base font, 500 weight when visible, sticky, separator below.
+     Header-less groups (designer-simple-merged) have display:none via the rules above
+     so the zero-height trick is handled by the existing !important overrides. */
   .props-group__label {
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    color: #666;
-    margin: 0 0 8px;
+    display: flex;
+    align-items: center;
+    height: 32px;
+    font-size: 14px; /* var(--text-size-base) */
+    font-weight: 500;
+    color: hsl(225, 10%, 15%); /* var(--color-grey-225-10-15) */
+    background-color: #ffffff; /* var(--group-background-color) */
+    border-bottom: 1px solid hsl(225, 10%, 75%); /* var(--group-bottom-border-color) */
+    margin: 0 0 -1px; /* avoid double borders like bio-properties-panel */
+    padding: 0 12px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    user-select: none;
   }
 
-  /* bio-properties-panel(form-js 기본) 엔트리와 시각 일치.
-     - label: 13px / 400 / #22242a, 마진 2px 0 1px
-     - input: 28.5px / border #b9bcc6 / bg #f7f7f8 / radius 2px / padding 4px 6px */
+  /* bio-properties-panel-entry と시각 일치:
+     margin: 2px 32px 6px 12px (right-side intentionally wide for action buttons)
+     last-child gets extra bottom padding */
   .props-entry {
-    display: flex;
-    flex-direction: column;
-    margin-bottom: 10px;
+    display: block;
+    margin: 2px 32px 6px 12px; /* matches .bio-properties-panel-entry */
   }
 
+  .props-entry:last-child {
+    padding-bottom: 10px; /* matches .bio-properties-panel-entry:last-child */
+  }
+
+  /* bio-properties-panel-label と시각 일치: 13px / 400 / display:block / margin: 2px 0 1px */
   .props-entry__label {
-    display: flex;
-    font-size: 13px;
+    display: block;
+    font-size: 13px; /* var(--text-size-small) */
     font-weight: 400;
-    color: #22242a;
+    color: hsl(225, 10%, 15%); /* var(--text-base-color) */
     margin: 2px 0 1px;
   }
 
+  /* Input/select/textarea — matches bio-properties-panel input tokens:
+     bg #f7f7f8 / border hsl(225,10%,75%) / radius 2px / padding 4px 6px / 14px */
   .props-entry input,
   .props-entry select,
   .props-entry textarea {
     width: 100%;
-    font-size: 14px;
+    font-size: 14px; /* var(--text-size-base) */
     font-family: inherit;
-    color: #22242a;
-    background-color: #f7f7f8;
-    border: 1px solid #b9bcc6;
+    color: hsl(225, 10%, 15%); /* var(--text-base-color) */
+    background-color: hsl(225, 10%, 97%); /* var(--input-background-color) */
+    border: 1px solid hsl(225, 10%, 75%); /* var(--input-border-color) */
     border-radius: 2px;
     padding: 4px 6px;
     box-sizing: border-box;
@@ -645,8 +684,9 @@
   .props-entry select:focus,
   .props-entry textarea:focus {
     outline: none;
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 1px #3b82f6;
+    background-color: hsl(205, 100%, 95%); /* var(--input-focus-background-color) */
+    border-color: hsl(205, 100%, 50%); /* var(--input-focus-border-color) */
+    box-shadow: 0 0 0 1px hsl(205, 100%, 50%);
   }
 
   /* LivePreview */
