@@ -25,11 +25,11 @@ describe('SIMPLE_MODE_WHITELIST', () => {
   it('separator는 빈 set', () => {
     expect(SIMPLE_MODE_WHITELIST.separator.size).toBe(0);
   });
-  it('tabs는 defaultValue 포함', () => {
-    expect(SIMPLE_MODE_WHITELIST.tabs.has('defaultValue')).toBe(true);
+  it('tabs는 orientation 포함', () => {
+    expect(SIMPLE_MODE_WHITELIST.tabs.has('orientation')).toBe(true);
   });
-  it('getAllowedEntryIds(tabs).has(defaultValue) === true', () => {
-    expect(getAllowedEntryIds('tabs').has('defaultValue')).toBe(true);
+  it('getAllowedEntryIds(tabs).has(orientation) === true', () => {
+    expect(getAllowedEntryIds('tabs').has('orientation')).toBe(true);
   });
   it('HIDDEN_GROUPS = condition + customProperties', () => {
     expect(SIMPLE_MODE_HIDDEN_GROUPS.has('condition')).toBe(true);
