@@ -48,6 +48,18 @@ vi.mock('@form-js-designer/designer-core', () => ({
     'staticOptions', 'group-staticOptions',
     'valuesSource', 'group-valuesSource',
   ]),
+  isPassthroughGroup: vi.fn((id: string) => {
+    const staticSet = new Set([
+      'columns', 'layout',
+      'group-columns', 'group-layout',
+      'staticOptions', 'group-staticOptions',
+      'valuesSource', 'group-valuesSource',
+    ]);
+    if (staticSet.has(id)) return true;
+    if (id.endsWith('-columns')) return true;
+    if (id.endsWith('-columnsSource')) return true;
+    return false;
+  }),
   // panelModeStorage was promoted from `./panelModeStorage` to designer-core.
   // The service constructor seeds `currentMode` via readStoredPanelMode, so
   // the mock must export it. We replicate the real helper's behaviour

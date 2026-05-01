@@ -13,11 +13,11 @@ const WHITELIST = {
   group:            new Set(['label']),
   dynamiclist:      new Set(['label','defaultRepetitions']),
   iframe:           new Set(['label','url','iframe-height']),
-  table:            new Set(['label','dataSource','staticColumns']),
+  table:            new Set(['label','dataSource','pagination','rowCount']),
   documentPreview:  new Set(['label','dataSource']),
   text:             new Set(['text']),
   html:             new Set(['content']),
-  image:            new Set(['imageSource','altText']),
+  image:            new Set(['source','alt']),
   spacer:           new Set(['spacer-height']),
   separator:        new Set<string>([]),
   expression:       new Set(['expression-expression']),
@@ -72,4 +72,18 @@ export function getAllowedEntryIds(fieldType: string | undefined): ReadonlySet<s
   if (!fieldType) return SIMPLE_MODE_DEFAULT_ALLOWED;
   const map = SIMPLE_MODE_WHITELIST as Readonly<Record<string, ReadonlySet<string> | undefined>>;
   return map[fieldType] ?? SIMPLE_MODE_DEFAULT_ALLOWED;
+}
+
+/**
+ * Pattern-based passthrough check.
+ * Form-js's Table component generates dynamic group IDs like
+ * `group-Field_<id>-columns` and `group-Field_<id>-columnsSource`.
+ * Static check via SIMPLE_MODE_PASSTHROUGH_GROUPS misses these — match by suffix.
+ */
+export function isPassthroughGroup(id: string): boolean {
+  if (SIMPLE_MODE_PASSTHROUGH_GROUPS.has(id)) return true;
+  // Table column groups have dynamic prefixes — match by suffix
+  if (id.endsWith('-columns')) return true;
+  if (id.endsWith('-columnsSource')) return true;
+  return false;
 }

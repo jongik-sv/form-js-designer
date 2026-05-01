@@ -5,6 +5,7 @@ import {
   SIMPLE_MODE_PASSTHROUGH_GROUPS,
   SIMPLE_MODE_DEFAULT_ALLOWED,
   getAllowedEntryIds,
+  isPassthroughGroup,
 } from '../simpleModeWhitelist';
 
 describe('SIMPLE_MODE_WHITELIST', () => {
@@ -46,5 +47,41 @@ describe('SIMPLE_MODE_WHITELIST', () => {
   });
   it('getAllowedEntryIds(card) === card set', () => {
     expect(getAllowedEntryIds('card')).toBe(SIMPLE_MODE_WHITELIST.card);
+  });
+  it('image whitelist uses form-js actual IDs: source and alt', () => {
+    expect(SIMPLE_MODE_WHITELIST.image.has('source')).toBe(true);
+    expect(SIMPLE_MODE_WHITELIST.image.has('alt')).toBe(true);
+    expect(SIMPLE_MODE_WHITELIST.image.has('imageSource')).toBe(false);
+    expect(SIMPLE_MODE_WHITELIST.image.has('altText')).toBe(false);
+  });
+  it('table whitelist uses form-js actual IDs: label, dataSource, pagination, rowCount', () => {
+    expect(SIMPLE_MODE_WHITELIST.table.has('label')).toBe(true);
+    expect(SIMPLE_MODE_WHITELIST.table.has('dataSource')).toBe(true);
+    expect(SIMPLE_MODE_WHITELIST.table.has('pagination')).toBe(true);
+    expect(SIMPLE_MODE_WHITELIST.table.has('rowCount')).toBe(true);
+    expect(SIMPLE_MODE_WHITELIST.table.has('staticColumns')).toBe(false);
+  });
+});
+
+describe('isPassthroughGroup', () => {
+  it('returns true for static passthrough IDs', () => {
+    expect(isPassthroughGroup('columns')).toBe(true);
+    expect(isPassthroughGroup('layout')).toBe(true);
+    expect(isPassthroughGroup('staticOptions')).toBe(true);
+    expect(isPassthroughGroup('group-columns')).toBe(true);
+    expect(isPassthroughGroup('group-staticOptions')).toBe(true);
+  });
+  it('returns true for dynamic table column group IDs (suffix match)', () => {
+    expect(isPassthroughGroup('group-Field_1rcxb6q-columns')).toBe(true);
+    expect(isPassthroughGroup('group-Field_abc123-columns')).toBe(true);
+    expect(isPassthroughGroup('group-Field_1rcxb6q-columnsSource')).toBe(true);
+    expect(isPassthroughGroup('group-Field_xyz-columnsSource')).toBe(true);
+  });
+  it('returns false for unrelated group IDs', () => {
+    expect(isPassthroughGroup('condition')).toBe(false);
+    expect(isPassthroughGroup('appearance')).toBe(false);
+    expect(isPassthroughGroup('group-condition')).toBe(false);
+    expect(isPassthroughGroup('designer-custom-props')).toBe(false);
+    expect(isPassthroughGroup('myGroup-columnsExtra')).toBe(false);
   });
 });

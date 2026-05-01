@@ -35,6 +35,7 @@ export {
   SIMPLE_MODE_PASSTHROUGH_GROUPS,
   SIMPLE_MODE_DEFAULT_ALLOWED,
   getAllowedEntryIds,
+  isPassthroughGroup,
 } from './panel/simpleModeWhitelist';
 export { I18nSimpleWidget } from './panel/widgets/I18nSimpleWidget';
 export {

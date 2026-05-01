@@ -17,6 +17,7 @@ import {
   I18nSimpleWidget,
   SIMPLE_MODE_HIDDEN_GROUPS,
   SIMPLE_MODE_PASSTHROUGH_GROUPS,
+  isPassthroughGroup,
 } from '@form-js-designer/designer-core';
 import type { PanelWidgetRegistry } from '@form-js-designer/designer-core';
 import { LAYOUT_HEIGHT_TARGET_TYPES } from '@form-js-designer/designer-runtime';
@@ -198,7 +199,7 @@ export class PropsPanelService {
               passthroughSelfGroups.push(g);
               continue;
             }
-            if (SIMPLE_MODE_PASSTHROUGH_GROUPS.has(g.id)) {
+            if (isPassthroughGroup(g.id)) {
               const hasEntries = (g.entries?.length ?? 0) > 0;
               const hasItems = (g.items?.length ?? 0) > 0;
               const hasAdd = typeof (g as { add?: unknown }).add === 'function';
