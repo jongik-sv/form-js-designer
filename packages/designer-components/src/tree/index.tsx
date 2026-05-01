@@ -158,15 +158,12 @@ export const TreeComponent = defineComponent<TreeSchema>({
   pathed: false,
   escapeGridRender: false,
   propsSchema: treePropsSchema,
-  create: (options = {}) => {
-    const { id, ...rest } = options as { id?: string; [k: string]: unknown };
-    return {
-      type: 'tree',
-      label: '트리',
-      dataSource: typeof id === 'string' && id ? `=${id}` : '',
-      ...(id !== undefined ? { id } : {}),
-      ...rest,
-    };
-  },
+  create: (options = {}) => ({
+    type: 'tree',
+    label: '트리',
+    dataSource: '=[{"label":"부모","children":[{"label":"자식1"},{"label":"자식2"}]}]',
+    expandedByDefault: false,
+    ...options,
+  }),
   render: TreeRender,
 });

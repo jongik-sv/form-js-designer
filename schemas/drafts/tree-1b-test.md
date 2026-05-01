@@ -166,9 +166,12 @@
     {
       "type": "tree",
       "label": "접힘 기본",
-      "id": "tree3",
       "dataSource": "=[{\"label\":\"부모\",\"children\":[{\"label\":\"자식1\"},{\"label\":\"자식2\"}]}]",
-      "expandedByDefault": false
+      "id": "tree3",
+      "expandedByDefault": false,
+      "layout": {
+        "row": "Row_0f3057x"
+      }
     }
   ],
   "type": "default",
