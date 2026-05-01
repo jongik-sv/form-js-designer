@@ -2,6 +2,8 @@
   .dc-chart-placeholder {
     display: block;
     width: 100%;
+    padding: 8px 12px;
+    box-sizing: border-box;
   }
 
   .dc-chart-placeholder__title {
@@ -26,5 +28,18 @@
     font-size: 0.875em;
     opacity: 0.75;
     margin-top: 0.5em;
+  }
+
+  /* layout.height가 설정된 경우 — flex로 캔버스를 가용 높이에 맞춤 */
+  .dc-chart-placeholder--sized {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+
+  .dc-chart-placeholder--sized .dc-chart-placeholder__canvas {
+    flex: 1;
+    aspect-ratio: unset;
+    min-height: 0;
   }
 }

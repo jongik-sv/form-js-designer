@@ -13,10 +13,15 @@ function ChartPlaceholderRender(props: PureRenderProps<ChartPlaceholderSchema>) 
   const entry = getChart(field.chartType);
   const title = resolveI18n(field.title).trim();
   const description = resolveI18n(field.description).trim();
+  const layout = (field as { layout?: { height?: number } }).layout;
+  const hasHeight = typeof layout?.height === 'number' && layout.height > 0;
+  const containerClass = hasHeight
+    ? 'dc-chart-placeholder dc-chart-placeholder--sized'
+    : 'dc-chart-placeholder';
 
   return (
     <div
-      class="dc-chart-placeholder"
+      class={containerClass}
       data-component="chartPlaceholder"
       data-chart-type={entry.type}
       id={props.domId}
