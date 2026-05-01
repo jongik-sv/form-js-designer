@@ -7,6 +7,7 @@
  * TSK-12-02: 중첩 경로(점 표기법, e.g. "layout.height") 지원 추가.
  */
 
+import { h, Fragment } from 'preact';
 import type { PanelEntry } from '@form-js-designer/designer-core';
 
 /**
@@ -102,7 +103,7 @@ export function panelEntryAdapter(
           modeling.editFormField(field, { [key]: v });
         }
       };
-      return widget.edit(
+      const editEl = widget.edit(
         currentValue,
         onChange,
         {
@@ -112,6 +113,12 @@ export function panelEntryAdapter(
           disabled: false,
         },
         meta,
+      );
+      const desc = meta?.description;
+      if (!desc) return editEl;
+      return h(Fragment, null,
+        editEl,
+        h('p', { class: 'dp-field-description', style: 'font-size:11px;color:#64748b;margin:4px 0 0 0;line-height:1.4;' }, desc),
       );
     },
 

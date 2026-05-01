@@ -26,7 +26,7 @@ const WHITELIST = {
   chartPlaceholder: new Set(['chartType','title','description']),
   modal:            new Set(['title','triggerLabel','size']),
   tabPanel:         new Set(['label']),
-  tabs:             new Set(['defaultValue']),
+  tabs:             new Set(['orientation']),
   tree:             new Set(['dataSource','expandedByDefault','showGuides']),
 } satisfies Record<string, ReadonlySet<string>>;
 
@@ -55,14 +55,15 @@ export const SIMPLE_MODE_HIDDEN_GROUPS: ReadonlySet<string> = new Set([
 // entry ids carry per-row suffixes that the whitelist can't enumerate ahead
 // of time — e.g. form-js's `group-staticOptions` exposes entries like
 // `staticOptions-0-label`, `staticOptions-0-value`, etc., one set per row.
-// The companion `group-valuesSource` toggles between static/dynamic data
-// sources and must accompany staticOptions so users can switch modes.
 // Layout (columns) is included because grid placement is essential.
+// NOTE: valuesSource / group-valuesSource are intentionally excluded — in
+// Simple mode checkbox/radio/select/taglist always behave as static (options
+// are edited via staticOptions rows). The static/dynamic toggle is hidden so
+// users cannot accidentally switch to expression/variable data sources.
 export const SIMPLE_MODE_PASSTHROUGH_GROUPS: ReadonlySet<string> = new Set([
   'columns', 'layout',
   'group-columns', 'group-layout',
   'staticOptions', 'group-staticOptions',
-  'valuesSource', 'group-valuesSource',
 ]);
 
 export const SIMPLE_MODE_DEFAULT_ALLOWED: ReadonlySet<string> = new Set(['label']);

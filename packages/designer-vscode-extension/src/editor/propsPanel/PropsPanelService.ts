@@ -21,7 +21,7 @@
  * 는 entry 객체의 추가 필드(__widget, __entryKey …)로 실어 props 로 전달한다.
  */
 
-import { h } from 'preact';
+import { h, Fragment } from 'preact';
 import type { ComponentType, JSX } from 'preact';
 import {
   propsSchemaToPanel,
@@ -113,12 +113,18 @@ const WidgetEntryComponent: ComponentType<WidgetEntryProps> = (props) => {
     }
   };
   const current = readValue() ?? dflt;
-  return widget.edit(
+  const editEl = widget.edit(
     current,
     onChange,
     { t: identityT, domId: `designer-props-${key}`, label, disabled: false },
     meta,
   ) as JSX.Element;
+  const desc = meta?.description;
+  if (!desc) return editEl;
+  return h(Fragment, null, editEl, h('p', {
+    class: 'dp-field-description',
+    style: 'font-size:11px;color:#64748b;margin:4px 0 0 0;line-height:1.4;',
+  }, desc)) as JSX.Element;
 };
 
 /**
@@ -381,8 +387,8 @@ function splitPath(path: string): { rootKey: string; nestedKey: string } | null 
   return { rootKey: path.slice(0, dotIndex), nestedKey: path.slice(dotIndex + 1) };
 }
 
-// preact h이 제거되지 않도록 side-effect 방지용 reference (JSX factory 호환)
-void h;
+// preact h / Fragment이 제거되지 않도록 side-effect 방지용 reference (JSX factory 호환)
+void h; void Fragment;
 
 export const PropsPanelModule = {
   // Expose under `propsPanel` so the webview can `editor.get('propsPanel')`
