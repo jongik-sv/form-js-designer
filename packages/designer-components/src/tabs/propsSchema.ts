@@ -33,12 +33,14 @@ export const tabsPropsSchema: PropsSchema = {
     defaultValue: {
       type: 'string',
       label: 'designer.components.tabs.defaultValue',
+      description: '폼이 처음 열릴 때 활성화될 탭의 value',
     },
     orientation: {
       type: 'enum',
       label: 'designer.components.tabs.orientation',
       default: 'horizontal',
       enum: ['horizontal', 'vertical'] as const,
+      description: 'horizontal: 가로 탭 · vertical: 세로 탭',
     },
   },
 };

@@ -28,31 +28,37 @@ export const treePropsSchema: PropsSchema = {
       type: 'i18n',
       label: 'designer.components.tree.label',
       default: '트리',
+      description: '트리 영역 위에 표시되는 라벨',
     },
     dataSource: {
       type: 'expression',
       label: 'designer.components.tree.dataSource',
       default: '',
+      description: '트리 노드 배열을 반환하는 FEEL 표현식. 예: =[{"label":"부모","children":[{"label":"자식"}]}]',
     },
     labelKey: {
       type: 'string',
       label: 'designer.components.tree.labelKey',
       default: 'label',
+      description: '각 노드 객체에서 라벨로 사용할 키 이름 (기본: label)',
     },
     childrenKey: {
       type: 'string',
       label: 'designer.components.tree.childrenKey',
       default: 'children',
+      description: '각 노드 객체에서 자식 배열로 사용할 키 이름 (기본: children)',
     },
     expandedByDefault: {
       type: 'boolean',
       label: 'designer.components.tree.expandedByDefault',
       default: true,
+      description: '켜면 모든 노드가 기본 펼침 상태로 시작합니다',
     },
     showGuides: {
       type: 'boolean',
       label: 'designer.components.tree.showGuides',
       default: false,
+      description: '부모-자식 노드를 잇는 가이드 선을 표시합니다',
     },
   },
 };

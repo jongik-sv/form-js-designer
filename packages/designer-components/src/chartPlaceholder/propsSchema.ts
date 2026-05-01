@@ -31,16 +31,19 @@ export const chartPlaceholderPropsSchema: PropsSchema = {
         'heatmap',
         'treemap',
       ] as const,
+      description: '표시할 차트 종류 (시안용 자리표시자 — 실데이터 미연결)',
     },
     title: {
       type: 'i18n',
       label: 'designer.components.chartPlaceholder.title',
       default: '',
+      description: '차트 위에 표시되는 제목',
     },
     description: {
       type: 'i18n',
       label: 'designer.components.chartPlaceholder.description',
       default: '',
+      description: '차트 아래에 표시되는 설명 텍스트',
     },
   },
 };
