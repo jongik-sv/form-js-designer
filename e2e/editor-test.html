@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>editor test</title>
+    <link rel="stylesheet" href="./styles.scss" />
+  </head>
+  <body>
+    <div id="editor" style="width:100vw;height:100vh"></div>
+    <script type="module">
+      import '@bpmn-io/form-js/dist/assets/form-js.css';
+      import '@bpmn-io/form-js/dist/assets/form-js-editor.css';
+      import { FormEditor } from '@bpmn-io/form-js';
+
+      const e = new FormEditor({ container: document.getElementById('editor') });
+      await e.importSchema({ type: 'default', components: [] });
+      window.__editor = e;
+    </script>
+  </body>
+</html>
