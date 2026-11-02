@@ -33,7 +33,6 @@ import {
   isPassthroughGroup,
 } from '@form-js-designer/designer-core';
 import type { PanelEntry, PanelWidget, PanelWidgetRegistry } from '@form-js-designer/designer-core';
-import { LAYOUT_HEIGHT_TARGET_TYPES } from '@form-js-designer/designer-runtime/modules';
 import { readStoredPanelMode, type PanelMode } from '@form-js-designer/designer-core';
 
 interface PropertiesPanelLike {
@@ -87,6 +86,18 @@ const DESIGNER_NATIVE_FILTER_PRIORITY = 400;
 const identityT = (k: string): string => k;
 
 /**
+ * i18n 키("designer.components.tree.dataSource") 또는 camelCase 식별자를
+ * 사람이 읽는 라벨("Data Source")로 변환. designer-editor-host의
+ * PropsPanelContainer.humanizeLabel과 동일 규칙 — 두 패널의 라벨 표기를 일치시킨다.
+ */
+function humanizeLabel(label: string | undefined, fallbackKey: string): string {
+  const raw = label ?? fallbackKey;
+  const last = raw.includes('.') ? raw.split('.').pop()! : raw;
+  const spaced = last.replace(/([a-z])([A-Z])/g, '$1 $2');
+  return spaced.charAt(0).toUpperCase() + spaced.slice(1);
+}
+
+/**
  * 모듈 레벨 stable widget entry component.
  * bio-properties-panel 이 `{...entry, element}` 를 props 로 spread 해 주므로
  * 엔트리 데이터는 props 로 받는다.
@@ -114,18 +125,34 @@ const WidgetEntryComponent: ComponentType<WidgetEntryProps> = (props) => {
     }
   };
   const current = readValue() ?? dflt;
+  const domId = `designer-props-${key}`;
+  const entryId = `designer-props-${key}`;
+  const displayLabel = humanizeLabel(label, key);
   const editEl = widget.edit(
     current,
     onChange,
-    { t: identityT, domId: `designer-props-${key}`, label, disabled: false },
+    { t: identityT, domId, label: displayLabel, disabled: false },
     meta,
   ) as JSX.Element;
+  const labelEl = h('label', {
+    class: 'bio-properties-panel-label',
+    for: domId,
+  }, displayLabel) as JSX.Element;
   const desc = meta?.description;
-  if (!desc) return editEl;
-  return h(Fragment, null, editEl, h('p', {
-    class: 'dp-field-description',
-    style: 'font-size:11px;color:#64748b;margin:4px 0 0 0;line-height:1.4;',
-  }, desc)) as JSX.Element;
+  const descEl = desc
+    ? (h('div', { class: 'bio-properties-panel-description' }, desc) as JSX.Element)
+    : null;
+  // bio-properties-panel native Group은 entries를 그대로 createElement로 렌더만 하고
+  // wrapper를 씌우지 않으므로(@bpmn-io/properties-panel index.js Group 구현 참고),
+  // 네이티브 entries(TextField/Select 등)와 동일한 좌우 margin/spacing을 얻으려면
+  // 우리 컴포넌트가 직접 .bio-properties-panel-entry div로 감싸야 한다.
+  return h(
+    'div',
+    { class: 'bio-properties-panel-entry', 'data-entry-id': entryId },
+    labelEl,
+    editEl,
+    descEl,
+  ) as JSX.Element;
 };
 
 /**
@@ -322,9 +349,11 @@ export class PropsPanelService {
         }
       }
 
-      // 대상 타입(textarea/html/table/group/card/modal/tabs/tabPanel/iframe/image/text)에
-      // height 숫자 입력 그룹을 추가한다 (TSK-12-02 포팅).
-      if ((LAYOUT_HEIGHT_TARGET_TYPES as readonly string[]).includes(field.type)) {
+      // host PropsPanelService와 동일 규칙(FU-A): Layout(height) 그룹은 'spacer'에만
+      // 노출한다. 나머지 LAYOUT_HEIGHT_TARGET_TYPES는 캔버스 ResizeHandle로만
+      // 높이를 조절 — Properties 패널에 별도 entry를 만들면 native Layout(Columns)
+      // 그룹과 동일 라벨로 중복 노출되어 빈 input만 보인다.
+      if (field.type === 'spacer') {
         next.push(this.#buildLayoutGroup(field as Record<string, unknown>, editField));
       }
 

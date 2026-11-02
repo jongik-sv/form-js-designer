@@ -143,6 +143,7 @@ export class FormJsBlockEditorProvider {
       distAsset('customEditor.css'),
       mediaAsset('canvas-spacing.css'),
       mediaAsset('form-js-editor-host.css'),
+      mediaAsset('designer-props-overrides.css'),
     ];
 
     const cspSource = webviewPanel.webview.cspSource;
